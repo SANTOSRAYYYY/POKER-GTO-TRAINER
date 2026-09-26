@@ -220,7 +220,11 @@ export default function TableScreen({
   const heroRebuysLeft = Math.max(0, rebuysAllowed - heroRebuysUsed);
 
   return (
-    <main className="flex min-h-screen flex-col">
+    // 移动端（max-md）为应用壳布局：整屏 h-dvh，顶栏/HUD 固定，中部牌桌区
+    // flex-1 min-h-0 自滚动，行动栏始终在视口底部完整可见——内容再高也不会
+    // 被 sticky 元素覆盖（9 人桌 + 横幅超高时信息条曾盖住预操作按钮）。
+    // 桌面端保持 min-h-screen 文档流不变。
+    <main className="flex min-h-screen flex-col max-md:h-dvh max-md:min-h-0">
       <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-neutral-800 px-4 py-2.5">
         <div className="flex items-center gap-3">
           <Link href="/" className="text-sm font-bold tracking-tight hover:text-emerald-300">
@@ -272,9 +276,16 @@ export default function TableScreen({
         )}
       </div>
 
-      <div className="mx-auto flex w-full max-w-7xl flex-1 items-start gap-4 px-2 py-3 md:px-4 md:py-4">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 items-start gap-4 px-2 py-3 max-md:min-h-0 max-md:overflow-y-auto md:px-4 md:py-4">
         <section className="min-w-0 flex-1">
           <PokerTable />
+          {/* 折叠后的悬浮窄条：桌面端 fixed 右缘（md:contents 使包装层消失，
+              行为与之前一致）；移动端为牌桌下方的文档流内横条，不再遮挡座位 */}
+          {panelCollapsed && (
+            <div className="max-md:mt-1 max-md:flex max-md:justify-center md:contents">
+              <HandInfoPanel collapsed onToggle={togglePanel} />
+            </div>
+          )}
         </section>
         <aside
           className={`hidden shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out lg:block ${
@@ -284,10 +295,7 @@ export default function TableScreen({
           <HandInfoPanel collapsed={false} onToggle={togglePanel} />
         </aside>
       </div>
-      {/* 折叠后的悬浮窄条（小屏默认折叠时同样可用） */}
-      {panelCollapsed && (
-        <HandInfoPanel collapsed onToggle={togglePanel} />
-      )}
+      {/* 折叠后的悬浮窄条已移入上方 section（移动端在流内、桌面端 fixed） */}
       {/* 小屏（<lg）展开时以抽屉形式悬浮展示面板 */}
       {panelCollapsed === false && (
         <div className="fixed inset-y-0 right-0 z-30 w-72 max-w-[85vw] overflow-y-auto border-l border-neutral-800 bg-neutral-950/95 p-3 transition-transform duration-300 lg:hidden">
@@ -310,7 +318,7 @@ export default function TableScreen({
             type="button"
             onClick={clearError}
             aria-label={t("table.dismissError")}
-            className="rounded px-1.5 font-bold text-rose-200 hover:bg-rose-900"
+            className="flex items-center justify-center rounded px-1.5 font-bold text-rose-200 hover:bg-rose-900 max-md:min-h-10 max-md:min-w-10"
           >
             ×
           </button>

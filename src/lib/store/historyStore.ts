@@ -27,6 +27,8 @@ import type {
 } from "@/lib/types";
 import { chatCompletion } from "@/lib/llm/client";
 import { equityMulti } from "@/lib/poker/equity";
+import { handReferenceLines } from "@/lib/gto/reference";
+import { withRunoutStreets } from "@/lib/store/runout";
 import { isTournamentHand, seatPosition, seatPositionCn, STYLE_NAME } from "@/components/history/labels";
 import { summarizeHand } from "@/lib/ai/recentHands";
 import { computeHeroHud } from "@/lib/ai/hudStats";
@@ -187,7 +189,8 @@ export function renderHandForPrompt(hand: HandRecord): string {
     if (st.street === "showdown") continue;
     lines.push(`【${STREET_LABEL[st.street]}】公共牌：${cardsText(st.board)}`);
     if (st.actions.length === 0) {
-      lines.push("  （无动作记录）");
+      // 空动作街 = 双方全下后引擎跑马发出的街（不可能有动作），如实标注
+      lines.push("  （无动作——双方已全下，跑马发牌）");
     } else {
       for (const a of st.actions) {
         lines.push(`  - ${actionToText(a, hand)}`);
@@ -236,7 +239,28 @@ function handEquityLines(hand: HandRecord): string[] {
   return lines;
 }
 
-const ANALYSIS_SYSTEM_PROMPT = `你是职业德州扑克教练。复盘学员（"你"）这手牌的关键决策：指出对错、给出正确打法与理由；若提供了胜率数据，请结合数据分析（这是实算的客观数据，可信）。若某条街是三人及以上多人底池，简要点评多人动态。
+/**
+ * 组装单手复盘的 user prompt（纯函数，便于 vitest 直测）：
+ * renderHandForPrompt 文本 + 街级实算胜率 + 决策点级参考数据
+ * （handReferenceLines：每个 hero 决策点一行的参考线，见 gto/reference.ts）。
+ */
+export function buildAnalysisUserPrompt(hand: HandRecord): string {
+  const eqLines = handEquityLines(hand);
+  const eqSection =
+    eqLines.length > 0
+      ? `\n\n客观胜率数据（实算，供分析参考）：\n${eqLines.join("\n")}`
+      : "";
+  const refLines = handReferenceLines(hand);
+  const refSection =
+    refLines.length > 0
+      ? `\n\n决策点参考数据（你每个决策点的引擎参考线；启发式简化，非 solver 精确解）：\n${refLines.join("\n")}`
+      : "";
+  return `以下是这手牌的完整记录，请按系统要求的 JSON 格式输出复盘分析：\n\n${renderHandForPrompt(hand)}${eqSection}${refSection}`;
+}
+
+export const ANALYSIS_SYSTEM_PROMPT = `你是职业德州扑克教练。复盘学员（"你"）这手牌的关键决策：指出对错、给出正确打法与理由；若提供了胜率数据，请结合数据分析（这是实算的客观数据，可信）。若某条街是三人及以上多人底池，简要点评多人动态。
+
+若提供了「决策点参考数据」：点评时优先逐条对照每个决策点的参考数据——与参考倾向一致的决策给予肯定并说明为什么对；偏离参考倾向的明确指出，并按「胜率差 × 当时底池」粗估该偏离长期重复的筹码代价（例如"胜率差约 10%，底池 200，每次约亏 20"）。参考数据由实算胜率驱动，是启发式参考线而非 solver 精确解，其胜率与赔率数值可直接引用。
 
 严格要求：
 1. 只输出一个严格的 JSON 对象，不要输出 markdown 代码块，不要输出任何其他文字。
@@ -251,7 +275,7 @@ const ANALYSIS_SYSTEM_PROMPT = `你是职业德州扑克教练。复盘学员（
 3. "street" 只能取 "preflop" | "flop" | "turn" | "river"，只点评实际进行到的街道，每条街道一条。
 4. "rating" 只能取 "good"（打得好）| "ok"（可接受）| "mistake"（明显错误）。
 5. "score" 为 0-100 的整数综合评分（越高代表学员这手牌打得越好）。
-6. 简洁硬约束：每条 comment 不超过 80 字，overall 不超过 120 字——宁可少说也要保证 JSON 完整收尾，绝对不要让输出被截断。`;
+6. 简洁硬约束：每条 comment 不超过 120 字，overall 不超过 200 字——宁可少说也要保证 JSON 完整收尾，绝对不要让输出被截断。`;
 
 const VALID_STREETS = new Set<Street>(["preflop", "flop", "turn", "river"]);
 const VALID_RATINGS = new Set<StreetRating>(["good", "ok", "mistake"]);
@@ -437,7 +461,11 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
 
   listHands: async () => {
     const db = await getDB();
-    const hands = sortDesc((await db.getAll("hands")) as HandRecord[]);
+    const hands = sortDesc((await db.getAll("hands")) as HandRecord[]).map(
+      // 旧记录回填：修复前存的 HandRecord 缺全下跑马后的空动作街，读出时补齐
+      // （withRunoutStreets 对已齐全的记录是幂等 no-op）
+      (h) => ({ ...h, streets: withRunoutStreets(h.streets, h.finalBoard) }),
+    );
     set({ hands, loaded: true });
     return hands;
   },
@@ -447,7 +475,8 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     if (cached) return cached;
     const db = await getDB();
     const hand = (await db.get("hands", id)) as HandRecord | undefined;
-    return hand ?? null;
+    if (!hand) return null;
+    return { ...hand, streets: withRunoutStreets(hand.streets, hand.finalBoard) };
   },
 
   deleteHand: async (id) => {
@@ -492,15 +521,9 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     if (!hand) {
       throw new Error("未找到该手牌记录，可能已被删除");
     }
-    const eqLines = handEquityLines(hand);
-    const eqSection =
-      eqLines.length > 0
-        ? `\n\n客观胜率数据（实算，供分析参考）：\n${eqLines.join("\n")}`
-        : "";
-    const userPrompt = `以下是这手牌的完整记录，请按系统要求的 JSON 格式输出复盘分析：\n\n${renderHandForPrompt(hand)}${eqSection}`;
     const messages: ChatMessage[] = [
       { role: "system", content: ANALYSIS_SYSTEM_PROMPT },
-      { role: "user", content: userPrompt },
+      { role: "user", content: buildAnalysisUserPrompt(hand) },
     ];
     const { result } = await analyzeWithRetry(messages, (msgs) =>
       chatCompletion(config, msgs),

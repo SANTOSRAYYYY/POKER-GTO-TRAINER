@@ -266,3 +266,75 @@ export function heroDecisionInput(
   }
   return null;
 }
+
+// ---------------------------------------------------------------------------
+// 教练复盘 prompt 注入：每个 hero 决策点一行参考数据
+// ---------------------------------------------------------------------------
+
+const TENDENCY_LABEL: Record<GtoTendency, string> = {
+  raise: "加注/下注",
+  call: "跟注",
+  fold: "弃牌",
+  check: "过牌",
+};
+const CONFIDENCE_LABEL: Record<GtoConfidence, string> = {
+  strong: "明确",
+  marginal: "边际",
+};
+const PROMPT_STREET_LABEL: Record<string, string> = {
+  preflop: "翻前",
+  flop: "翻牌圈",
+  turn: "转牌圈",
+  river: "河牌圈",
+};
+
+/**
+ * 为教练复盘 prompt 生成「每个 hero 决策点一行」的参考数据。
+ *
+ * 每行含：街道、面对跟注额与底池、实算胜率、（有跟注额时）保本所需胜率、
+ * 参考倾向（含明确/边际置信度）。让教练有点对点的客观弹药，不再泛泛点评。
+ *
+ * 从略情形（该行直接省略，不阻塞复盘）：
+ * - 非 hero 的动作 / showdown 街（heroDecisionInput 返回 null）；
+ * - hero 底牌未知、无存活对手；
+ * - 胜率模拟等计算抛错（数据不全等异常）。
+ * 翻前 board 为空同样可算（equityMulti 对 N 名随机对手跑蒙特卡洛）。
+ */
+export function handReferenceLines(
+  hand: HandRecord,
+  iterations: number = REFERENCE_ITERATIONS,
+): string[] {
+  const lines: string[] = [];
+  hand.streets.forEach((st, si) => {
+    if (st.street === "showdown") return;
+    st.actions.forEach((sa, ai) => {
+      if (sa.seat !== hand.heroSeat) return;
+      try {
+        const input = heroDecisionInput(hand, si, ai);
+        if (!input) return;
+        const line = referenceLine(input, iterations);
+        const street = PROMPT_STREET_LABEL[st.street] ?? st.street;
+        const eqPct = (line.equity * 100).toFixed(1);
+        const tendency = TENDENCY_LABEL[line.tendency];
+        const confidence = CONFIDENCE_LABEL[line.confidence];
+        if (input.callAmount > 0) {
+          const reqPct = (
+            requiredEquity(input.potBefore, input.callAmount) * 100
+          ).toFixed(1);
+          lines.push(
+            `- ${street} 你面对跟注额 ${input.callAmount}（底池 ${input.potBefore}）：` +
+              `实算胜率 ${eqPct}%，所需胜率 ${reqPct}%，参考倾向：${tendency}（${confidence}）`,
+          );
+        } else {
+          lines.push(
+            `- ${street} 无人下注到你（底池 ${input.potBefore}）：` +
+              `实算胜率 ${eqPct}%，参考倾向：${tendency}（${confidence}）`,
+          );
+        }
+      } catch {
+        // 该决策点数据从略
+      }
+    });
+  });
+  return lines;
+}

@@ -119,16 +119,18 @@ export default function HandInfoPanel({
     return a.amount > 0 ? `${label} ${a.amount}` : label;
   };
 
-  // 折叠窄条：悬浮在右缘，只留展开按钮与胜率迷你数字
+  // 折叠窄条：桌面端悬浮在右缘（fixed，只留展开按钮与胜率/赔率迷你数字）；
+  // 移动端（max-md）改为文档流内横条——fixed 右缘会盖住矩形环右列座位
+  // （CO/LJ/HJ 的筹码与状态列），由 TableScreen 渲染到牌桌下方居中。
   if (collapsed) {
     return (
-      <div className="fixed right-3 top-1/3 z-30 flex w-11 flex-col items-center gap-2 rounded-xl border border-neutral-700 bg-neutral-900/95 py-2 shadow-xl transition-all duration-300">
+      <div className="fixed right-3 top-1/3 z-30 flex w-11 flex-col items-center gap-2 rounded-xl border border-neutral-700 bg-neutral-900/95 py-2 shadow-xl transition-all duration-300 max-md:static max-md:w-auto max-md:flex-row max-md:gap-3 max-md:px-3 max-md:py-1.5">
         <button
           type="button"
           onClick={() => onToggle?.(false)}
           aria-label={t("panel.expand")}
           title={t("panel.expand")}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-sm text-neutral-300 transition hover:bg-neutral-800 hover:text-neutral-100"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-sm text-neutral-300 transition hover:bg-neutral-800 hover:text-neutral-100 max-md:h-10 max-md:w-10"
         >
           «
         </button>

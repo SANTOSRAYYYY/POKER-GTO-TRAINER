@@ -97,13 +97,13 @@ export default function HandResultOverlay() {
         <button
           type="button"
           onClick={() => setFastForward(!fastForward)}
-          className="rounded bg-neutral-700 px-2 py-0.5 font-semibold text-neutral-100 hover:bg-neutral-600"
+          className="rounded bg-neutral-700 px-2 py-0.5 font-semibold text-neutral-100 hover:bg-neutral-600 max-md:min-h-11"
         >
           {fastForward ? t("result.pause") : t("result.resume")}
         </button>
         <Link
           href="/"
-          className="rounded bg-neutral-700 px-2 py-0.5 font-semibold text-neutral-100 hover:bg-neutral-600"
+          className="rounded bg-neutral-700 px-2 py-0.5 font-semibold text-neutral-100 hover:bg-neutral-600 max-md:flex max-md:min-h-11 max-md:items-center"
         >
           {t("result.backToLobby")}
         </Link>
@@ -129,14 +129,14 @@ export default function HandResultOverlay() {
             <button
               type="button"
               onClick={() => void resolveTournamentRebuy(true)}
-              className="rounded-lg bg-amber-500 px-4 py-1.5 text-xs font-bold text-neutral-950 transition hover:bg-amber-400"
+              className="rounded-lg bg-amber-500 px-4 py-1.5 text-xs font-bold text-neutral-950 transition hover:bg-amber-400 max-md:min-h-11"
             >
               {t("result.rebuyContinue", { n: startStack })}
             </button>
             <button
               type="button"
               onClick={() => void resolveTournamentRebuy(false)}
-              className="rounded-lg bg-neutral-700 px-4 py-1.5 text-xs font-bold text-neutral-100 transition hover:bg-neutral-600"
+              className="rounded-lg bg-neutral-700 px-4 py-1.5 text-xs font-bold text-neutral-100 transition hover:bg-neutral-600 max-md:min-h-11"
             >
               {t("result.concedeSpectate")}
             </button>
@@ -159,14 +159,14 @@ export default function HandResultOverlay() {
             <button
               type="button"
               onClick={() => void resolveRebuy(true)}
-              className="rounded-lg bg-amber-500 px-4 py-1.5 text-xs font-bold text-neutral-950 transition hover:bg-amber-400"
+              className="rounded-lg bg-amber-500 px-4 py-1.5 text-xs font-bold text-neutral-950 transition hover:bg-amber-400 max-md:min-h-11"
             >
               {t("result.resetBuyin", { n: buyin })}
             </button>
             <button
               type="button"
               onClick={() => void spectateCash()}
-              className="rounded-lg bg-neutral-700 px-4 py-1.5 text-xs font-bold text-neutral-100 transition hover:bg-neutral-600"
+              className="rounded-lg bg-neutral-700 px-4 py-1.5 text-xs font-bold text-neutral-100 transition hover:bg-neutral-600 max-md:min-h-11"
             >
               {t("result.leaveSpectate")}
             </button>
@@ -315,7 +315,7 @@ export default function HandResultOverlay() {
         <button
           type="button"
           onClick={() => void advanceToNextHand()}
-          className="mt-0.5 text-xs font-semibold text-amber-300 underline underline-offset-2 transition hover:text-amber-200"
+          className="mt-0.5 text-xs font-semibold text-amber-300 underline underline-offset-2 transition hover:text-amber-200 max-md:inline-flex max-md:min-h-11 max-md:items-center"
         >
           {t("action.nextHand")}
         </button>

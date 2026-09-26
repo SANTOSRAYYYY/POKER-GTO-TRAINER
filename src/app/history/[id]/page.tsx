@@ -7,6 +7,13 @@ import { CardBack, PlayingCard } from "@/components/history/PlayingCard";
 import { Nav } from "@/components/history/Nav";
 import { ReferenceBadge } from "@/components/history/ReferenceBadge";
 import {
+  actionText,
+  buildSteps,
+  foldedSeatsAt,
+  isShowdownStep,
+  replayText,
+} from "@/components/history/replay";
+import {
   heroDecisionInput,
   type ReferenceInput,
 } from "@/lib/gto/reference";
@@ -24,14 +31,11 @@ import type {
   HandRecord,
   LLMConfig,
   Seat,
-  SeatAction,
   Street,
   StreetRating,
 } from "@/lib/types";
 
 const LLM_CONFIG_KEY = "pokergto_llm_config";
-
-type TFunc = (key: DictKey, vars?: Record<string, string | number>) => string;
 
 const STREET_LABEL_KEY: Record<Street, DictKey> = {
   preflop: "history.street.preflop",
@@ -40,96 +44,6 @@ const STREET_LABEL_KEY: Record<Street, DictKey> = {
   river: "history.street.river",
   showdown: "history.street.showdown",
 };
-
-/** 行动者称呼：hero 显示“你”，AI 显示座位号与风格 */
-function actorLabel(hand: HandRecord, seat: Seat, t: TFunc): string {
-  const p = hand.players.find((pl) => pl.seat === seat);
-  if (!p) return t("history.seat", { n: seat });
-  if (p.isHero) return t("common.you");
-  return p.aiStyle
-    ? t("history.aiActor", { style: STYLE_NAME[p.aiStyle] })
-    : t("history.seat", { n: seat });
-}
-
-function actionText(sa: SeatAction, hand: HandRecord, t: TFunc): string {
-  const who = t("history.actorWithSeat", {
-    who: actorLabel(hand, sa.seat, t),
-    seat: sa.seat,
-  });
-  const { type, amount } = sa.action;
-  switch (type) {
-    case "fold":
-      return t("history.act.fold", { who });
-    case "check":
-      return t("history.act.check", { who });
-    case "call":
-      return t("history.act.call", { who, amount: amount ?? 0 });
-    case "bet":
-      return t("history.act.bet", { who, amount: amount ?? 0 });
-    case "raise":
-      return t("history.act.raise", { who, amount: amount ?? 0 });
-    case "allin":
-      return t("history.act.allin", { who, amount: amount ?? 0 });
-  }
-}
-
-interface Step {
-  streetIdx: number;
-  /** -1 表示刚到该街、尚未应用任何动作 */
-  actionIdx: number;
-  pot: number;
-  /** 该步行动者座位（无动作的步骤为 null） */
-  actor: Seat | null;
-  text: string | null;
-}
-
-/**
- * 把 HandRecord 的逐街动作展开成线性步骤序列。
- * 底池初始 = 小盲 + 大盲 + 全员 ante（引擎 streetActions 不含盲注/ante
- * 投放动作——createGame 时直接计入 pot，见 game.ts——故恒按此公式计算）。
- * bet-to 语义：每人维护本街已投入额，bet/raise/allin 按增量计入底池。
- */
-function buildSteps(hand: HandRecord, t: TFunc): Step[] {
-  const initialPot =
-    hand.smallBlind + hand.bigBlind + hand.ante * hand.players.length;
-
-  const steps: Step[] = [];
-  let pot = initialPot;
-  hand.streets.forEach((st, si) => {
-    const invested: number[] = [];
-    steps.push({ streetIdx: si, actionIdx: -1, pot, actor: null, text: null });
-    st.actions.forEach((sa, ai) => {
-      let inc = 0;
-      const { type, amount } = sa.action;
-      if (type === "call") inc = amount;
-      else if (type === "bet" || type === "raise" || type === "allin") {
-        inc = Math.max(0, amount - (invested[sa.seat] ?? 0));
-      }
-      invested[sa.seat] = (invested[sa.seat] ?? 0) + inc;
-      pot += inc;
-      steps.push({
-        streetIdx: si,
-        actionIdx: ai,
-        pot,
-        actor: sa.seat,
-        text: actionText(sa, hand, t),
-      });
-    });
-  });
-  return steps;
-}
-
-/** 截至当前步骤已弃牌的座位集合（用于座位卡片状态） */
-function foldedSeatsAt(hand: HandRecord, steps: Step[], cur: number): Set<Seat> {
-  const folded = new Set<Seat>();
-  for (let i = 0; i <= cur && i < steps.length; i++) {
-    const s = steps[i];
-    if (s.actionIdx < 0) continue;
-    const sa = hand.streets[s.streetIdx].actions[s.actionIdx];
-    if (sa && sa.action.type === "fold") folded.add(sa.seat);
-  }
-  return folded;
-}
 
 const RATING_STYLE: Record<StreetRating, { icon: string; className: string; labelKey: DictKey }> = {
   good: { icon: "✓", className: "text-emerald-400 border-emerald-700 bg-emerald-950/40", labelKey: "history.rating.good" },
@@ -147,7 +61,7 @@ interface AnalyzeError {
 export default function HandReplayPage() {
   const params = useParams();
   const id = String(params.id ?? "");
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { loaded, loadAll, getHand, getAnalysis, analyzeHand, analyses } = useHistoryStore();
 
   const [hand, setHand] = useState<HandRecord | null | undefined>(undefined);
@@ -174,8 +88,12 @@ export default function HandReplayPage() {
   const steps = useMemo(() => (hand ? buildSteps(hand, t) : []), [hand, t]);
   const cur = Math.min(stepIdx, Math.max(0, steps.length - 1));
   const step = steps[cur];
-  const street: Street | null = hand && step ? hand.streets[step.streetIdx].street : null;
-  const board = hand && step ? hand.streets[step.streetIdx].board : [];
+  /** 摊牌终局步骤（streetIdx = streets.length 哨兵） */
+  const showdownStep = hand && step ? isShowdownStep(hand, step) : false;
+  const street: Street | null =
+    hand && step ? (showdownStep ? "showdown" : hand.streets[step.streetIdx].street) : null;
+  const board =
+    hand && step ? (showdownStep ? hand.finalBoard : hand.streets[step.streetIdx].board) : [];
   const analysis: AnalysisResult | null = analyses[id] ?? null;
   /** 当前步骤的行动者座位（无动作步骤为 null），用于座位卡片高亮 */
   const actorSeat: Seat | null = step?.actor ?? null;
@@ -183,15 +101,24 @@ export default function HandReplayPage() {
     () => (hand ? foldedSeatsAt(hand, steps, cur) : new Set<Seat>()),
     [hand, steps, cur],
   );
+  /** 摊牌亮牌名单：终局时未弃牌且记录中亮出底牌的玩家 */
+  const showdownPlayers = useMemo(() => {
+    if (!hand || !hand.showdown) return [];
+    const foldedFinal = foldedSeatsAt(hand, steps, steps.length - 1);
+    return hand.players.filter(
+      (p) => !foldedFinal.has(p.seat) && p.cards && p.cards.length > 0,
+    );
+  }, [hand, steps]);
 
   /**
    * 当前街 hero 决策点的参考线输入（actionIdx → ReferenceInput）。
    * potBefore / callAmount 由 heroDecisionInput 重放动作序列推导（含翻前盲注
    * 预置投入）；胜率在徽章点击后才惰性计算并缓存。
+   * 摊牌终局步骤没有动作序列，返回空表。
    */
   const heroInputs = useMemo(() => {
     const m = new Map<number, ReferenceInput>();
-    if (!hand || !step) return m;
+    if (!hand || !step || isShowdownStep(hand, step)) return m;
     const si = step.streetIdx;
     hand.streets[si].actions.forEach((sa, ai) => {
       if (sa.seat !== hand.heroSeat) return;
@@ -296,7 +223,7 @@ export default function HandReplayPage() {
         <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
           {/* 左侧：回放器 */}
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-            {/* 街道切换 */}
+            {/* 街道切换（摊牌手追加「摊牌」tab，落点为终局步骤） */}
             <div className="mb-4 flex flex-wrap gap-2">
               {hand.streets.map((st, si) => {
                 const startIdx = steps.findIndex((s) => s.streetIdx === si);
@@ -315,6 +242,18 @@ export default function HandReplayPage() {
                   </button>
                 );
               })}
+              {hand.showdown && (
+                <button
+                  onClick={() => setStepIdx(steps.length - 1)}
+                  className={`rounded-md px-3 py-1 text-sm transition-colors ${
+                    showdownStep
+                      ? "bg-emerald-500/15 font-medium text-emerald-400"
+                      : "bg-zinc-800/60 text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  {t("history.street.showdown")}
+                </button>
+              )}
             </div>
 
             {/* 公共牌与底池 */}
@@ -418,8 +357,39 @@ export default function HandReplayPage() {
                 })}
             </p>
 
-            {/* 当前街动作序列 */}
-            {step && (
+            {/* 当前街动作序列（摊牌步骤改为亮牌名单；空动作街标注跑马） */}
+            {step && showdownStep && (
+              <div className="rounded-lg bg-zinc-950/60 p-3">
+                <div className="mb-2 text-xs text-zinc-500">
+                  {replayText("replay.showdownReveal", lang)}
+                </div>
+                <ul className="space-y-1.5">
+                  {showdownPlayers.map((p) => (
+                    <li key={p.seat} className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="text-zinc-300">
+                        {p.isHero
+                          ? t("common.you")
+                          : `${t("history.seat", { n: p.seat })}${p.aiStyle ? ` · ${STYLE_NAME[p.aiStyle]}` : ""}`}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        {p.cards!.map((c) => (
+                          <PlayingCard key={c} card={c} size="sm" />
+                        ))}
+                      </span>
+                      <span
+                        className={`font-semibold ${
+                          p.profit > 0 ? "text-emerald-400" : p.profit < 0 ? "text-red-400" : "text-zinc-500"
+                        }`}
+                      >
+                        {p.profit >= 0 ? "+" : ""}
+                        {p.profit}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {step && !showdownStep && (
               <div className="rounded-lg bg-zinc-950/60 p-3">
                 <div className="mb-2 text-xs text-zinc-500">
                   {t("history.streetActions", {
@@ -427,7 +397,9 @@ export default function HandReplayPage() {
                   })}
                 </div>
                 {hand.streets[step.streetIdx].actions.length === 0 ? (
-                  <p className="text-sm text-zinc-600">{t("history.noActions")}</p>
+                  <p className="text-sm text-zinc-500">
+                    {replayText("replay.runoutNote", lang)}
+                  </p>
                 ) : (
                   <ol className="space-y-1">
                     {hand.streets[step.streetIdx].actions.map((sa, ai) => {

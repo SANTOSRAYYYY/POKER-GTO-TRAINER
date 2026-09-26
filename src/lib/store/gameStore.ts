@@ -43,6 +43,7 @@ import type {
   PlayerState,
   Seat,
   SeatAction,
+  Street,
   StreetRecord,
   TournamentConfig,
   TournamentContext,
@@ -67,6 +68,7 @@ import { summarizeHand } from "@/lib/ai/recentHands";
 import { buildModel, createOpponentStats, updateStats } from "@/lib/ai/adapt";
 import { useHistoryStore } from "@/lib/store/historyStore";
 import { loadSession, saveSession } from "@/lib/store/sessionPersistence";
+import { withRunoutStreets } from "@/lib/store/runout";
 import {
   clearNotebook,
   loadDecayedHeroStats,
@@ -493,6 +495,13 @@ export function cappedCallAmount(state: GameState, seat: Seat): number {
   if (!me) return 0;
   return Math.max(0, Math.min(state.currentBet - me.streetBet, me.stack));
 }
+
+/**
+ * 补齐全下跑马被跳过的空动作街记录。
+ * 实现已移至独立模块 @/lib/store/runout（避免 gameStore ↔ historyStore
+ * 循环引用），此处 re-export 保持既有调用方兼容。
+ */
+export { withRunoutStreets } from "@/lib/store/runout";
 
 /**
  * 预操作合法性解析（须在轮到 currentSeat 行动时调用，通常即 hero）：
@@ -1517,7 +1526,9 @@ export const useGameStore = create<GameStore>()((set, get) => {
           smallBlind: game.smallBlind,
           bigBlind: game.bigBlind,
           ante: game.ante,
-          streets: streetLog,
+          // 全下跑马时被引擎跳过的空动作街在此补录（见 withRunoutStreets），
+          // 保证 streets 覆盖每一张发出的公共牌，回放/教练复盘可见完整牌局
+          streets: withRunoutStreets(streetLog, game.board),
           finalBoard: [...game.board],
           result,
           profit: heroProfit,

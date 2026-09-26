@@ -65,6 +65,22 @@ export default function ActionBar() {
     setAmount(minSizing);
   }, [game?.street, game?.currentBet, game?.handNumber, minSizing]);
 
+  // 矮屏手机展开滑杆时行动栏变高、牌桌滚动区被压缩：
+  // 移动端把 hero 座位舱滚进牌桌区视野（底牌 + 滑杆面板 + 按钮同时可见）；
+  // 桌面端面板本就在视口内，block:"nearest" 不产生滚动。
+  useEffect(() => {
+    if (!mode) return;
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      document
+        .getElementById("poker-hero-pod")
+        ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      return;
+    }
+    document
+      .getElementById("poker-sizing-panel")
+      ?.scrollIntoView({ block: "nearest" });
+  }, [mode]);
+
   if (!game || !hero) return null;
   // hero 观战（锦标赛淘汰）时没有行动权，隐藏行动栏
   if (heroSpectating) return null;
@@ -98,7 +114,10 @@ export default function ActionBar() {
     <div className="sticky bottom-0 z-10 border-t border-neutral-800 bg-neutral-950/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-3">
         {mode && (
-          <div className="flex flex-wrap items-center gap-3 rounded-xl bg-neutral-900 p-3">
+          <div
+            id="poker-sizing-panel"
+            className="flex flex-wrap items-center gap-3 rounded-xl bg-neutral-900 p-3"
+          >
             <span className="text-sm font-semibold text-neutral-200">
               {mode === "bet" ? t("action.betTo") : t("action.raiseTo")}
               <span className="ml-2 text-lg tabular-nums text-amber-300">
@@ -114,7 +133,7 @@ export default function ActionBar() {
               value={amount}
               disabled={!heroTurn}
               onChange={(e) => setAmount(Number(e.target.value))}
-              className="min-w-40 flex-1 accent-amber-400 max-md:min-w-full"
+              className="min-w-40 flex-1 accent-amber-400 max-md:h-8 max-md:min-w-full"
               aria-label={t("action.betAmount")}
             />
             {([["action.halfPot", 0.5], ["action.threeQuarterPot", 0.75]] as const).map(([key, f]) => (
@@ -235,7 +254,8 @@ export default function ActionBar() {
             <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="text-xs text-neutral-500">
                 {aiThinking ? t("action.aiThinking") : t("action.waitingOpponents")}{" "}
-                {t("action.preActionLabel")}
+                {/* 移动端省一行纵向空间（按钮文本已自解释），桌面端保留 */}
+                <span className="max-md:hidden">{t("action.preActionLabel")}</span>
               </span>
               {(
                 [

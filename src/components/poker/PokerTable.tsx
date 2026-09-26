@@ -81,8 +81,10 @@ function RotateHint({ show }: { show: boolean }) {
     return () => mq.removeEventListener("change", update);
   }, [show]);
   if (!visible) return null;
+  // 在文档流内渲染（非 fixed）：横幅仅出现于 <390px 竖屏 9 人桌，fixed 会压住
+  // 锦标赛 HUD 第二行；在流内把牌桌微微下推即可，桌面端永不渲染不受影响。
   return (
-    <div className="fixed inset-x-0 top-16 z-30 mx-auto flex w-fit max-w-[88vw] items-center gap-2 rounded-full border border-amber-700/60 bg-neutral-900/95 px-3 py-1.5 text-[11px] text-amber-200 shadow-xl">
+    <div className="mx-auto mb-1 flex w-fit max-w-[88vw] items-center gap-2 rounded-full border border-amber-700/60 bg-neutral-900/95 px-3 py-1.5 text-[11px] text-amber-200 shadow-xl">
       <span>{t("table.rotateHint")}</span>
       <button
         type="button"
@@ -95,7 +97,7 @@ function RotateHint({ show }: { show: boolean }) {
           }
           setVisible(false);
         }}
-        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-sm font-bold text-amber-300 hover:bg-neutral-800"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-amber-300 hover:bg-neutral-800"
       >
         ×
       </button>
@@ -139,12 +141,15 @@ function BetDisc({
   );
 }
 
-/** 思考中三点动画 */
-function ThinkingDots() {
+/** 思考中三点动画；dotsOnly（紧凑模式窄列放不下文字）只留三点 */
+function ThinkingDots({ dotsOnly = false }: { dotsOnly?: boolean }) {
   const { t } = useI18n();
   return (
-    <span className="inline-flex items-end gap-1 text-[10px] text-emerald-200">
-      {t("action.thinking")}
+    <span
+      className="inline-flex items-end gap-1 whitespace-nowrap text-[10px] text-emerald-200"
+      aria-label={t("action.thinking")}
+    >
+      {dotsOnly ? null : t("action.thinking")}
       {[0, 1, 2].map((i) => (
         <span
           key={i}
@@ -240,7 +245,7 @@ function SeatPod({ seat, compact = false }: SeatPodProps) {
       <div className={`flex items-center ${compact ? "gap-1" : "gap-2"}`}>
         {/* 发牌滑入方向：hero 在底部，牌堆在其上方（-y）；其余座位牌堆在其下方（+y） */}
         <div
-          className="flex gap-1"
+          className="relative flex gap-1"
           style={{ "--pk-deal-y": isHero ? "-70px" : "60px" } as CSSProperties}
         >
           {cards.map((c, i) => (
@@ -253,6 +258,21 @@ function SeatPod({ seat, compact = false }: SeatPodProps) {
               animDelay={i * 90}
             />
           ))}
+          {/* 紧凑模式窄列放不下文字徽标：已弃牌/ALL-IN 改为覆盖在底牌上 */}
+          {compact && player.folded && (
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="whitespace-nowrap rounded bg-neutral-700/90 px-1.5 py-0.5 text-[10px] text-neutral-300">
+                {t("table.folded")}
+              </span>
+            </span>
+          )}
+          {compact && player.allIn && (
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="whitespace-nowrap rounded bg-rose-800/90 px-1.5 py-0.5 text-[10px] font-bold text-rose-100">
+                ALL-IN
+              </span>
+            </span>
+          )}
         </div>
         <div className="flex flex-col items-start">
           <span
@@ -260,13 +280,15 @@ function SeatPod({ seat, compact = false }: SeatPodProps) {
           >
             {stack}
           </span>
-          {isTurn && !isHero && aiThinking && <ThinkingDots />}
-          {player.folded && (
+          {isTurn && !isHero && aiThinking && (
+            <ThinkingDots dotsOnly={compact} />
+          )}
+          {!compact && player.folded && (
             <span className="rounded bg-neutral-700/80 px-1.5 py-0.5 text-[10px] text-neutral-300">
               {t("table.folded")}
             </span>
           )}
-          {player.allIn && (
+          {!compact && player.allIn && (
             <span className="rounded bg-rose-800/80 px-1.5 py-0.5 text-[10px] font-bold text-rose-100">
               ALL-IN
             </span>
@@ -361,7 +383,11 @@ export default function PokerTable() {
     <div className="mx-auto w-full max-w-5xl">
       <PokerAnimStyles />
       <RotateHint show={n === 9} />
-      <div className="relative aspect-[4/5] md:aspect-[8/5]">
+      {/* 牌桌容器：紧凑模式纵横比 10/11（比初版 4/5 矮 ~12%，9 人桌 + 横屏提示
+          + 信息条 + 行动栏在 667px 高视口内基本一屏放下，底排座位不被吸附的
+          行动栏遮盖）；矩形环/毛毡/中央均为 % 坐标，随容器自适应。
+          桌面端 md:aspect-[8/5] 与原版一致 */}
+      <div className="relative aspect-[10/11] md:aspect-[8/5]">
         {/* 毛毡：移动端内缩给环形座位让位；桌面端（md:）铺满，像素与原版一致 */}
         <div
           className="absolute inset-x-[6%] inset-y-[10%] rounded-[50%] border-[6px] border-amber-950 shadow-2xl md:inset-0 md:border-[10px]"
@@ -457,6 +483,7 @@ export default function PokerTable() {
               <div
                 className="absolute -translate-x-1/2 -translate-y-1/2"
                 style={podStyle}
+                {...(j === HERO_SEAT ? { id: "poker-hero-pod" } : {})}
               >
                 <SeatPod seat={p.seat} compact={compact} />
               </div>
