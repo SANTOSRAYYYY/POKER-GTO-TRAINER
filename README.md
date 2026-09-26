@@ -6,7 +6,7 @@
 > - Run it: `npm install && npm run dev`, open http://localhost:3000
 > - Tests: `npm test` (625 unit/integration tests), `npm run test:e2e` (browser smoke, needs `npx playwright install chromium`)
 > - AI opponents run 100% locally (heuristic engine — Monte Carlo equity, range inference, opponent modeling); plug in any OpenAI-compatible API key in **Settings** to unlock LLM opponents and LLM coaching (your key stays in your browser's localStorage)
-> - Self-play research harness in `scripts/selfplay/` (seeded paired matches, bb/100 + 95% CI) — every shipped AI mechanism was validated on 10k-500k hands before being enabled; reports in `scripts/selfplay/results/`
+> - Self-play research harness in `scripts/selfplay/` (seeded paired matches, bb/100 + 95% CI) — every shipped AI mechanism was validated on 10k-500k hands before being enabled; curated reports in `docs/research/`
 > - License: MIT (see `LICENSE`)
 
 一个本地运行的无限注德州扑克（No-Limit Hold'em）训练器：支持 2-9 人桌，你坐在牌桌一端，其余座位是不同风格的 AI 对手。打完的每一手牌都可以回放、交给 LLM 教练逐街复盘点评。**界面支持中英文切换（导航栏右侧 `EN`/`中文` 开关）。**
@@ -30,7 +30,7 @@
 - **GTO 参考线**：回放时 hero 的每个决策点旁显示参考徽章——实算胜率（蒙特卡洛）+ 建议动作倾向（加注/跟注/过牌/弃牌，含置信度）；统一标注「启发式参考线，非 solver 精确解」
 - **对手笔记本**：AI 对 hero 的长期画像跨 session 持久化（近因衰减记忆），AI 越打越懂你；数据中心可查看「AI 眼中的你」并重置
 - **移动端适配**：小屏下信息侧栏默认折叠为悬浮窄条/抽屉，牌桌环形座位与动画按视口宽度自适应，行动栏适配触屏（隐藏键盘快捷键提示）
-- **E2E 冒烟**：6 条 Playwright 真实浏览器用例（大厅开局/弃牌自动下一手/历史回放/数据中心/训练器答题/设置持久化），见 `e2e/README.md`
+- **E2E 冒烟**：7 条 Playwright 真实浏览器用例（大厅开局/弃牌自动下一手/历史回放/数据中心/训练器答题/设置持久化），见 `e2e/README.md`
 
 ## 锦标赛结构（SNG）
 
@@ -133,5 +133,5 @@ npm run build     # 生产构建（Turbopack）
 
 # E2E（首次先装浏览器）
 npx playwright install chromium
-npm run test:e2e  # 6 条真实浏览器冒烟，自动起 dev server（端口 3105）
+npm run test:e2e  # 7 条真实浏览器冒烟，自动起 dev server（端口 3105）
 ```
