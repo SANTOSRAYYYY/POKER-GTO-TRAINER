@@ -1,0 +1,21 @@
+{
+  "seats": 8,
+  "hands": 4,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 42,
+  "resetStacksEachHand": true,
+  "handConcurrency": 12,
+  "progressEvery": 1,
+  "seatBrains": [
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "kimi-for-coding", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "kimi-for-coding", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-flash", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-flash", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-v4-pro", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-v4-pro", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } }
+  ]
+}

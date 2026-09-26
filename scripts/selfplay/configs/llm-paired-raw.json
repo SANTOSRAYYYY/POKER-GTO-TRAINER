@@ -1,0 +1,23 @@
+{
+  "_note": "配对臂 B：座位 0 = gto 启发式基准 vs seat0Alt = flash raw 裸模型（生产实战参数）。与 llm-paired-agent.json 同种子同场子，两臂 A 完全一致、发牌逐手一致。",
+  "seats": 8,
+  "hands": 300,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 42,
+  "resetStacksEachHand": true,
+  "handConcurrency": 12,
+  "progressEvery": 50,
+  "seatBrains": [
+    { "style": "gto" },
+    { "style": "gto" },
+    { "style": "gto" },
+    { "style": "gto" },
+    { "style": "gto" },
+    { "style": "gto" },
+    { "style": "gto" },
+    { "style": "gto" }
+  ],
+  "seat0Alt": { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-flash", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } }
+}

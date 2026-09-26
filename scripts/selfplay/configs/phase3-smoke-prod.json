@@ -1,0 +1,17 @@
+{
+  "seats": 6,
+  "hands": 3000,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 7,
+  "progressEvery": 500,
+  "seatBrains": [
+    { "style": "gto" },
+    { "style": "gto" },
+    { "style": "gto" },
+    { "style": "gto" },
+    { "style": "gto" },
+    { "style": "gto" }
+  ]
+}

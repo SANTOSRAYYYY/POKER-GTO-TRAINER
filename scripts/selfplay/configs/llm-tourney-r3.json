@@ -1,0 +1,156 @@
+{
+  "_note": "锦标赛大乱斗 R45((s-42))：100bb/rebuy×6/座位随机 seed 45",
+  "seats": 8,
+  "hands": 150,
+  "masterSeed": 45,
+  "tournament": {
+    "levels": [
+      {
+        "smallBlind": 10,
+        "bigBlind": 20,
+        "ante": 0
+      },
+      {
+        "smallBlind": 15,
+        "bigBlind": 30,
+        "ante": 0
+      },
+      {
+        "smallBlind": 25,
+        "bigBlind": 50,
+        "ante": 0
+      },
+      {
+        "smallBlind": 50,
+        "bigBlind": 100,
+        "ante": 12
+      },
+      {
+        "smallBlind": 75,
+        "bigBlind": 150,
+        "ante": 18
+      },
+      {
+        "smallBlind": 100,
+        "bigBlind": 200,
+        "ante": 25
+      },
+      {
+        "smallBlind": 150,
+        "bigBlind": 300,
+        "ante": 37
+      },
+      {
+        "smallBlind": 200,
+        "bigBlind": 400,
+        "ante": 50
+      },
+      {
+        "smallBlind": 300,
+        "bigBlind": 600,
+        "ante": 75
+      },
+      {
+        "smallBlind": 400,
+        "bigBlind": 800,
+        "ante": 100
+      }
+    ],
+    "handsPerLevel": 10,
+    "startStack": 2000,
+    "rebuysAllowed": 6
+  },
+  "shuffleSeats": true,
+  "handConcurrency": 12,
+  "progressEvery": 5,
+  "seatBrains": [
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "moonshot",
+        "model": "k3",
+        "agent": true,
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "moonshot",
+        "model": "k3",
+        "agent": false,
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "moonshot",
+        "model": "kimi-for-coding",
+        "agent": true,
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "moonshot",
+        "model": "kimi-for-coding",
+        "agent": false,
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "agent": true,
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "agent": false,
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "agent": true,
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "agent": false,
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    }
+  ]
+}

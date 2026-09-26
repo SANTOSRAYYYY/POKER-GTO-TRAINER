@@ -1,0 +1,19 @@
+{
+  "_note": "agent 层病灶诊断局：4 人桌全 K3（2×full + 2×raw），现金 5/10 100bb，resetStacksEachHand 消方差，串行（配额有限），logDecisions 全量决策原文。",
+  "seats": 4,
+  "hands": 30,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 42,
+  "resetStacksEachHand": true,
+  "handConcurrency": 1,
+  "logDecisions": true,
+  "progressEvery": 5,
+  "seatBrains": [
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "seats": 6,
+  "hands": 30,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 7,
+  "seatBrains": [
+    { "style": "gto" },
+    { "style": "tag" },
+    { "style": "nit" },
+    { "style": "lag" },
+    { "style": "maniac" },
+    { "style": "calling_station" }
+  ]
+}

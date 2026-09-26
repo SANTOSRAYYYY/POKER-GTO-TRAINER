@@ -1,0 +1,21 @@
+{
+  "_note": "prompt 变体烟测：6 人桌全 K3，五档 promptMode 各一 + 补位 raw，8 手串行，验证各变体 prompt 正确且 fallback≈0。",
+  "seats": 6,
+  "hands": 8,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 42,
+  "resetStacksEachHand": true,
+  "handConcurrency": 1,
+  "logDecisions": true,
+  "progressEvery": 1,
+  "seatBrains": [
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": true, "promptMode": "full", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "promptMode": "slim", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "promptMode": "stats", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "promptMode": "models", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "promptMode": "raw", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "promptMode": "raw", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } }
+  ]
+}

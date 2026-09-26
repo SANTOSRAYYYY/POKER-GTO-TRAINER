@@ -1,0 +1,19 @@
+{
+  "seats": 6,
+  "hands": 12000,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 43,
+  "resetStacksEachHand": true,
+  "progressEvery": 2000,
+  "seatBrains": [
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25, "preflopRangeModeEnabled": false } },
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25 } },
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25 } },
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25 } },
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25 } },
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25 } }
+  ],
+  "seat0Alt": { "style": "gto", "tuning": { "equityIterationsScale": 0.25, "preflopRangeModeEnabled": true } }
+}

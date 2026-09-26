@@ -1,0 +1,19 @@
+{
+  "seats": 6,
+  "hands": 15000,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 44,
+  "resetStacksEachHand": true,
+  "progressEvery": 1000,
+  "seatBrains": [
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25, "warGuardEnabled": false } },
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25, "warGuardEnabled": false } },
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25, "warGuardEnabled": false } },
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25, "warGuardEnabled": false } },
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25, "warGuardEnabled": false } },
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25, "warGuardEnabled": false } }
+  ],
+  "seat0Alt": { "style": "gto", "tuning": { "equityIterationsScale": 0.25 } }
+}

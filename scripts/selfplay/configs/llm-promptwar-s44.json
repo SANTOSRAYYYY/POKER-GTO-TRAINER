@@ -1,0 +1,87 @@
+{
+  "_note": "prompt 变体确认赛 seed44",
+  "seats": 6,
+  "hands": 120,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 44,
+  "resetStacksEachHand": true,
+  "handConcurrency": 1,
+  "logDecisions": true,
+  "progressEvery": 5,
+  "seatBrains": [
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "moonshot",
+        "model": "k3",
+        "agent": true,
+        "promptMode": "full",
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "moonshot",
+        "model": "k3",
+        "agent": false,
+        "promptMode": "slim",
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "moonshot",
+        "model": "k3",
+        "agent": false,
+        "promptMode": "stats",
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "moonshot",
+        "model": "k3",
+        "agent": false,
+        "promptMode": "models",
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "moonshot",
+        "model": "k3",
+        "agent": false,
+        "promptMode": "raw",
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    },
+    {
+      "style": "gto",
+      "llm": {
+        "provider": "moonshot",
+        "model": "k3",
+        "agent": false,
+        "promptMode": "raw",
+        "reasoningEffort": "high",
+        "thinkingEnabled": true,
+        "maxTokens": 384000
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "_note": "锦标赛大乱斗正式赛：8 座全 LLM（生产实战参数 thinking high + maxTokens 384000），100bb 起步（levels[0] 10/20 → startStack 2000），每 10 手升盲（DEFAULT_BLIND_LEVELS 全 10 级），rebuy 每座位最多 6 次（归零立即买回 2000），maxHands=400，座位随机映射（seed 42）。筹码结转 ⇒ 强制顺序执行（conc 12 会被忽略并告警）。",
+  "seats": 8,
+  "hands": 400,
+  "masterSeed": 42,
+  "tournament": {
+    "levels": [
+      { "smallBlind": 10, "bigBlind": 20, "ante": 0 },
+      { "smallBlind": 15, "bigBlind": 30, "ante": 0 },
+      { "smallBlind": 25, "bigBlind": 50, "ante": 0 },
+      { "smallBlind": 50, "bigBlind": 100, "ante": 12 },
+      { "smallBlind": 75, "bigBlind": 150, "ante": 18 },
+      { "smallBlind": 100, "bigBlind": 200, "ante": 25 },
+      { "smallBlind": 150, "bigBlind": 300, "ante": 37 },
+      { "smallBlind": 200, "bigBlind": 400, "ante": 50 },
+      { "smallBlind": 300, "bigBlind": 600, "ante": 75 },
+      { "smallBlind": 400, "bigBlind": 800, "ante": 100 }
+    ],
+    "handsPerLevel": 10,
+    "startStack": 2000,
+    "rebuysAllowed": 6
+  },
+  "shuffleSeats": true,
+  "handConcurrency": 12,
+  "progressEvery": 5,
+  "seatBrains": [
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "kimi-for-coding", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "kimi-for-coding", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-flash", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-flash", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-v4-pro", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-v4-pro", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } }
+  ]
+}

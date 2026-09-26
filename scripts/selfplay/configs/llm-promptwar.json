@@ -1,0 +1,21 @@
+{
+  "_note": "prompt 变体正式赛：6 人桌全 K3（full/slim/stats/models/raw/raw），hands=120，resetStacksEachHand，串行（配额有限）。按烟测实测 ~140-250s/手预估 4.7-8.3h；不许跑，等确认。",
+  "seats": 6,
+  "hands": 120,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 42,
+  "resetStacksEachHand": true,
+  "handConcurrency": 1,
+  "logDecisions": true,
+  "progressEvery": 5,
+  "seatBrains": [
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": true, "promptMode": "full", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "promptMode": "slim", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "promptMode": "stats", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "promptMode": "models", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "promptMode": "raw", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "promptMode": "raw", "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } }
+  ]
+}

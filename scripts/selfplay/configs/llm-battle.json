@@ -1,0 +1,22 @@
+{
+  "_note": "模型大战混战正式赛：生产实战参数（thinking enabled + reasoning_effort high + maxTokens 384000，moonshot 侧 400 时运行时按阶梯降档并记入 meta.llmRuntime）。hands=200 为预估值：high 思考单决策 20-60s、一手 15-25 决策、conc 12 下预计 1.5-3h；若 llm-smoke-think 实测推算超 3.5h，降为 150。",
+  "seats": 8,
+  "hands": 200,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 42,
+  "resetStacksEachHand": true,
+  "handConcurrency": 12,
+  "progressEvery": 10,
+  "seatBrains": [
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "k3", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "kimi-for-coding", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "moonshot", "model": "kimi-for-coding", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-flash", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-flash", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-v4-pro", "agent": true, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } },
+    { "style": "gto", "llm": { "provider": "deepseek", "model": "deepseek-v4-pro", "agent": false, "reasoningEffort": "high", "thinkingEnabled": true, "maxTokens": 384000 } }
+  ]
+}
