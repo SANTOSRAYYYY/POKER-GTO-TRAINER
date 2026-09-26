@@ -1,7 +1,11 @@
 import type { AIStyle, GameMode } from "@/lib/types";
 import TableScreen from "@/components/poker/TableScreen";
 import type { TableConfig } from "@/lib/store/gameStore";
-import { DEFAULT_TOURNAMENT } from "@/lib/poker/tournament";
+import {
+  DEFAULT_TOURNAMENT,
+  extendLevelsInfinite,
+  INFINITE_TOTAL_LEVELS,
+} from "@/lib/poker/tournament";
 
 const VALID_STYLES: readonly AIStyle[] = [
   "nit",
@@ -22,16 +26,35 @@ function parsePositiveInt(v: string | undefined, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
+/** 有限数钳制进 [min, max]；非法（非数值）回退 fallback */
+function parseClampedInt(
+  v: string | undefined,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  const n = Number.parseInt(v ?? "", 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
 function parseSeats(v: string | undefined): number {
   const n = Number.parseInt(v ?? "", 10);
   return Number.isFinite(n) && n >= 2 && n <= 9 ? n : 2;
 }
 
 /**
- * /play?mode=cash|tournament&seats=2-9&aiStyle=random&sb=1&bb=2&buyin=200&rebuys=0-3
+ * /play?mode=cash|tournament&seats=2-9&aiStyle=random&sb=1&bb=2&buyin=200
+ *   &rebuys=0-99&hpl=1-50&blindMode=limited|infinite&rebuyPeriod=0-10
  * 缺省：mode=cash、seats=2、aiStyle=random；现金局盲注 1/2、买入 100bb；
  * 锦标赛忽略 sb/bb/buyin，使用默认升盲结构（1500 筹码 / 每 8 手升级），
- * rebuys 为每人可重购次数（0-3，默认 0）。
+ * 其中：
+ * - rebuys 为每人可重购次数（0-99，默认 0）；
+ * - hpl 为每几手升一级（1-50，默认 8）；
+ * - blindMode=infinite 时升盲表扩展为「无限升盲」（原 10 级后大盲继续
+ *   翻倍，预生成至 40 级），其余值按限制级别（10 级表到顶停住）处理；
+ * - rebuyPeriod 为重购期级数（前 N 级可重购，0-10，默认 4）。
+ * 各参数非法时回退对应默认值。
  *
  * 恢复规则（config 仅作无存档时的回退新局配置）：
  * - ?resume=1，或不带任何开局参数直达 /play：优先从 localStorage 存档
@@ -59,17 +82,41 @@ export default async function PlayPage({
     config.cashBlinds = { sb: Math.min(smallBlind, bigBlind), bb: bigBlind };
     config.buyin = parsePositiveInt(first(sp.buyin), bigBlind * 100);
   } else {
-    // 锦标赛：忽略 sb/bb/buyin，store 内使用 DEFAULT_TOURNAMENT + rebuys
-    const rebuysRaw = Number.parseInt(first(sp.rebuys) ?? "", 10);
-    const rebuysAllowed =
-      Number.isFinite(rebuysRaw) ? Math.min(3, Math.max(0, rebuysRaw)) : 0;
-    config.tournament = { ...DEFAULT_TOURNAMENT, rebuysAllowed };
+    // 锦标赛：忽略 sb/bb/buyin，store 内使用 DEFAULT_TOURNAMENT + URL 覆盖项
+    const rebuysAllowed = parseClampedInt(first(sp.rebuys), 0, 99, 0);
+    const handsPerLevel = parseClampedInt(
+      first(sp.hpl),
+      1,
+      50,
+      DEFAULT_TOURNAMENT.handsPerLevel,
+    );
+    const rebuyPeriodLevels = parseClampedInt(first(sp.rebuyPeriod), 0, 10, 4);
+    const levels =
+      first(sp.blindMode) === "infinite"
+        ? extendLevelsInfinite(DEFAULT_TOURNAMENT.levels, INFINITE_TOTAL_LEVELS)
+        : DEFAULT_TOURNAMENT.levels;
+    config.tournament = {
+      ...DEFAULT_TOURNAMENT,
+      levels,
+      handsPerLevel,
+      rebuysAllowed,
+      rebuyPeriodLevels,
+    };
   }
 
   // 显式 resume=1，或未带任何开局参数直达 /play（含刷新后的裸地址）：尝试恢复存档
-  const hasStartParams = ["mode", "seats", "aiStyle", "sb", "bb", "buyin", "rebuys"].some(
-    (k) => first(sp[k]) !== undefined,
-  );
+  const hasStartParams = [
+    "mode",
+    "seats",
+    "aiStyle",
+    "sb",
+    "bb",
+    "buyin",
+    "rebuys",
+    "hpl",
+    "blindMode",
+    "rebuyPeriod",
+  ].some((k) => first(sp[k]) !== undefined);
   const resume = first(sp.resume) === "1" || !hasStartParams;
 
   return <TableScreen config={config} resume={resume} />;

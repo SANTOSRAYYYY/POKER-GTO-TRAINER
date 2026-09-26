@@ -151,8 +151,8 @@ export const TABLE_DICT = {
   },
   "tour.levelUp": { zh: "盲注升级！", en: "Blinds Up!" },
   "tour.rebuyHint": {
-    zh: "重购期内（前 4 级）筹码归零可买回起始筹码",
-    en: "During the rebuy period (first 4 levels), busting lets you buy back the starting stack",
+    zh: "重购期内（前 {n} 级）筹码归零可买回起始筹码",
+    en: "During the rebuy period (first {n} levels), busting lets you buy back the starting stack",
   },
   "tour.rebuyDisabled": { zh: "重购已停用", en: "Rebuys disabled" },
   "tour.rebuysLeft": { zh: "剩余重购 {n} 次", en: "{n} rebuys left" },

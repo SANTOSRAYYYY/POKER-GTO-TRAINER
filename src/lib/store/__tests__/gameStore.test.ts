@@ -158,13 +158,13 @@ describe("startTable 开桌", () => {
     expect(s.seatMap).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
     expect(g.buttonSeat).toBe(0); // 第 1 手 hero 坐按钮位
     expect(g.handNumber).toBe(1);
-    // DEFAULT_TOURNAMENT 第 0 级 10/20 无 ante
+    // DEFAULT_TOURNAMENT 第 0 级 10/20，ante = 大盲 20
     expect(g.smallBlind).toBe(10);
     expect(g.bigBlind).toBe(20);
-    expect(g.ante).toBe(0);
-    // 盲注落在按钮左邻两座
-    expect(g.players[1].stack).toBe(1490);
-    expect(g.players[2].stack).toBe(1480);
+    expect(g.ante).toBe(20);
+    // 盲注落在按钮左邻两座；每人另付 ante 20（死钱）
+    expect(g.players[1].stack).toBe(1470); // 1500 − 20 ante − 10 小盲
+    expect(g.players[2].stack).toBe(1460); // 1500 − 20 ante − 20 大盲
     // 筹码守恒：Σ stack + pot === 9 × 1500
     const total =
       g.players.reduce((sum, p) => sum + p.stack, 0) + g.pot;
@@ -307,7 +307,7 @@ describe("锦标赛升盲", () => {
     expect(st().levelHandsLeft).toBe(8);
     expect(st().levelUpEvent).toEqual({
       level: 1,
-      blinds: { smallBlind: 15, bigBlind: 30, ante: 0 },
+      blinds: { smallBlind: 15, bigBlind: 30, ante: 30 },
     });
     // 第 9 手：用新盲注 15/30，事件在开手时清除
     if (st().game!.handOver) await st().advanceToNextHand();
@@ -748,6 +748,95 @@ describe("重购期判定以出局手所在级别为准", () => {
     expect(st().rebuysUsed[0]).toBe(1);
     expect(st().stacks[HERO_SEAT]).toBe(1500);
     expect(st().eliminated).toEqual([false, false, false]);
+  });
+});
+
+describe("自定义重购期级数（rebuyPeriodLevels）", () => {
+  it("前 N 级可重购、第 N+1 级起不可：N=2 时第 1/2 级归零自动重购，第 3 级归零淘汰", async () => {
+    // handsPerLevel=1：每手结束即升盲；rebuysAllowed 给到 5 以隔离次数因素
+    const tc = {
+      ...DEFAULT_TOURNAMENT,
+      handsPerLevel: 1,
+      rebuysAllowed: 5,
+      rebuyPeriodLevels: 2,
+    };
+    await st().startTable({ mode: "tournament", seats: 3, aiStyle: "tag", tournament: tc });
+    expect(st().blindLevel).toBe(0);
+
+    // 第 1 级（索引 0 < 2）：AI 1 归零 → 自动重购
+    craftHandOver([1500, 0, 3000], [2]);
+    st().finalizeHand();
+    let s = st();
+    expect(s.blindLevel).toBe(1); // 每手必升
+    expect(s.rebuysUsed).toEqual([0, 1, 0]);
+    expect(s.eliminated).toEqual([false, false, false]);
+    expect(s.tableStacks).toEqual([1500, 1500, 3000]);
+
+    // 第 2 级（索引 1 < 2）：仍在重购期，AI 1 再次归零仍自动重购
+    craftHandOver([1500, 0, 4500], [2]);
+    st().finalizeHand();
+    s = st();
+    expect(s.blindLevel).toBe(2);
+    expect(s.rebuysUsed).toEqual([0, 2, 0]);
+    expect(s.eliminated).toEqual([false, false, false]);
+    expect(s.tableStacks).toEqual([1500, 1500, 4500]);
+
+    // 第 3 级（索引 2 ≥ 2）：重购期结束，AI 1 归零 = 正常淘汰（次数仍有剩余也不救）
+    craftHandOver([1500, 0, 6000], [2]);
+    st().finalizeHand();
+    s = st();
+    expect(s.blindLevel).toBe(3);
+    expect(s.rebuysUsed).toEqual([0, 2, 0]); // 不再消耗次数
+    expect(s.eliminated).toEqual([false, true, false]);
+    expect(s.finishPlaces[1]).toBe(3);
+    expect(s.bustEvents).toEqual([{ seat: 1, place: 3 }]);
+    expect(s.tableStacks).toEqual([1500, 0, 6000]);
+  });
+
+  it("hero 归零在自定义重购期内同样弹重购提示（N=1，第 1 级）", async () => {
+    const tc = {
+      ...DEFAULT_TOURNAMENT,
+      handsPerLevel: 1,
+      rebuysAllowed: 1,
+      rebuyPeriodLevels: 1,
+    };
+    await st().startTable({ mode: "tournament", seats: 3, aiStyle: "tag", tournament: tc });
+    // 第 1 级（索引 0 < 1）：hero 归零 → 提示重购而非淘汰
+    craftHandOver([0, 3000, 1500], [1]);
+    st().finalizeHand();
+    expect(st().pendingHeroBust).not.toBeNull();
+    expect(st().eliminated).toEqual([false, false, false]);
+    await st().resolveTournamentRebuy(true);
+    expect(st().rebuysUsed[0]).toBe(1);
+
+    // 第 2 级（索引 1 ≥ 1）：重购期已过，hero 归零 = 直接淘汰观战
+    craftHandOver([0, 3000, 1500], [1]);
+    st().finalizeHand();
+    const s = st();
+    expect(s.pendingHeroBust).toBeNull();
+    expect(s.eliminated).toEqual([true, false, false]);
+    expect(s.finishPlaces[0]).toBe(3);
+    expect(s.heroSpectating).toBe(true);
+    expect(s.fastForward).toBe(true);
+  });
+
+  it("rebuyPeriodLevels=0：全程不可重购（次数再多也直接淘汰）；负数归一化为 0", async () => {
+    const tc = {
+      ...DEFAULT_TOURNAMENT,
+      rebuysAllowed: 5,
+      rebuyPeriodLevels: -3, // 非法：归一化钳到 0
+    };
+    await st().startTable({ mode: "tournament", seats: 3, aiStyle: "tag", tournament: tc });
+    expect(st().tournamentConfig!.rebuyPeriodLevels).toBe(0);
+
+    // 第 1 级即无重购期：AI 1 归零直接淘汰
+    craftHandOver([1500, 0, 3000], [2]);
+    st().finalizeHand();
+    const s = st();
+    expect(s.rebuysUsed).toEqual([0, 0, 0]);
+    expect(s.eliminated).toEqual([false, true, false]);
+    expect(s.bustEvents).toEqual([{ seat: 1, place: 3 }]);
+    expect(s.tableStacks).toEqual([1500, 0, 3000]);
   });
 });
 

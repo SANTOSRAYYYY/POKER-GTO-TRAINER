@@ -1,13 +1,227 @@
-# PokerGTO Trainer — 德州扑克 AI 训练器
+# PokerGTO Trainer
 
-> **English**: PokerGTO Trainer is a local-first No-Limit Hold'em training app (2-9 handed) with style-driven AI opponents, tournament SNG mode, hand replay with per-decision reference lines, an LLM coach for hand/session reviews, a personal HUD, and quiz trainers. **UI is bilingual — use the `EN`/`中文` toggle in the top nav.**
+**An open-source, local-first No-Limit Hold'em trainer whose AI opponents are *proven* by large-scale self-play — every shipped mechanic carries a measured bb/100 and a 95% CI, not a hunch.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
+[![TypeScript 7](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tests: 625 passing](https://img.shields.io/badge/tests-625%20passing-brightgreen)](#tests)
+[![E2E: Playwright](https://img.shields.io/badge/E2E-Playwright%20smoke-45ba4b?logo=playwright&logoColor=white)](e2e/README.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
+
+**[▶ Play the live demo](https://poker-nu-steel.vercel.app)** · **[GitHub repo](https://github.com/SANTOSRAYYYY/POKER-GTO-TRAINER)** · 中文详细文档见下文
+
+Play 2–9 handed NLHE against style-driven AI opponents — cash games and tournament SNGs — then replay every hand with per-decision reference lines, get an LLM coach review, track your own HUD stats, and drill leaks in quiz trainers. Runs 100% in your browser; plug in any OpenAI-compatible key to unlock LLM opponents and coaching. **Bilingual UI: `EN`/`中文` toggle in the top nav.**
+
+## Why this is different
+
+This is not another poker UI. Three things set it apart:
+
+### 1. Every AI mechanic is validated by seeded self-play
+
+Each shipped mechanism was A/B-tested on 10k–500k hands in a paired-deal simulator (same cards to both arms, seat 0 as the only variable, zero-sum verified per match). The adoption bar is a **fully-positive merged 95% CI** — measured in bb/100:
+
+| Mechanism | Measured net effect (bb/100, paired self-play) | Status |
+| --- | --- | --- |
+| **Range inference engine** — equity vs the raiser's implied range instead of vs random | **+104.1** (n=96k, 95% CI [+95.6, +112.7]); **+156.8** at 200bb deep | ✅ default ON |
+| **Raise-war guardrails** — depth-aware caps that break infinite re-raise chains | fixes chains measured at −598 bb/100/seat; **+19.9** at 200bb, ≈0 at 100bb (value ∝ stack depth) | ✅ default ON |
+| **Opponent modeling v2** — positional VPIP/PFR buckets + recency-weighted memory (λ=0.92) | **+21.3** (n=45k, 95% CI [+13.4, +29.2]) | ✅ default ON |
+| **Preflop range closure** — real equity vs the raiser's opening range (169×5 offline table) | +5.3 at 100bb → **+29.7** at 200bb (95% CI [+9.7, +49.7]) | ✅ default ON |
+| **Slim LLM prompt** — facts only, zero strategy preaching | the only variant profitable in both 240-hand battles; agent-style prompts lost in 5 of 6 matchups | ✅ default |
+
+Just as telling are the mechanisms that **failed validation and stay off by default**: showdown learning (+3.9, CI crosses zero), blocker effects (+0.1, precisely zero), ICM heuristics (rank impact exactly 0.000 across 30 SNGs). The code ships with the knobs — the defaults ship with the evidence. Full write-ups live in [`docs/research/`](docs/research/).
+
+### 2. Two engines, one interface
+
+AI decisions run on a fast, free, fully local **heuristic engine** (Monte Carlo equity, range inference, opponent modeling) — or on **any OpenAI-compatible LLM** you point it at (DeepSeek, Kimi, Moonshot, OpenRouter, …), with per-decision reasoning shown. No key configured or the API fails? It falls back to the heuristic engine silently. **No API key needed to play.**
+
+### 3. A complete training loop, not a single feature
+
+**Play** a hand → **replay** it street by street → compare each decision against the **reference line** (real equity + suggested action, with confidence) → get an **LLM coach review** (per-street ratings + 0–100 score, cached so you never pay twice) → watch your own **HUD** (VPIP/PFR/AF/WTSD, profit curves, per-position splits) → drill the leak in **targeted trainers** (push/fold, postflop equity quizzes). Meanwhile the AI builds a persistent model of *you* across sessions — check "you through the AI's eyes" in the stats page.
+
+## Screenshots
+
+<!--
+Screenshots to add under docs/images/ — drop the files in, then remove this comment block.
+
+| File | Suggested content |
+| --- | --- |
+| docs/images/table.png | 6-max cash table mid-hand, collapsible sidebar open showing equity / pot odds / AI panel |
+| docs/images/replay.png | Hand replay: per-decision GTO reference badges + LLM coach review panel |
+| docs/images/stats.png | /stats personal HUD: VPIP/PFR/AF/WTSD cards, profit curve, per-position breakdown |
+
+<p align="center">
+  <img src="docs/images/table.png" width="32%" alt="6-max table with live odds sidebar">
+  <img src="docs/images/replay.png" width="32%" alt="Hand replay with reference line">
+  <img src="docs/images/stats.png" width="32%" alt="Personal HUD in the stats center">
+</p>
+-->
+
+## Features
+
+### Training
+
+| Feature | What you get |
+| --- | --- |
+| Hand replay | Every hand auto-saved to IndexedDB; step through streets, actions and pot changes with position/style/rank annotations |
+| GTO reference line | Per-decision badge on every hero decision: Monte Carlo equity + suggested action with confidence (honestly labeled "heuristic reference, not solver-exact") |
+| LLM coach review | Per-street ratings + comments + overall 0–100 score, multiway-aware; results cached — never billed twice |
+| Personal HUD `/stats` | VPIP/PFR/AF/WTSD with positional buckets, profit curve, per-position and per-style P&L, last-50/100-hand segments, full-session LLM review |
+| Quiz trainers `/trainer` | Preflop push/fold (HU SB, random 5–15bb depths) + postflop equity-driven drills, scored separately |
+| Range charts | 13×13 matrix: 9-max opening ranges by position + HU button/big-blind attack & defense |
+| Equity calculator | Monte Carlo any hole cards vs 1–8 opponents (random or assigned) on any board |
+
+### AI
+
+| Feature | What you get |
+| --- | --- |
+| Dual decision engine | Local heuristic (instant, free) or LLM with per-decision reasoning; automatic fallback — fully playable with no key |
+| 6+ styles | Nit / TAG / LAG / Maniac / Calling station / GTO, plus a "random" mode with hidden per-seat assignments |
+| Range inference engine | Equity vs implied ranges instead of vs random — validated at **+104.1 bb/100** |
+| Opponent modeling | Positional VPIP/PFR buckets + recency decay; the AI adapts to you across sessions (view/reset in `/stats`) |
+| Raise-war guardrails | Depth-aware caps on re-raise chains; deep-stack disasters fixed without hurting 100bb play |
+| LLM extras | Self-consistency voting on big pots (≥25bb or river: 3 samples, majority vote, median sizing), slim prompt by default |
+
+### Product
+
+| Feature | What you get |
+| --- | --- |
+| Cash games, 2–9 handed | Full engine: blinds/antes, betting rounds, all-ins, side pots, showdown; button rotation, chip carryover, auto top-up |
+| Tournament SNG | 1500-chip start, 10-level blind structure (table below), 0–3 optional rebuys, spectator mode with fast-forward after you bust |
+| Achievements | WSOP bracelet collection (first win, first title, 9-max title, +500bb session, 1000 hands, +10000bb career, 5-table streak, revenge) with toasts & banners |
+| Opponent notebook | The AI's persistent profile of *you* across sessions — inspect or wipe it |
+| Collapsible info sidebar | Equity/odds/AI panel folds to a floating strip; state persists, drawer on small screens |
+| Bilingual & mobile-ready | EN/中文 UI toggle; responsive ring table, touch-friendly action bar |
+| Local-first privacy | Hands live in IndexedDB, your API key lives only in your browser's localStorage |
+
+## Quick start
+
+```bash
+git clone https://github.com/SANTOSRAYYYY/POKER-GTO-TRAINER.git
+cd POKER-GTO-TRAINER
+npm install
+npm run dev
+```
+
+Open http://localhost:3000, pick cash or tournament, table size (2/6/9) and AI styles — play. No API key required.
+
+**Optional LLM unlock** (Settings page): API key + base URL + model. The key stays in your browser's localStorage; requests are proxied server-side via `/api/llm` and never baked into the build.
+
+**Deploy your own**: import the repo into Vercel — zero config. All pages are static/client-rendered; the only backend is the `/api/llm` serverless proxy.
+
+### Recommended LLM setup (DeepSeek)
+
+Validated by 2 × 240-hand LLM variant battles:
+
+| Setting | Recommended | Why |
+| --- | --- | --- |
+| Base URL | `https://api.deepseek.com` | official root (`/v1` also accepted) |
+| Model | `deepseek-flash` | default in Settings |
+| Thinking mode | on | DeepSeek V4 `thinking` field |
+| Reasoning effort | `high` or `max` | `reasoning_effort`; `max` is V4-only |
+| Max tokens | `8192` | thinking spends the same budget — prevents truncated coach reviews |
+| Force JSON output | on | `response_format`; sharply cuts parse failures |
+| Prompt style | slim (default) | strategy preaching induces mechanical threshold play ("win small, lose big"); slim was the only variant profitable in both battles |
+
+## Tournament structure (SNG)
+
+1500 starting chips, blinds up every 8 hands, 10 levels (top level repeats):
+
+| Level | SB/BB | Ante |
+| --- | --- | --- |
+| 1 | 10/20 | – |
+| 2 | 15/30 | – |
+| 3 | 25/50 | – |
+| 4 | 50/100 | 12 |
+| 5 | 75/150 | 18 |
+| 6 | 100/200 | 25 |
+| 7 | 150/300 | 37 |
+| 8 | 200/400 | 50 |
+| 9 | 300/600 | 75 |
+| 10 | 400/800 | 100 |
+
+Optional 0–3 rebuys per player during the first 4 levels. Finishing positions by bust order (same-hand busts ranked by starting chips); last stack standing wins.
+
+## Architecture
+
+Next.js 16 (App Router + Turbopack) · React 19 · TypeScript 7 · Tailwind v4 · zustand · idb (IndexedDB) · Vitest · Playwright
+
+```
+src/
+├── app/               # lobby / · table /play · /history (+/history/[id] replay) · /stats ·
+│                      # /trainer · /ranges · /equity · /settings · /api/llm proxy
+├── lib/
+│   ├── poker/         # pure engine: N-handed state machine · SNG blind scheduler ·
+│                      # 7-card evaluator · Monte Carlo equity
+│   ├── ai/            # opponent.ts (LLM first, heuristic fallback) · brain.ts / heuristic.ts ·
+│                      # range.ts · adapt.ts (opponent modeling) · prompt.ts · profiles.ts · hudStats.ts
+│   ├── gto/           # push/fold tables · postflop quiz · per-decision reference line
+│   ├── llm/           # browser-side LLM client (via /api/llm)
+│   └── store/         # zustand: game flow · history persistence · achievements · notebook · session save
+└── components/        # table / history / stats UI
+scripts/selfplay/      # seeded paired self-play bench → bb/100 + 95% CI
+docs/research/         # 22 curated experiment reports
+e2e/                   # 7 Playwright real-browser smoke tests
+```
+
+## Tests
+
+```bash
+npm test          # 625 unit/integration tests: engine / AI / stores / components / routes
+npx tsc --noEmit  # type check (TypeScript 7)
+npm run build     # production build (Turbopack)
+
+npx playwright install chromium   # first time only
+npm run test:e2e  # 7 real-browser smoke cases, dev server auto-starts on port 3105
+```
+
+## Self-play research bench
+
+`scripts/selfplay/` is a headless simulator that drives the **same** engine (`src/lib/poker/game.ts`) and decision brain (`src/lib/ai/brain.ts`) as production — no React, fully synchronous. Experiments are paired: one master seed deals identical cards to both arms, seat 0 is the only variable, and its profit difference is the mechanic's isolated net effect, reported as bb/100 with a 95% CI and per-match zero-sum verification. Adoption rule: merged CI fully positive. Every default-on mechanic passed it; the rejected ones remain in the codebase, off by default, knobs intact for future A/B. Run your own with `scripts/selfplay/README.md`.
+
+Start with these reports:
+
+- [phase4-range-6max-report.md](docs/research/phase4-range-6max-report.md) — range inference engine, **+104.1 bb/100** over 96k paired hands
+- [phase6-adapt-report.md](docs/research/phase6-adapt-report.md) — opponent modeling v2, **+21.3 bb/100**
+- [phase9-deep-retest-report.md](docs/research/phase9-deep-retest-report.md) — 200bb retests: preflop closure **+29.7**, three mechanisms honestly rejected
+- [llm-battle-report.md](docs/research/llm-battle-report.md) — 4 models × {agent, raw} battle royale; agent prompt layer hurt 5 of 6 matchups
+- [prompt-diagnosis.md](docs/research/prompt-diagnosis.md) — qualitative autopsy: *why* a preachy prompt makes an LLM play "win small, lose big"
+- [coachlab-report.md](docs/research/coachlab-report.md) — coach-prompt variants blind-judged by an LLM jury
+
+## Roadmap
+
+- [x] 2–9 handed engine with side pots & showdown
+- [x] Tournament SNG + rebuys + spectator fast-forward
+- [x] Range inference engine (+104.1 bb/100, validated)
+- [x] Opponent modeling v2 (+21.3 bb/100, validated)
+- [x] Preflop range closure (+29.7 bb/100 at 200bb, validated)
+- [x] LLM opponents & LLM coach (any OpenAI-compatible provider)
+- [x] Personal HUD, quiz trainers, range charts, equity calculator
+- [x] Bilingual UI + mobile adaptation + E2E smoke suite
+- [ ] Real solver integration — replace heuristic reference lines with solver-exact solutions
+- [ ] Online multiplayer
+- [ ] More training scenarios (3-bet pots, blind-vs-blind, ICM/bubble drills)
+
+## Contributing
+
+PRs, issues and experiment ideas are welcome.
+
+- Keep it green: `npm test` (625 tests) and `npx tsc --noEmit` must pass; run `npm run test:e2e` for UI changes.
+- Changing an AI mechanic? Ship paired self-play evidence (bb/100 + 95% CI) in the PR — that is how every default in this repo earned its place. `scripts/selfplay/` has the bench.
+- UI strings live in `src/lib/i18n/` — add both English and Chinese entries.
+- E2E selectors use roles/text/placeholders only; please don't add `data-testid` to `src`.
+
+## License
+
+[MIT](LICENSE)
+
+---
+
+# PokerGTO Trainer — 德州扑克 AI 训练器（中文详细文档）
+
+> 在线 demo：https://poker-nu-steel.vercel.app ｜ GitHub：https://github.com/SANTOSRAYYYY/POKER-GTO-TRAINER
 >
-> - Stack: Next.js 16 + React 19 + TypeScript 7 + Tailwind v4 + Zustand + idb + Vitest + Playwright
-> - Run it: `npm install && npm run dev`, open http://localhost:3000
-> - Tests: `npm test` (625 unit/integration tests), `npm run test:e2e` (browser smoke, needs `npx playwright install chromium`)
-> - AI opponents run 100% locally (heuristic engine — Monte Carlo equity, range inference, opponent modeling); plug in any OpenAI-compatible API key in **Settings** to unlock LLM opponents and LLM coaching (your key stays in your browser's localStorage)
-> - Self-play research harness in `scripts/selfplay/` (seeded paired matches, bb/100 + 95% CI) — every shipped AI mechanism was validated on 10k-500k hands before being enabled; curated reports in `docs/research/`
-> - License: MIT (see `LICENSE`)
+> 这不是又一个扑克 UI：每一个默认开启的 AI 机制都在种子配对自对战台架上跑过 1万-50万 手验收（bb/100 + 95% CI 全正才采纳）——范围引擎 +104.1、对手建模 +21.3、翻前闭环 +29.7（200bb），未过线的机制（摊牌学习、blocker、ICM）一律默认关闭。22 份实验报告见 `docs/research/`。
 
 一个本地运行的无限注德州扑克（No-Limit Hold'em）训练器：支持 2-9 人桌，你坐在牌桌一端，其余座位是不同风格的 AI 对手。打完的每一手牌都可以回放、交给 LLM 教练逐街复盘点评。**界面支持中英文切换（导航栏右侧 `EN`/`中文` 开关）。**
 

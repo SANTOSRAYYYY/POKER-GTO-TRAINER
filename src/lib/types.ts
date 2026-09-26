@@ -210,28 +210,33 @@ export interface TournamentConfig {
   handsPerLevel: number;
   /**
    * 每人允许的重购（rebuy）次数，默认 0。
-   * 重购期内（前 4 个盲注级别）筹码归零可买回起始筹码继续；
+   * 重购期内（见 rebuyPeriodLevels）筹码归零可买回起始筹码继续；
    * 次数用完或重购期外归零即正常淘汰。
    */
   rebuysAllowed?: number;
+  /**
+   * 重购期级数：前 N 个盲注级别（索引 0..N-1）允许重购，默认 4。
+   * 0 = 全程不可重购（等同直接淘汰制，rebuysAllowed 失效）。
+   */
+  rebuyPeriodLevels?: number;
 }
 
 /**
  * 默认升盲表：10/20 → 15/30 → 25/50 → 50/100 → 75/150 → 100/200
  * → 150/300 → 200/400 → 300/600 → 400/800。
- * 前 3 级无 ante；第 4 级起 ante = Math.floor(bigBlind / 8)。
+ * 每级 ante = 该级大盲（含第 1 级）。
  */
 export const DEFAULT_BLIND_LEVELS: BlindLevel[] = [
-  { smallBlind: 10, bigBlind: 20, ante: 0 },
-  { smallBlind: 15, bigBlind: 30, ante: 0 },
-  { smallBlind: 25, bigBlind: 50, ante: 0 },
-  { smallBlind: 50, bigBlind: 100, ante: 12 },
-  { smallBlind: 75, bigBlind: 150, ante: 18 },
-  { smallBlind: 100, bigBlind: 200, ante: 25 },
-  { smallBlind: 150, bigBlind: 300, ante: 37 },
-  { smallBlind: 200, bigBlind: 400, ante: 50 },
-  { smallBlind: 300, bigBlind: 600, ante: 75 },
-  { smallBlind: 400, bigBlind: 800, ante: 100 },
+  { smallBlind: 10, bigBlind: 20, ante: 20 },
+  { smallBlind: 15, bigBlind: 30, ante: 30 },
+  { smallBlind: 25, bigBlind: 50, ante: 50 },
+  { smallBlind: 50, bigBlind: 100, ante: 100 },
+  { smallBlind: 75, bigBlind: 150, ante: 150 },
+  { smallBlind: 100, bigBlind: 200, ante: 200 },
+  { smallBlind: 150, bigBlind: 300, ante: 300 },
+  { smallBlind: 200, bigBlind: 400, ante: 400 },
+  { smallBlind: 300, bigBlind: 600, ante: 600 },
+  { smallBlind: 400, bigBlind: 800, ante: 800 },
 ];
 
 // ---------------------------------------------------------------------------

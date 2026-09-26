@@ -46,6 +46,9 @@ export default function TableScreen({
   const rebuysAllowed = useGameStore(
     (s) => s.tournamentConfig?.rebuysAllowed ?? 0,
   );
+  const rebuyPeriodLevels = useGameStore(
+    (s) => s.tournamentConfig?.rebuyPeriodLevels ?? 4,
+  );
   const heroRebuysUsed = useGameStore((s) => s.rebuysUsed[HERO_SEAT] ?? 0);
   const heroEliminated = useGameStore((s) => s.eliminated[HERO_SEAT] ?? false);
   const [panelCollapsed, togglePanel] = usePanelCollapsed();
@@ -260,7 +263,7 @@ export default function TableScreen({
         {mode === "tournament" && rebuysAllowed > 0 && (
           <span
             className="mx-auto mb-1 block w-fit rounded-full border border-purple-700/60 bg-purple-900/70 px-2.5 py-0.5 text-[11px] tabular-nums text-purple-200 md:absolute md:right-4 md:top-1/2 md:mb-0 md:-translate-y-1/2"
-            title={t("tour.rebuyHint")}
+            title={t("tour.rebuyHint", { n: rebuyPeriodLevels })}
           >
             {heroEliminated
               ? t("tour.rebuyDisabled")

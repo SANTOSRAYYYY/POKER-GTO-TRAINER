@@ -313,9 +313,10 @@ const SPECTATE_STEP_MS = 800;
 export const AUTO_ADVANCE_MS = 5000;
 
 /**
- * 锦标赛重购期：只有前 4 个盲注级别（blindLevel 索引 0..3）允许重购，
- * 进入第 5 级（索引 ≥ 4）后归零即正常淘汰。按出局手所在级别判定
- * （升盲结算发生在一手结束之后，故用升盲前的级别）。
+ * 锦标赛重购期级数默认值：只有前 N 个盲注级别（blindLevel 索引 0..N-1）
+ * 允许重购，进入第 N+1 级（索引 ≥ N）后归零即正常淘汰。按出局手所在级别
+ * 判定（升盲结算发生在一手结束之后，故用升盲前的级别）。
+ * 实际级数以 tournamentConfig.rebuyPeriodLevels 为准，缺省回退本常量。
  */
 export const REBUY_PERIOD_LEVELS = 4;
 
@@ -394,18 +395,33 @@ function normalizeConfig(config: TableConfig): {
   const seatsRaw = Math.floor(config.seats);
   const seats = Number.isFinite(seatsRaw) ? Math.min(9, Math.max(2, seatsRaw)) : 2;
   if (mode === "tournament") {
-    // 锦标赛：重购次数归一化（缺省/非法按 0，不允许负数）
+    // 锦标赛：重购次数归一化（缺省/非法按 0，不允许负数）；
+    // 重购期级数缺省保留 undefined（使用时回退 REBUY_PERIOD_LEVELS），
+    // 显式传入时归一化为非负整数
     const raw = config.tournament ?? DEFAULT_TOURNAMENT;
     const rebuysAllowed = Math.max(
       0,
       Math.floor(Number.isFinite(raw.rebuysAllowed) ? raw.rebuysAllowed! : 0),
     );
+    const rebuyPeriodLevels =
+      raw.rebuyPeriodLevels === undefined
+        ? undefined
+        : Math.max(
+            0,
+            Math.floor(
+              Number.isFinite(raw.rebuyPeriodLevels) ? raw.rebuyPeriodLevels : 0,
+            ),
+          );
     return {
       mode,
       seats,
       cashBlinds: { sb: 0, bb: 0 },
       buyin: 0,
-      tournamentConfig: { ...raw, rebuysAllowed },
+      tournamentConfig: {
+        ...raw,
+        rebuysAllowed,
+        ...(rebuyPeriodLevels === undefined ? {} : { rebuyPeriodLevels }),
+      },
     };
   }
   const bb = Math.max(1, Math.floor(config.cashBlinds?.bb ?? 2));
@@ -1375,12 +1391,14 @@ export const useGameStore = create<GameStore>()((set, get) => {
       if (st.mode === "tournament" && tc) {
         // 本手结束后 stack===0 的玩家出局；同手多人出局按开手筹码排序，
         // 筹码少者名次靠后（place = 剩余人数 + 1 起）。
-        // 重购规则：出局手所在级别处于重购期（前 REBUY_PERIOD_LEVELS 级）
-        // 且该座位剩余重购次数 >0 时可重购——AI 自动买回起始筹码；
+        // 重购规则：出局手所在级别处于重购期（前 rebuyPeriodLevels 级，
+        // 缺省 REBUY_PERIOD_LEVELS=4）且该座位剩余重购次数 >0 时可重购——
+        // AI 自动买回起始筹码；
         // hero 不立即记账淘汰，置 pendingHeroBust 等 resolveTournamentRebuy 决策。
         const startStack = tc.startStack;
         const rebuysAllowed = tc.rebuysAllowed ?? 0;
-        const rebuyPeriodOpen = blindLevel < REBUY_PERIOD_LEVELS;
+        const rebuyPeriodOpen =
+          blindLevel < (tc.rebuyPeriodLevels ?? REBUY_PERIOD_LEVELS);
         rebuysUsed = [...st.rebuysUsed];
         const canRebuy = (t: Seat) =>
           rebuysAllowed - (rebuysUsed[t] ?? 0) > 0 && rebuyPeriodOpen;

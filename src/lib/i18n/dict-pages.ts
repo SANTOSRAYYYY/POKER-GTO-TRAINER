@@ -93,12 +93,31 @@ export const PAGES_DICT = {
     zh: "起始筹码 {stack}，每 {hands} 手升一级盲注，共 {levels} 级；筹码清零即淘汰，最后幸存者为冠军。",
     en: "Starting stack {stack}; blinds go up every {hands} hands across {levels} levels. Bust out and you're eliminated — the last survivor wins.",
   },
+  "lobby.tourney.handsPerLevel": {
+    zh: "每 N 手升一级",
+    en: "Hands per level",
+  },
+  "lobby.tourney.blindMode": { zh: "升盲", en: "Blind escalation" },
+  "lobby.tourney.blindMode.limited": { zh: "限制级别", en: "Limited levels" },
+  "lobby.tourney.blindMode.limitedDesc": {
+    zh: "10 级升盲表打完即停在顶级盲注",
+    en: "Blinds stop at the top of the 10-level table",
+  },
+  "lobby.tourney.blindMode.infinite": { zh: "无限升盲", en: "Infinite escalation" },
+  "lobby.tourney.blindMode.infiniteDesc": {
+    zh: "顶级后大盲继续翻倍不封顶（预生成至 40 级）",
+    en: "Big blind keeps doubling past the top level, uncapped (pre-generated to level 40)",
+  },
+  "lobby.tourney.rebuyPeriod": {
+    zh: "重购期级数（前 N 级）",
+    en: "Rebuy period (first N levels)",
+  },
   "lobby.rebuys.label": { zh: "每人可重购次数", en: "Rebuys per player" },
   "lobby.rebuys.none": { zh: "不可重购", en: "No rebuys" },
   "lobby.rebuys.times": { zh: "{n} 次", en: "{n}" },
   "lobby.rebuys.hintOn": {
-    zh: "重购期内（前 4 级）筹码归零可买回起始筹码，每人最多 {n} 次。",
-    en: "During the rebuy period (first 4 levels), busting lets you buy back the starting stack, up to {n} times per player.",
+    zh: "重购期内（前 {levels} 级）筹码归零可买回起始筹码，每人最多 {n} 次。",
+    en: "During the rebuy period (first {levels} levels), busting lets you buy back the starting stack, up to {n} times per player.",
   },
   "lobby.rebuys.hintOff": {
     zh: "筹码清零即淘汰，不可重购。",

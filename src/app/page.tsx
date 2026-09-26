@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Nav } from "@/components/history/Nav";
@@ -12,7 +12,11 @@ import {
   summarizeSession,
   type SessionSummary,
 } from "@/lib/store/sessionPersistence";
-import { DEFAULT_TOURNAMENT } from "@/lib/poker/tournament";
+import {
+  DEFAULT_TOURNAMENT,
+  extendLevelsInfinite,
+  INFINITE_TOTAL_LEVELS,
+} from "@/lib/poker/tournament";
 import type { AIStyle, GameMode } from "@/lib/types";
 
 const STYLE_OPTIONS: AIStyle[] = [
@@ -47,12 +51,11 @@ const STYLE_DESC_KEY: Record<AIStyle, DictKey> = {
 
 const SEAT_OPTIONS = [2, 6, 9] as const;
 
-/** 锦标赛每人可重购次数选项（0 = 不可重购） */
-const REBUY_OPTIONS = [0, 1, 2, 3] as const;
+/** 升盲模式：限制级别（10 级表到顶停住）/ 无限升盲（顶级后大盲继续翻倍，预生成 40 级） */
+type BlindMode = "limited" | "infinite";
 
 /** 锦标赛结构展示数据：与引擎同源（DEFAULT_TOURNAMENT），不另设硬编码副本 */
 const TOURNAMENT_START_STACK = DEFAULT_TOURNAMENT.startStack;
-const TOURNAMENT_HANDS_PER_LEVEL = DEFAULT_TOURNAMENT.handsPerLevel;
 const TOURNAMENT_LEVELS = DEFAULT_TOURNAMENT.levels;
 
 const DEFAULT_STYLE_KEY = "pokergto_default_style";
@@ -68,7 +71,21 @@ export default function LobbyPage() {
   const [bb, setBb] = useState(2);
   const [buyin, setBuyin] = useState(200);
   const [rebuys, setRebuys] = useState<number>(0);
+  const [handsPerLevel, setHandsPerLevel] = useState<number>(
+    DEFAULT_TOURNAMENT.handsPerLevel,
+  );
+  const [blindMode, setBlindMode] = useState<BlindMode>("limited");
+  const [rebuyPeriod, setRebuyPeriod] = useState<number>(4);
   const [activeSession, setActiveSession] = useState<SessionSummary | null>(null);
+
+  /** 结构预览的升盲表：无限模式时展示预生成的 40 级扩展表 */
+  const previewLevels = useMemo(
+    () =>
+      blindMode === "infinite"
+        ? extendLevelsInfinite(TOURNAMENT_LEVELS, INFINITE_TOTAL_LEVELS)
+        : TOURNAMENT_LEVELS,
+    [blindMode],
+  );
 
   useEffect(() => {
     void loadAll().catch(() => {});
@@ -92,6 +109,9 @@ export default function LobbyPage() {
       bb: String(bb),
       buyin: String(buyin),
       rebuys: String(rebuys),
+      hpl: String(handsPerLevel),
+      blindMode,
+      rebuyPeriod: String(rebuyPeriod),
     });
     router.push(`/play?${params.toString()}`);
   };
@@ -250,12 +270,12 @@ export default function LobbyPage() {
                 <p className="mb-2 text-xs leading-5 text-zinc-400">
                   {t("lobby.tourney.structure", {
                     stack: TOURNAMENT_START_STACK,
-                    hands: TOURNAMENT_HANDS_PER_LEVEL,
-                    levels: TOURNAMENT_LEVELS.length,
+                    hands: handsPerLevel,
+                    levels: previewLevels.length,
                   })}
                 </p>
                 <div className="flex flex-nowrap gap-1 overflow-x-auto pb-1 md:flex-wrap md:overflow-x-visible md:pb-0">
-                  {TOURNAMENT_LEVELS.map((lv, i) => (
+                  {previewLevels.map((lv, i) => (
                     <span
                       key={i}
                       className="shrink-0 rounded bg-zinc-800/80 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400"
@@ -265,27 +285,69 @@ export default function LobbyPage() {
                     </span>
                   ))}
                 </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <NumberField
+                    label={t("lobby.tourney.handsPerLevel")}
+                    value={handsPerLevel}
+                    min={1}
+                    max={50}
+                    onChange={setHandsPerLevel}
+                  />
+                  <NumberField
+                    label={t("lobby.tourney.rebuyPeriod")}
+                    value={rebuyPeriod}
+                    min={0}
+                    max={10}
+                    onChange={setRebuyPeriod}
+                  />
+                </div>
+
                 <label className="mb-1 mt-3 block text-sm text-zinc-400">
-                  {t("lobby.rebuys.label")}
+                  {t("lobby.tourney.blindMode")}
                 </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {REBUY_OPTIONS.map((n) => (
+                <div className="grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      {
+                        id: "limited",
+                        nameKey: "lobby.tourney.blindMode.limited",
+                        descKey: "lobby.tourney.blindMode.limitedDesc",
+                      },
+                      {
+                        id: "infinite",
+                        nameKey: "lobby.tourney.blindMode.infinite",
+                        descKey: "lobby.tourney.blindMode.infiniteDesc",
+                      },
+                    ] as { id: BlindMode; nameKey: DictKey; descKey: DictKey }[]
+                  ).map((bm) => (
                     <button
-                      key={n}
-                      onClick={() => setRebuys(n)}
-                      className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
-                        rebuys === n
+                      key={bm.id}
+                      onClick={() => setBlindMode(bm.id)}
+                      className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                        blindMode === bm.id
                           ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
                           : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500"
                       }`}
                     >
-                      {n === 0 ? t("lobby.rebuys.none") : t("lobby.rebuys.times", { n })}
+                      <div className="text-sm font-medium">{t(bm.nameKey)}</div>
+                      <div className="mt-0.5 text-xs text-zinc-500">{t(bm.descKey)}</div>
                     </button>
                   ))}
                 </div>
+
+                <div className="mt-3">
+                  <NumberField
+                    label={t("lobby.rebuys.label")}
+                    value={rebuys}
+                    min={0}
+                    max={99}
+                    onChange={setRebuys}
+                  />
+                </div>
                 <p className="mt-1 text-xs text-zinc-500">
                   {rebuys > 0
-                    ? t("lobby.rebuys.hintOn", { n: rebuys })
+                    ? t("lobby.rebuys.hintOn", { n: rebuys, levels: rebuyPeriod })
                     : t("lobby.rebuys.hintOff")}
                 </p>
               </div>
@@ -344,11 +406,13 @@ function NumberField({
   label,
   value,
   min,
+  max,
   onChange,
 }: {
   label: string;
   value: number;
   min: number;
+  max?: number;
   onChange: (v: number) => void;
 }) {
   return (
@@ -357,10 +421,13 @@ function NumberField({
       <input
         type="number"
         min={min}
+        max={max}
         value={value}
         onChange={(e) => {
-          const v = Math.floor(Number(e.target.value));
-          onChange(Number.isFinite(v) && v >= min ? v : min);
+          let v = Math.floor(Number(e.target.value));
+          if (!Number.isFinite(v) || v < min) v = min;
+          if (max !== undefined && v > max) v = max;
+          onChange(v);
         }}
         className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
       />

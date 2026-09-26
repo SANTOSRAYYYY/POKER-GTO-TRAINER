@@ -48,3 +48,25 @@ export function nextLevel(
   if (levels.length === 0) throw new Error("levels 不能为空");
   return Math.min(Math.floor(levelIndex) + 1, levels.length - 1);
 }
+
+/** 「无限升盲」模式预生成的总级数（盲注到顶后大盲继续翻倍至该级数） */
+export const INFINITE_TOTAL_LEVELS = 40;
+
+/**
+ * 无限升盲扩展表：保留原表，顶级之后按「小盲/大盲 ×2、ante = 大盲」
+ * 继续生成，直到总级数达到 total。不修改入参。
+ * total <= levels.length 时原样返回（副本）。
+ */
+export function extendLevelsInfinite(
+  levels: BlindLevel[],
+  total: number,
+): BlindLevel[] {
+  if (levels.length === 0) throw new Error("levels 不能为空");
+  const out = levels.map((l) => ({ ...l }));
+  while (out.length < total) {
+    const last = out[out.length - 1];
+    const bigBlind = last.bigBlind * 2;
+    out.push({ smallBlind: last.smallBlind * 2, bigBlind, ante: bigBlind });
+  }
+  return out;
+}
