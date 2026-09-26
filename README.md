@@ -41,21 +41,11 @@ AI decisions run on a fast, free, fully local **heuristic engine** (Monte Carlo 
 
 ## Screenshots
 
-<!--
-Screenshots to add under docs/images/ — drop the files in, then remove this comment block.
-
-| File | Suggested content |
-| --- | --- |
-| docs/images/table.png | 6-max cash table mid-hand, collapsible sidebar open showing equity / pot odds / AI panel |
-| docs/images/replay.png | Hand replay: per-decision GTO reference badges + LLM coach review panel |
-| docs/images/stats.png | /stats personal HUD: VPIP/PFR/AF/WTSD cards, profit curve, per-position breakdown |
-
 <p align="center">
   <img src="docs/images/table.png" width="32%" alt="6-max table with live odds sidebar">
   <img src="docs/images/replay.png" width="32%" alt="Hand replay with reference line">
   <img src="docs/images/stats.png" width="32%" alt="Personal HUD in the stats center">
 </p>
--->
 
 ## Features
 
