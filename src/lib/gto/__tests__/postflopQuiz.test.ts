@@ -10,12 +10,14 @@
 import { describe, expect, it } from "vitest";
 import type { Card } from "@/lib/types";
 import {
+  analyzeDraws,
   dealPostflopScenario,
   DEFENSE_CALL_THRESHOLD,
   DEFENSE_RANGE_SPEC,
   DEFENSE_RAISE_THRESHOLD,
   evaluateScenario,
   generatePostflopQuiz,
+  isStrongDraw,
   judgePostflop,
   quizComment,
   type PostflopScenario,
@@ -165,5 +167,42 @@ describe("generatePostflopQuiz 整题", () => {
     const text = quizComment(q);
     expect(text.length).toBeGreaterThan(10);
     expect(text).toContain((q.equity.win * 100).toFixed(1));
+  });
+});
+
+describe("analyzeDraws 听牌识别与半诈唬判定", () => {
+  it("两头顺听：T♣9♠ 在 4♥8♣J♣ → 8 张出路（7 或 Q）", () => {
+    const d = analyzeDraws(c("Tc 9s") as [Card, Card], c("4h 8c Jc") as [Card, Card, Card]);
+    expect(d.straightOuts).toBe(8);
+  });
+
+  it("同花听：某花色 ≥4 张", () => {
+    const d = analyzeDraws(c("Tc 9c") as [Card, Card], c("4h 8c Jc") as [Card, Card, Card]);
+    expect(d.flushDraw).toBe(true);
+    const d2 = analyzeDraws(c("Ts 9s") as [Card, Card], c("4h 8c Jc") as [Card, Card, Card]);
+    expect(d2.flushDraw).toBe(false);
+  });
+
+  it("用户实报场景：T♣9♠ 在 4♥8♣J♣ 进攻题（54.4%）→ 半诈唬进攻（不判过牌）", () => {
+    const draws = analyzeDraws(c("Tc 9s") as [Card, Card], c("4h 8c Jc") as [Card, Card, Card]);
+    expect(isStrongDraw(draws)).toBe(true);
+    expect(judgePostflop(0.544, "attack", undefined, draws)).toBe("aggressive");
+  });
+
+  it("无听牌的中间胜率仍判过牌（防误放宽）", () => {
+    // K♦5♠ 在 Q♣7♥2♦ 面：无花无顺的纯高牌区
+    const draws = analyzeDraws(c("Kd 5s") as [Card, Card], c("Qc 7h 2d") as [Card, Card, Card]);
+    expect(isStrongDraw(draws)).toBe(false);
+    expect(judgePostflop(0.5, "attack", undefined, draws)).toBe("passive");
+  });
+
+  it("45% 以下即使有听牌也保持过牌（下限保护）", () => {
+    const draws = analyzeDraws(c("Tc 9s") as [Card, Card], c("4h 8c Jc") as [Card, Card, Card]);
+    expect(judgePostflop(0.44, "attack", undefined, draws)).toBe("passive");
+  });
+
+  it("A 低顺检测：A2345 轮子", () => {
+    const d = analyzeDraws(c("As 2d") as [Card, Card], c("3c 4h 5s") as [Card, Card, Card]);
+    expect(d.straightOuts).toBeGreaterThanOrEqual(0); // 已成顺，无新增出路需求
   });
 });

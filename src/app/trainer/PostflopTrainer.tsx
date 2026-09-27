@@ -9,6 +9,7 @@ import {
   DEFENSE_CALL_THRESHOLD,
   DEFENSE_RAISE_THRESHOLD,
   generatePostflopQuiz,
+  isStrongDraw,
   type PostflopChoice,
   type PostflopQuiz,
   type ScenarioType,
@@ -50,12 +51,24 @@ function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
       : "";
   switch (quiz.answer) {
     case "aggressive":
-      return t(
-        quiz.type === "attack"
-          ? "trainer.post.comment.attackAggressive"
-          : "trainer.post.comment.defenseAggressive",
-        { pct: quiz.type === "attack" ? pct : dPct, tie },
-      );
+      if (quiz.type === "attack") {
+        if (quiz.equity.win < ATTACK_EQUITY_THRESHOLD && isStrongDraw(quiz.draws)) {
+          const drawParts: string[] = [];
+          if (quiz.draws.straightOuts >= 8)
+            drawParts.push(t("trainer.post.draw.straight", { outs: quiz.draws.straightOuts }));
+          if (quiz.draws.flushDraw) drawParts.push(t("trainer.post.draw.flush"));
+          return t("trainer.post.comment.attackSemibluff", {
+            pct,
+            tie,
+            draw: drawParts.join(" + "),
+          });
+        }
+        return t("trainer.post.comment.attackAggressive", { pct, tie });
+      }
+      return t("trainer.post.comment.defenseAggressive", {
+        pct: quiz.defenseEquity !== null ? dPct : pct,
+        tie,
+      });
     case "fold":
       return t("trainer.post.comment.fold", { pct: dPct, tie });
     case "passive":

@@ -36,6 +36,8 @@ export interface PostflopQuiz extends PostflopScenario {
   equity: EquityResult;
   /** 防守题的判定胜率（对下注者范围，0-1；进攻题为 null） */
   defenseEquity: number | null;
+  /** 听牌分析（进攻题的半诈唬判定用） */
+  draws: DrawInfo;
   /** 由胜率与题型推导的标准答案 */
   answer: PostflopChoice;
 }
@@ -73,11 +75,59 @@ export function dealPostflopScenario(
   };
 }
 
+/** 听牌分析：同花听（4 张同花）与顺子出路数 */
+export interface DrawInfo {
+  /** 是否有同花听牌（hero+board 中某花色 ≥4 张） */
+  flushDraw: boolean;
+  /** 顺子补牌张数（能让 5 张成顺的剩余牌数，去重按张计） */
+  straightOuts: number;
+}
+
+const RANKS = "23456789TJQKA";
+
+/** 分析 hero 在当前 board 上的听牌（纯函数，可测） */
+export function analyzeDraws(hero: [Card, Card], board: Card[]): DrawInfo {
+  const cards = [...hero, ...board];
+  // 同花听：任一花色 ≥4 张
+  const suitCount = new Map<string, number>();
+  for (const c of cards) {
+    const s = c.slice(-1);
+    suitCount.set(s, (suitCount.get(s) ?? 0) + 1);
+  }
+  const flushDraw = [...suitCount.values()].some((n) => n >= 4);
+
+  // 顺子出路：枚举每个点数，加入该点数一张牌后是否成顺（5 张连）
+  const rankSet = new Set(cards.map((c) => RANKS.indexOf(c[0])));
+  let straightOuts = 0;
+  for (let r = 0; r < 13; r++) {
+    if (rankSet.has(r)) continue; // 已有该点数的牌，跳过（保守不重复计）
+    const test = new Set([...rankSet, r]);
+    // 5 连检测：存在长度为 5 的连续序列
+    let run = 0;
+    for (let i = 0; i < 13; i++) {
+      run = test.has(i) ? run + 1 : 0;
+      if (run >= 5) break;
+    }
+    // A 也可以当 1（A2345）
+    if (run < 5 && test.has(12) && test.has(0) && test.has(1) && test.has(2) && test.has(3)) {
+      run = 5;
+    }
+    if (run >= 5) straightOuts += 4; // 每个点数 4 张（花色）
+  }
+  return { flushDraw, straightOuts };
+}
+
+/** 强听牌：同花听 或 顺子出路 ≥8（两头顺/更强） */
+export function isStrongDraw(d: DrawInfo): boolean {
+  return d.flushDraw || d.straightOuts >= 8;
+}
+
 /** 胜率 + 题型 → 标准答案（纯函数）。defense 请传对下注者范围的胜率 */
 export function judgePostflop(
   win: number,
   type: ScenarioType,
   defenseWin?: number,
+  draws?: DrawInfo,
 ): PostflopChoice {
   if (type === "defense") {
     const w = defenseWin ?? win;
@@ -85,7 +135,11 @@ export function judgePostflop(
     if (w >= DEFENSE_CALL_THRESHOLD) return "passive";
     return "fold";
   }
-  return win >= ATTACK_EQUITY_THRESHOLD ? "aggressive" : "passive";
+  if (win >= ATTACK_EQUITY_THRESHOLD) return "aggressive";
+  // 强听牌（两头顺/同花听）即使胜率在 45-55% 也是标准半诈唬进攻，
+  // 别把 T♣9♠ 这类牌当"弱牌"过牌（半诈唬：对手弃牌收池，对手跟注有大量补牌）
+  if (win >= 0.45 && draws && isStrongDraw(draws)) return "aggressive";
+  return "passive";
 }
 
 /** 实算场景胜率：对 1 名随机对手，蒙特卡洛 iterations 次 */
@@ -107,11 +161,18 @@ export function generatePostflopQuiz(
     scenario.type === "defense"
       ? equityVsRange(scenario.hero, scenario.board, DEFENSE_RANGE_SPEC, iterations, rng)
       : null;
+  const draws = analyzeDraws(scenario.hero, scenario.board);
   return {
     ...scenario,
     equity,
     defenseEquity,
-    answer: judgePostflop(equity.win, scenario.type, defenseEquity ?? undefined),
+    draws,
+    answer: judgePostflop(
+      equity.win,
+      scenario.type,
+      defenseEquity ?? undefined,
+      draws,
+    ),
   };
 }
 
@@ -133,10 +194,19 @@ export function quizComment(quiz: PostflopQuiz): string {
       ? (quiz.defenseEquity * 100).toFixed(1)
       : null;
   switch (quiz.answer) {
-    case "aggressive":
-      return quiz.type === "attack"
-        ? `实算胜率 ${pct}%${tie}，越过 55% 进攻线——牌力明显领先随机手，主动下注拿价值、直接收池`
-        : `对下注者范围（前 60%）实算胜率 ${dPct}%${tie}，超过 68% 加注线——价值加注榨取，别给便宜看牌`;
+    case "aggressive": {
+      if (quiz.type === "attack") {
+        // 区分价值进攻与半诈唬进攻
+        if (quiz.equity.win < ATTACK_EQUITY_THRESHOLD && isStrongDraw(quiz.draws)) {
+          const parts: string[] = [];
+          if (quiz.draws.straightOuts >= 8) parts.push(`顺子听 ${quiz.draws.straightOuts} 张出路`);
+          if (quiz.draws.flushDraw) parts.push("同花听");
+          return `实算胜率 ${pct}%${tie}，${parts.join(" + ")}——标准半诈唬：下注让对手弃牌直接收池，被跟也有大量补牌`;
+        }
+        return `实算胜率 ${pct}%${tie}，越过 55% 进攻线——牌力明显领先随机手，主动下注拿价值、直接收池`;
+      }
+      return `对下注者范围（前 60%）实算胜率 ${dPct}%${tie}，超过 68% 加注线——价值加注榨取，别给便宜看牌`;
+    }
     case "fold":
       return `对下注者范围（前 60%）实算胜率 ${dPct}%${tie}，不足 28%——半池注需 25% 赔率也够不上，弃牌`;
     case "passive":

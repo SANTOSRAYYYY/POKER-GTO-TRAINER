@@ -755,6 +755,12 @@ export const PAGES_DICT = {
     zh: "实算胜率 {pct}%{tie}，越过 55% 进攻线——牌力明显领先随机手，主动下注拿价值、直接收池",
     en: "Computed equity {pct}%{tie}, above the 55% attack line — clearly ahead of a random hand: bet for value and take the pot down",
   },
+  "trainer.post.draw.straight": { zh: '顺子听 {outs} 张出路', en: 'straight draw with {outs} outs' },
+  "trainer.post.draw.flush": { zh: '同花听', en: 'flush draw' },
+  "trainer.post.comment.attackSemibluff": {
+    zh: "实算胜率 {pct}%{tie}，{draw}——标准半诈唬：下注让对手弃牌直接收池，被跟也有大量补牌",
+    en: "Computed equity {pct}%{tie}, with {draw} — textbook semi-bluff: bet to win it now, with plenty of outs if called",
+  },
   "trainer.post.comment.defenseAggressive": {
     zh: "对下注者范围（前 60%）实算胜率 {pct}%{tie}，超过 68% 加注线——价值加注榨取，别给便宜看牌",
     en: "Equity vs the bettor's range (top 60%): {pct}%{tie}, above the 68% raise line — raise for value and don't give a cheap look",
