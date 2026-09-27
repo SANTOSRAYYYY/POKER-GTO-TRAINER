@@ -712,8 +712,8 @@ export const PAGES_DICT = {
     en: "{bb}bb ({depth}bb tier)",
   },
   "trainer.post.rule": {
-    zh: "翻牌圈场景 · 对 1 名随机对手实算胜率 · 胜率 ≥55% 进攻 / 面对半池注 ≤30% 弃牌 / 其余过牌·跟注",
-    en: "Flop scenarios · real computed equity vs 1 random opponent · attack at ≥55% equity / fold to a half-pot bet at ≤30% / otherwise check·call",
+    zh: "翻牌圈场景 · 进攻题按对随机胜率判定（≥55% 进攻）· 防守题按对下注者范围胜率判定（≥68% 加注 / ≥28% 跟注 / 否则弃牌）",
+    en: "Flop scenarios · attack judged vs random equity (≥55%) · defense judged vs bettor's range (raise ≥68% / call ≥28% / else fold)",
   },
   "trainer.post.dealing": {
     zh: "发牌并实算胜率中…",
@@ -739,11 +739,12 @@ export const PAGES_DICT = {
   "trainer.choice.passive": { zh: "过牌/跟注", en: "Check/Call" },
   "trainer.post.shouldBe": { zh: "应{choice}。", en: "the answer is {choice}." },
   "trainer.post.win": { zh: "胜率", en: "Win" },
+  "trainer.post.winVsRange": { zh: "胜率（对下注者范围）", en: "Win (vs bettor's range)" },
   "trainer.post.tie": { zh: "平局", en: "Tie" },
   "trainer.post.lose": { zh: "败率", en: "Lose" },
   "trainer.post.method": {
-    zh: "实算口径：对 1 名随机对手蒙特卡洛模拟 2000 次 · 进攻线 {attack}% · 防守弃牌线 {fold}%",
-    en: "Method: 2000-iteration Monte Carlo vs 1 random opponent · attack line {attack}% · defense fold line {fold}%",
+    zh: "实算口径：蒙特卡洛 2000 次 · 进攻线（对随机）{attack}% · 防守判定用下注者范围（前 60%）：加注线 {raise}% / 跟注线 {call}%",
+    en: "Method: 2000-iteration Monte Carlo · attack line (vs random) {attack}% · defense judged vs bettor's range (top 60%): raise {raise}% / call {call}%",
   },
   "trainer.post.wrongMeta": {
     zh: "{type} · 胜率 {pct}%",
@@ -755,20 +756,20 @@ export const PAGES_DICT = {
     en: "Computed equity {pct}%{tie}, above the 55% attack line — clearly ahead of a random hand: bet for value and take the pot down",
   },
   "trainer.post.comment.defenseAggressive": {
-    zh: "实算胜率 {pct}%{tie}，面对半池注仍显著领先——加注进攻榨取价值，别给便宜看牌",
-    en: "Computed equity {pct}%{tie}, still well ahead against a half-pot bet — raise for value and don't give a cheap look",
+    zh: "对下注者范围（前 60%）实算胜率 {pct}%{tie}，超过 68% 加注线——价值加注榨取，别给便宜看牌",
+    en: "Equity vs the bettor's range (top 60%): {pct}%{tie}, above the 68% raise line — raise for value and don't give a cheap look",
   },
   "trainer.post.comment.fold": {
-    zh: "实算胜率 {pct}%{tie}，不足 30%——半池注虽只需 25% 赔率，但无主动权时实现率打折，弃牌",
-    en: "Computed equity {pct}%{tie}, below 30% — a half-pot bet only needs 25%, but without the initiative your realization suffers: fold",
+    zh: "对下注者范围（前 60%）实算胜率 {pct}%{tie}，不足 28%——半池注需 25% 赔率也够不上，弃牌",
+    en: "Equity vs the bettor's range (top 60%): {pct}%{tie}, below 28% — can't even make the 25% price of a half-pot call: fold",
   },
   "trainer.post.comment.attackPassive": {
     zh: "实算胜率 {pct}%{tie}，不够进攻线——过牌控池、免费看转牌，别用弱牌造池",
     en: "Computed equity {pct}%{tie}, short of the attack line — check, keep the pot small and see a free turn; don't build a pot with a weak hand",
   },
   "trainer.post.comment.defensePassive": {
-    zh: "实算胜率 {pct}%{tie}，够 25% 跟注赔率但不够加注——跟注看转牌，保持底池可控",
-    en: "Computed equity {pct}%{tie}, enough for the 25% call price but not for a raise — call and see the turn, keeping the pot under control",
+    zh: "对下注者范围（前 60%）实算胜率 {pct}%{tie}，够 28% 跟注线但不够 68% 加注线——中对/弱对标准打法是跟注看转牌，加注只会打走差的留下强的",
+    en: "Equity vs the bettor's range (top 60%): {pct}%{tie}, above the 28% call line but short of the 68% raise line — the standard play with a medium/weak pair is to call; raising only folds out worse and keeps in better",
   },
 
   // ================= 范围表（src/app/ranges/page.tsx） =================

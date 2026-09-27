@@ -11,12 +11,16 @@ import { describe, expect, it } from "vitest";
 import type { Card } from "@/lib/types";
 import {
   dealPostflopScenario,
+  DEFENSE_CALL_THRESHOLD,
+  DEFENSE_RANGE_SPEC,
+  DEFENSE_RAISE_THRESHOLD,
   evaluateScenario,
   generatePostflopQuiz,
   judgePostflop,
   quizComment,
   type PostflopScenario,
 } from "../postflopQuiz";
+import { equityVsRange } from "@/lib/ai/range";
 
 /** 线性同余种子 rng（测试可复现） */
 function lcg(seed: number): () => number {
@@ -57,26 +61,34 @@ describe("dealPostflopScenario 发牌", () => {
 });
 
 describe("judgePostflop 判定规则", () => {
-  it("胜率 ≥55% 两种题型都进攻（含 0.55 边界）", () => {
+  it("进攻题：对随机胜率 ≥55% 进攻（含 0.55 边界），否则过牌", () => {
     expect(judgePostflop(0.55, "attack")).toBe("aggressive");
-    expect(judgePostflop(0.55, "defense")).toBe("aggressive");
-    expect(judgePostflop(0.8, "defense")).toBe("aggressive");
+    expect(judgePostflop(0.8, "attack")).toBe("aggressive");
+    expect(judgePostflop(0.549, "attack")).toBe("passive");
   });
 
-  it("防守题胜率 ≤30% 弃牌（含 0.30 边界）", () => {
-    expect(judgePostflop(0.3, "defense")).toBe("fold");
+  it("防守题：对下注者范围胜率 ≥68% 才加注（第三对子不再误判加注）", () => {
+    // 0.55（旧规则的误判区）现在必须是跟注
+    expect(judgePostflop(0.9, "defense", 0.55)).toBe("passive");
+    expect(judgePostflop(0.9, "defense", 0.68)).toBe("aggressive");
+    expect(judgePostflop(0.9, "defense", 0.8)).toBe("aggressive");
+    expect(judgePostflop(0.9, "defense", 0.679)).toBe("passive");
+  });
+
+  it("防守题：<28% 弃牌（含 0.28 边界跟注）", () => {
+    expect(judgePostflop(0.9, "defense", 0.28)).toBe("passive");
+    expect(judgePostflop(0.9, "defense", 0.27)).toBe("fold");
+    expect(judgePostflop(0.9, "defense", 0.12)).toBe("fold");
+  });
+
+  it("防守题不传范围胜率时回退用 win（兼容旧签名）", () => {
+    expect(judgePostflop(0.7, "defense")).toBe("aggressive");
     expect(judgePostflop(0.12, "defense")).toBe("fold");
   });
 
   it("进攻题弱牌只过牌不弃牌", () => {
     expect(judgePostflop(0.3, "attack")).toBe("passive");
     expect(judgePostflop(0.05, "attack")).toBe("passive");
-  });
-
-  it("中间区（30%,55%) 两种题型都过牌/跟注", () => {
-    expect(judgePostflop(0.31, "defense")).toBe("passive");
-    expect(judgePostflop(0.45, "attack")).toBe("passive");
-    expect(judgePostflop(0.549, "defense")).toBe("passive");
   });
 });
 
@@ -116,11 +128,35 @@ describe("evaluateScenario 实算胜率", () => {
 });
 
 describe("generatePostflopQuiz 整题", () => {
-  it("答案与 judgePostflop(win, type) 一致，概率和≈1", () => {
+  it("用户实报场景：2♦J♠ 在 T♠2♥K♥ 面对半池注 → 跟注（不判加注）", () => {
+    // 第三对子 + J 踢脚：对随机胜率 ~55% 曾误判「加注」，对下注者范围应为跟注
+    const scenario: PostflopScenario = {
+      hero: c("2d Js") as [Card, Card],
+      board: c("Ts 2h Kh") as [Card, Card, Card],
+      type: "defense",
+    };
+    const defenseWin = equityVsRange(scenario.hero, scenario.board, DEFENSE_RANGE_SPEC, 3000, lcg(7));
+    const answer = judgePostflop(0.553, "defense", defenseWin);
+    expect(answer).not.toBe("aggressive"); // 对范围胜率应远低于 0.55
+    expect(answer).toBe("passive");
+    expect(defenseWin).toBeGreaterThanOrEqual(DEFENSE_CALL_THRESHOLD);
+    expect(defenseWin).toBeLessThan(DEFENSE_RAISE_THRESHOLD);
+  });
+
+  it("答案与 judgePostflop(win, type, defenseEquity) 一致，概率和≈1", () => {
     for (let seed = 100; seed < 110; seed++) {
       const q = generatePostflopQuiz(lcg(seed), 800);
-      expect(q.answer).toBe(judgePostflop(q.equity.win, q.type));
+      expect(q.answer).toBe(
+        judgePostflop(q.equity.win, q.type, q.defenseEquity ?? undefined),
+      );
       expect(q.equity.win + q.equity.tie + q.equity.lose).toBeCloseTo(1, 5);
+      if (q.type === "defense") {
+        expect(q.defenseEquity).not.toBeNull();
+        expect(q.defenseEquity!).toBeGreaterThanOrEqual(0);
+        expect(q.defenseEquity!).toBeLessThanOrEqual(1);
+      } else {
+        expect(q.defenseEquity).toBeNull();
+      }
     }
   });
 

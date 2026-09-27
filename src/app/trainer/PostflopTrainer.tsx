@@ -6,7 +6,8 @@ import { useI18n } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n/dict";
 import {
   ATTACK_EQUITY_THRESHOLD,
-  FOLD_EQUITY_THRESHOLD,
+  DEFENSE_CALL_THRESHOLD,
+  DEFENSE_RAISE_THRESHOLD,
   generatePostflopQuiz,
   type PostflopChoice,
   type PostflopQuiz,
@@ -36,9 +37,13 @@ const CHOICE_KEY: Record<PostflopChoice, DictKey> = {
   fold: "action.fold",
 };
 
-/** 判定后的一句话简评（实算胜率口径；与 lib/gto/postflopQuiz.quizComment 同逻辑、走字典双语） */
+/** 判定后的一句话简评（与 lib/gto/postflopQuiz.quizComment 同逻辑、走字典双语） */
 function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
   const pct = (quiz.equity.win * 100).toFixed(1);
+  const dPct =
+    quiz.defenseEquity !== null
+      ? (quiz.defenseEquity * 100).toFixed(1)
+      : pct;
   const tie =
     quiz.equity.tie >= 0.005
       ? t("trainer.post.tieNote", { pct: (quiz.equity.tie * 100).toFixed(1) })
@@ -49,16 +54,16 @@ function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
         quiz.type === "attack"
           ? "trainer.post.comment.attackAggressive"
           : "trainer.post.comment.defenseAggressive",
-        { pct, tie },
+        { pct: quiz.type === "attack" ? pct : dPct, tie },
       );
     case "fold":
-      return t("trainer.post.comment.fold", { pct, tie });
+      return t("trainer.post.comment.fold", { pct: dPct, tie });
     case "passive":
       return t(
         quiz.type === "attack"
           ? "trainer.post.comment.attackPassive"
           : "trainer.post.comment.defensePassive",
-        { pct, tie },
+        { pct: quiz.type === "attack" ? pct : dPct, tie },
       );
   }
 }
@@ -196,9 +201,17 @@ export function PostflopTrainer() {
             <div className="mb-3 grid grid-cols-3 gap-2 text-center text-xs">
               <div className="rounded-md bg-zinc-950/60 p-2">
                 <div className="text-base font-bold text-emerald-400">
-                  {(quiz.equity.win * 100).toFixed(1)}%
+                  {/* 防守题展示对下注者范围的判定胜率（与点评/答案同口径） */}
+                  {(
+                    (quiz.defenseEquity ?? quiz.equity.win) * 100
+                  ).toFixed(1)}
+                  %
                 </div>
-                <div className="text-zinc-500">{t("trainer.post.win")}</div>
+                <div className="text-zinc-500">
+                  {quiz.defenseEquity !== null
+                    ? t("trainer.post.winVsRange")
+                    : t("trainer.post.win")}
+                </div>
               </div>
               <div className="rounded-md bg-zinc-950/60 p-2">
                 <div className="text-base font-bold text-zinc-300">
@@ -216,7 +229,8 @@ export function PostflopTrainer() {
             <p className="mb-3 text-center text-xs text-zinc-600">
               {t("trainer.post.method", {
                 attack: ATTACK_EQUITY_THRESHOLD * 100,
-                fold: FOLD_EQUITY_THRESHOLD * 100,
+                raise: DEFENSE_RAISE_THRESHOLD * 100,
+                call: DEFENSE_CALL_THRESHOLD * 100,
               })}
             </p>
             <button
