@@ -272,6 +272,16 @@ export const PAGES_DICT = {
   "history.ai.goSettings": { zh: "去设置 →", en: "Go to Settings →" },
   "history.ai.overall": { zh: "总体评价", en: "Overall" },
 
+  // ================= 手牌回放页（src/app/history/[id]/page.tsx + components/history/replay.ts） =================
+  "replay.runoutNote": {
+    zh: "（无动作——双方已全下，发牌跑马）",
+    en: "(No actions — players are all-in; running out the board)",
+  },
+  "replay.showdownReveal": {
+    zh: "摊牌亮牌（未弃牌玩家）",
+    en: "Showdown hands (players who didn't fold)",
+  },
+
   // ================= 参考线徽章（src/components/history/ReferenceBadge.tsx） =================
   "ref.disclaimer": {
     zh: "启发式参考线，非 solver 精确解",

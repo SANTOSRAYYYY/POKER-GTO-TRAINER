@@ -8,11 +8,11 @@
  *   渲染「摊牌」tab——亮出未弃牌者底牌、展示完整公共牌。
  * - foldedSeatsAt：截至某步骤已弃牌的座位集合。
  * - actionText / actorLabel：动作与行动者的文案。
- * - 回放页新增文案的本地小字典（dict-pages.ts 属并行任务边界外，暂不登记；
- *   后续可迁回 src/lib/i18n/dict-pages.ts）。
+ * - replayText：回放页少量文案直查全站字典（replay.* 前缀，登记于
+ *   src/lib/i18n/dict-pages.ts）。
  */
 import type { Lang } from "@/lib/i18n";
-import type { DictKey } from "@/lib/i18n/dict";
+import { DICT, type DictKey } from "@/lib/i18n/dict";
 import type { HandRecord, Seat, SeatAction } from "@/lib/types";
 import { seatPositionName } from "@/lib/ai/positions";
 import { STYLE_NAME } from "@/components/history/labels";
@@ -136,24 +136,11 @@ export function foldedSeatsAt(hand: HandRecord, steps: Step[], cur: number): Set
 }
 
 // ---------------------------------------------------------------------------
-// 回放页新增文案（本地小字典；dict-pages.ts 在并行任务边界外，暂不登记）
+// 回放页文案（登记于 src/lib/i18n/dict-pages.ts 的 replay.* 前缀，此处按 lang 直查）
 // ---------------------------------------------------------------------------
 
-const REPLAY_EXTRA_DICT = {
-  /** 空动作街（全下跑马）的占位说明 */
-  "replay.runoutNote": {
-    zh: "（无动作——双方已全下，发牌跑马）",
-    en: "(No actions — players are all-in; running out the board)",
-  },
-  /** 摊牌 tab 的亮牌区标题 */
-  "replay.showdownReveal": {
-    zh: "摊牌亮牌（未弃牌玩家）",
-    en: "Showdown hands (players who didn't fold)",
-  },
-} as const;
-
-export type ReplayExtraKey = keyof typeof REPLAY_EXTRA_DICT;
+export type ReplayExtraKey = Extract<DictKey, `replay.${string}`>;
 
 export function replayText(key: ReplayExtraKey, lang: Lang): string {
-  return REPLAY_EXTRA_DICT[key][lang];
+  return DICT[key][lang];
 }

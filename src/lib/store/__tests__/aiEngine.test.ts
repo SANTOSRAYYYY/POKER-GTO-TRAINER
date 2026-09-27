@@ -4,9 +4,11 @@
  * 设置页把引擎选择写入 localStorage「pokergto_ai_engine」（heuristic | llm）：
  * - heuristic：gameStore 直连 heuristicDecide，绝不调用 LLM（即使已配置 API Key）；
  * - llm：走 opponent.decide（LLM 优先，失败兜底启发式）。
+ * - llm 路径的决策 prompt 语言跟随 localStorage「pokergto_lang」（en 切英文
+ *   slim 版，缺省/中文保持中文）。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { HandRecord } from "@/lib/types";
+import type { ChatMessage, HandRecord } from "@/lib/types";
 import { chatCompletion } from "@/lib/llm/client";
 import { useGameStore } from "@/lib/store/gameStore";
 import { useHistoryStore } from "@/lib/store/historyStore";
@@ -116,5 +118,40 @@ describe("AI 引擎开关", () => {
     await startHeadsUpAndCall();
     expect(st().aiEngine).toBe("heuristic");
     expect(chatMock).not.toHaveBeenCalled();
+  });
+
+  it("llm + UI 英文（pokergto_lang=en）：决策 prompt 切英文 slim 版", async () => {
+    stubLocalStorage({
+      pokergto_ai_engine: "llm",
+      pokergto_llm_config: LLM_CONFIG_JSON,
+      pokergto_lang: "en",
+    });
+    chatMock.mockResolvedValue(
+      JSON.stringify({ action: "check", amount: 0, reasoning: "Free flop from the big blind" }),
+    );
+    await startHeadsUpAndCall();
+    expect(chatMock).toHaveBeenCalled();
+    const messages = chatMock.mock.calls[0][1] as ChatMessage[];
+    expect(messages[0].role).toBe("system");
+    expect(messages[0].content).toContain("Output exactly one line of strict JSON");
+    expect(messages[0].content).toContain("in English");
+    expect(messages[1].content).toContain("Your hole cards");
+    expect(messages[1].content).toContain("[Legal actions]");
+    expect(messages[1].content).not.toContain("你的底牌");
+  });
+
+  it("llm + 无 pokergto_lang（默认中文）：决策 prompt 保持中文", async () => {
+    stubLocalStorage({
+      pokergto_ai_engine: "llm",
+      pokergto_llm_config: LLM_CONFIG_JSON,
+    });
+    chatMock.mockResolvedValue(
+      JSON.stringify({ action: "check", amount: 0, reasoning: "大盲免费看牌" }),
+    );
+    await startHeadsUpAndCall();
+    expect(chatMock).toHaveBeenCalled();
+    const messages = chatMock.mock.calls[0][1] as ChatMessage[];
+    expect(messages[1].content).toContain("你的底牌");
+    expect(messages[0].content).toContain("输出要求");
   });
 });

@@ -23,10 +23,10 @@ import {
   type ReactNode,
 } from "react";
 import { DICT, type DictKey } from "./dict";
+import { getStoredLang, LANG_KEY, type Lang } from "./lang";
 
-export type Lang = "zh" | "en";
-
-const LANG_KEY = "pokergto_lang";
+export type { Lang } from "./lang";
+export { getStoredLang } from "./lang";
 
 interface I18nCtx {
   lang: Lang;
@@ -36,21 +36,11 @@ interface I18nCtx {
 
 const Ctx = createContext<I18nCtx | null>(null);
 
-function readStoredLang(): Lang {
-  try {
-    const v = window.localStorage.getItem(LANG_KEY);
-    if (v === "en" || v === "zh") return v;
-  } catch {
-    // 隐私模式等：静默回退默认
-  }
-  return "zh";
-}
-
 export function I18nProvider({ children }: { children: ReactNode }) {
   // 首帧与 SSR 一致用 zh；挂载后再读存储值，避免 hydration mismatch
   const [lang, setLangState] = useState<Lang>("zh");
   useEffect(() => {
-    setLangState(readStoredLang());
+    setLangState(getStoredLang());
   }, []);
 
   const setLang = useCallback((l: Lang) => {

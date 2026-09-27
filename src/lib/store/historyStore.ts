@@ -32,6 +32,7 @@ import { withRunoutStreets } from "@/lib/store/runout";
 import { isTournamentHand, seatPosition, seatPositionCn, STYLE_NAME } from "@/components/history/labels";
 import { summarizeHand } from "@/lib/ai/recentHands";
 import { computeHeroHud } from "@/lib/ai/hudStats";
+import { getStoredLang, type Lang } from "@/lib/i18n/lang";
 
 const DB_NAME = "pokergto";
 const DB_VERSION = 1;
@@ -276,6 +277,35 @@ export const ANALYSIS_SYSTEM_PROMPT = `你是职业德州扑克教练。复盘�
 4. "rating" 只能取 "good"（打得好）| "ok"（可接受）| "mistake"（明显错误）。
 5. "score" 为 0-100 的整数综合评分（越高代表学员这手牌打得越好）。
 6. 简洁硬约束：每条 comment 不超过 120 字，overall 不超过 200 字——宁可少说也要保证 JSON 完整收尾，绝对不要让输出被截断。`;
+
+/**
+ * ANALYSIS_SYSTEM_PROMPT 的英文版（UI 语言为英文时使用）：结构与约束逐条对应，
+ * 额外要求 JSON 内的点评文本用英文输出（手牌数据本身仍以中文事实呈现，模型可理解）。
+ */
+export const ANALYSIS_SYSTEM_PROMPT_EN = `You are a professional Texas Hold'em coach. Review the student's (referred to as "you") key decisions in this hand: point out what was right or wrong, give the correct line and why; if equity data is provided, incorporate it into your analysis (it is objectively computed and trustworthy). If any street is a multiway pot (three or more players), briefly comment on the multiway dynamics.
+
+If "decision-point reference data" is provided: go through each decision point against its reference line first — affirm decisions that agree with the reference tendency and explain why they are right; clearly call out deviations, and roughly estimate the long-run chip cost of repeating each deviation as "equity gap × pot at the time" (e.g. "equity gap ≈10%, pot 200, ≈20 chips lost each time"). The reference data is driven by real computed equity — a heuristic reference line, not an exact solver solution — and its equity and odds figures may be quoted directly.
+
+Strict requirements:
+1. Output a single strict JSON object only — no markdown code blocks, no other text.
+2. The JSON format is:
+{
+  "streets": [
+    { "street": "preflop", "rating": "good", "comments": ["……", "……"] }
+  ],
+  "overall": "overall assessment (2-4 sentences)",
+  "score": 75
+}
+3. "street" must be one of "preflop" | "flop" | "turn" | "river"; cover only the streets actually played, one entry per street.
+4. "rating" must be one of "good" (well played) | "ok" (acceptable) | "mistake" (clear error).
+5. "score" is an integer from 0 to 100 (higher means the student played this hand better).
+6. Brevity hard constraints: each comment at most 120 characters, overall at most 200 characters — say less rather than risk an incomplete JSON; never let the output be truncated.
+7. Output JSON with English text: every comment and the overall assessment must be written in English.`;
+
+/** 按 UI 语言选择单手复盘 system prompt（zh 为默认，en 用英文版） */
+export function analysisSystemPromptFor(lang: Lang): string {
+  return lang === "en" ? ANALYSIS_SYSTEM_PROMPT_EN : ANALYSIS_SYSTEM_PROMPT;
+}
 
 const VALID_STREETS = new Set<Street>(["preflop", "flop", "turn", "river"]);
 const VALID_RATINGS = new Set<StreetRating>(["good", "ok", "mistake"]);
@@ -522,7 +552,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
       throw new Error("未找到该手牌记录，可能已被删除");
     }
     const messages: ChatMessage[] = [
-      { role: "system", content: ANALYSIS_SYSTEM_PROMPT },
+      { role: "system", content: analysisSystemPromptFor(getStoredLang()) },
       { role: "user", content: buildAnalysisUserPrompt(hand) },
     ];
     const { result } = await analyzeWithRetry(messages, (msgs) =>
@@ -573,6 +603,35 @@ export const SESSION_SYSTEM_PROMPT = `你是一位职业德州扑克教练，擅
 5. "priorities" 1-3 条，按练习优先级排序，具体可执行（例如"枪口位开局范围收紧到前 12%"，而不是"注意翻前"这种空话）。
 6. "score" 为 0-100 的整数综合评分（越高代表学员这场整体打得越好）。
 7. 简洁硬约束：strengths 每条不超过 60 字，leak 的 title 不超过 20 字、detail 不超过 120 字，priorities 每条不超过 40 字——宁可少说也要保证 JSON 完整收尾，绝对不要让输出被截断。`;
+
+/**
+ * SESSION_SYSTEM_PROMPT 的英文版（UI 语言为英文时使用）：结构与约束逐条对应；
+ * 证据引用沿用 user prompt 中的「样本1」~「样本5」编号，并要求 JSON 文本用英文输出。
+ */
+export const SESSION_SYSTEM_PROMPT_EN = `You are a professional No-Limit Texas Hold'em coach (heads-up and 2-9 player tables, cash games and SNG tournaments). The student just finished a session. You will see aggregated session stats (VPIP/PFR/AF/WTSD, position splits, opponent-style splits) plus summaries of the biggest losing hands. Review the student's (referred to as "you") performance at the session level: focus on repeatable strengths and systemic leaks, not the luck of individual hands.
+
+Strict requirements:
+1. Output a single strict JSON object only — no markdown code blocks, no other text.
+2. The JSON format is:
+{
+  "strengths": ["……", "……"],
+  "leaks": [
+    { "title": "one-line leak summary", "detail": "specifics, improvement advice and cited evidence" }
+  ],
+  "priorities": ["top practice priority", "second priority"],
+  "score": 68
+}
+3. "strengths": 2-4 items — things the student did well, each backed by data or samples (e.g. "aggressive opens from late position, +45 profit around the button").
+4. "leaks": 1-4 items sorted by severity; "detail" must cite evidence — reference losing sample hands by their labels 「样本1」-「样本5」, and stats by metric name and value (e.g. "VPIP 45% is clearly too loose", "UTG profit -120").
+5. "priorities": 1-3 items sorted by practice priority, concrete and actionable (e.g. "tighten the UTG opening range to the top 12%", not vague advice like "pay attention preflop").
+6. "score": an integer from 0 to 100 (higher means the student played the session better overall).
+7. Brevity hard constraints: each strength at most 60 characters, leak title at most 20 characters, leak detail at most 120 characters, each priority at most 40 characters — say less rather than risk an incomplete JSON; never let the output be truncated.
+8. Output JSON with English text: strengths, leak titles and details, and priorities must all be written in English.`;
+
+/** 按 UI 语言选择整场复盘 system prompt（zh 为默认，en 用英文版） */
+export function sessionSystemPromptFor(lang: Lang): string {
+  return lang === "en" ? SESSION_SYSTEM_PROMPT_EN : SESSION_SYSTEM_PROMPT;
+}
 
 const styleName = (s: string): string => STYLE_NAME[s as ConcreteAIStyle] ?? s;
 
@@ -718,16 +777,18 @@ export interface SessionAnalyzeOutcome {
  * 整场复盘核心（纯注入，不碰 idb/localStorage，便于 vitest 单测）：
  * 聚合 hands → prompt → callLLM → 容错解析；首次失败追加严格 JSON 提示重试一次，
  * 第二次仍失败抛出含两次原因的合并错误。
+ * lang 决定 system prompt 语言（默认 zh；en 时要求 JSON 文本用英文输出）。
  */
 export async function analyzeSessionCore(
   hands: HandRecord[],
   callLLM: LLMCaller,
+  lang: Lang = "zh",
 ): Promise<SessionAnalyzeOutcome> {
   if (hands.length === 0) {
     throw new Error("暂无可复盘的手牌记录，请先打几手牌再来整场复盘");
   }
   const messages: ChatMessage[] = [
-    { role: "system", content: SESSION_SYSTEM_PROMPT },
+    { role: "system", content: sessionSystemPromptFor(lang) },
     { role: "user", content: buildSessionUserPrompt(hands) },
   ];
   try {
@@ -823,8 +884,10 @@ export async function analyzeSession(
     Math.min(SESSION_ANALYSIS_MAX_LIMIT, Math.floor(limit ?? SESSION_ANALYSIS_DEFAULT_LIMIT)),
   );
   const hands = (await useHistoryStore.getState().listHands()).slice(0, lim);
-  const { report } = await analyzeSessionCore(hands, (msgs) =>
-    chatCompletion(config, msgs),
+  const { report } = await analyzeSessionCore(
+    hands,
+    (msgs) => chatCompletion(config, msgs),
+    getStoredLang(),
   );
   saveSessionReport(report);
   return report;

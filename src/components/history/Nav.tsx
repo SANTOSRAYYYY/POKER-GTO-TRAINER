@@ -42,7 +42,7 @@ export function Nav() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+                className={`rounded-md px-3 py-1.5 max-md:py-2 text-sm transition-colors ${
                   active
                     ? "bg-emerald-500/15 font-medium text-emerald-400"
                     : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"

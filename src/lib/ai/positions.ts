@@ -106,6 +106,15 @@ export function positionName(seat: Seat, state: GameState): string {
   return names ? names[idx] : `座位 ${seat}`;
 }
 
+/** 座位的位置短名（无中文标注，供英文 LLM prompt 等场景）；规则与 positionName 一致 */
+export function positionShortName(seat: Seat, state: GameState): string {
+  const seats = activeSeatsFromButton(state);
+  const idx = seats.indexOf(seat);
+  if (idx === -1) return "eliminated";
+  const names = POSITION_SHORT_NAMES[seats.length];
+  return names ? names[idx] : `Seat ${seat}`;
+}
+
 /** 行动顺序信息（供 prompt 向 AI 说明先后手） */
 export interface ActOrderInfo {
   /** 翻前第一个行动的座位（UTG；单挑为按钮位） */

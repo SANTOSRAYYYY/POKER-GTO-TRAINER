@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![TypeScript 7](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Tests: 625 passing](https://img.shields.io/badge/tests-625%20passing-brightgreen)](#tests)
+[![Tests: 672 passing](https://img.shields.io/badge/tests-672%20passing-brightgreen)](#tests)
 [![E2E: Playwright](https://img.shields.io/badge/E2E-Playwright%20smoke-45ba4b?logo=playwright&logoColor=white)](e2e/README.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
 
@@ -151,18 +151,18 @@ src/
 └── components/        # table / history / stats UI
 scripts/selfplay/      # seeded paired self-play bench → bb/100 + 95% CI
 docs/research/         # 22 curated experiment reports
-e2e/                   # 7 Playwright real-browser smoke tests
+e2e/                   # 12 Playwright real-browser E2E tests
 ```
 
 ## Tests
 
 ```bash
-npm test          # 625 unit/integration tests: engine / AI / stores / components / routes
+npm test          # 672 unit/integration tests: engine / AI / stores / components / routes
 npx tsc --noEmit  # type check (TypeScript 7)
 npm run build     # production build (Turbopack)
 
 npx playwright install chromium   # first time only
-npm run test:e2e  # 7 real-browser smoke cases, dev server auto-starts on port 3105
+npm run test:e2e  # 12 real-browser E2E cases, dev server auto-starts on port 3105
 ```
 
 ## Self-play research bench
@@ -196,7 +196,7 @@ Start with these reports:
 
 PRs, issues and experiment ideas are welcome.
 
-- Keep it green: `npm test` (625 tests) and `npx tsc --noEmit` must pass; run `npm run test:e2e` for UI changes.
+- Keep it green: `npm test` (672 tests) and `npx tsc --noEmit` must pass; run `npm run test:e2e` for UI changes.
 - Changing an AI mechanic? Ship paired self-play evidence (bb/100 + 95% CI) in the PR — that is how every default in this repo earned its place. `scripts/selfplay/` has the bench.
 - UI strings live in `src/lib/i18n/` — add both English and Chinese entries.
 - E2E selectors use roles/text/placeholders only; please don't add `data-testid` to `src`.
@@ -234,7 +234,7 @@ PRs, issues and experiment ideas are welcome.
 - **GTO 参考线**：回放时 hero 的每个决策点旁显示参考徽章——实算胜率（蒙特卡洛）+ 建议动作倾向（加注/跟注/过牌/弃牌，含置信度）；统一标注「启发式参考线，非 solver 精确解」
 - **对手笔记本**：AI 对 hero 的长期画像跨 session 持久化（近因衰减记忆），AI 越打越懂你；数据中心可查看「AI 眼中的你」并重置
 - **移动端适配**：小屏下信息侧栏默认折叠为悬浮窄条/抽屉，牌桌环形座位与动画按视口宽度自适应，行动栏适配触屏（隐藏键盘快捷键提示）
-- **E2E 冒烟**：7 条 Playwright 真实浏览器用例（大厅开局/弃牌自动下一手/历史回放/数据中心/训练器答题/设置持久化），见 `e2e/README.md`
+- **E2E 冒烟**：12 条 Playwright 真实浏览器用例（大厅开局/弃牌自动下一手/历史回放/数据中心/训练器答题/设置持久化/语言切换 + 移动端布局与触控 + 宣传截图），见 `e2e/README.md`
 
 ## 锦标赛结构（SNG）
 
@@ -331,11 +331,11 @@ Next.js 16（App Router + Turbopack）+ React 19 + TypeScript 7 + Tailwind CSS v
 ## 测试
 
 ```bash
-npm test          # vitest run：引擎 / AI / store / 组件 / 路由共 625 个测试
+npm test          # vitest run：引擎 / AI / store / 组件 / 路由共 672 个测试
 npx tsc --noEmit  # 类型检查（TypeScript 7）
 npm run build     # 生产构建（Turbopack）
 
 # E2E（首次先装浏览器）
 npx playwright install chromium
-npm run test:e2e  # 7 条真实浏览器冒烟，自动起 dev server（端口 3105）
+npm run test:e2e  # 12 条真实浏览器用例，自动起 dev server（端口 3105）
 ```

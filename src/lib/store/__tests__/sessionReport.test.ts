@@ -4,7 +4,8 @@
  *   score 缺失/越界/字符串、strengths 单字符串、leaks 字符串项/缺字段项、
  *   完全无 JSON 抛错
  * - analyzeSessionCore：mock LLMCaller（不触网/不碰 idb），首次成功不重试、
- *   首次失败追加严格 JSON 提示重试、两次都失败抛合并错误、空手牌直接抛错
+ *   首次失败追加严格 JSON 提示重试、两次都失败抛合并错误、空手牌直接抛错、
+ *   lang='en' 时 system prompt 切英文版（缺省/显式 zh 保持中文）
  * - buildSessionUserPrompt：聚合统计与亏损样本手进入 prompt
  * - listSessionReports/saveSessionReport：localStorage 最多 5 份、最新在前、
  *   脏数据/无 window 容错
@@ -18,6 +19,8 @@ import {
   parseSessionReport,
   saveSessionReport,
   SESSION_REPORTS_KEY,
+  SESSION_SYSTEM_PROMPT,
+  SESSION_SYSTEM_PROMPT_EN,
   type LLMCaller,
 } from "@/lib/store/historyStore";
 import { DEFAULT_RECENCY_LAMBDA, setAdaptRecencyLambda } from "@/lib/ai/adapt";
@@ -199,6 +202,26 @@ describe("analyzeSessionCore", () => {
     const callLLM: LLMCaller = vi.fn(async () => GOOD_JSON);
     await expect(analyzeSessionCore([], callLLM)).rejects.toThrow(/暂无可复盘/);
     expect(callLLM).not.toHaveBeenCalled();
+  });
+
+  it("lang='en'：system prompt 切英文版（要求英文输出）；缺省仍为中文", async () => {
+    const callLLMEn: LLMCaller = vi.fn(async () => GOOD_JSON);
+    await analyzeSessionCore(HANDS, callLLMEn, "en");
+    const enMessages = (callLLMEn as ReturnType<typeof vi.fn>).mock.calls[0][0] as ChatMessage[];
+    expect(enMessages[0].content).toBe(SESSION_SYSTEM_PROMPT_EN);
+    expect(enMessages[0].content).toContain("Output JSON with English text");
+    // user prompt（聚合数据）不受语言开关影响，仍按原结构渲染
+    expect(enMessages[1].content).toContain("样本1");
+
+    const callLLMZh: LLMCaller = vi.fn(async () => GOOD_JSON);
+    await analyzeSessionCore(HANDS, callLLMZh);
+    const zhMessages = (callLLMZh as ReturnType<typeof vi.fn>).mock.calls[0][0] as ChatMessage[];
+    expect(zhMessages[0].content).toBe(SESSION_SYSTEM_PROMPT);
+    const callLLMZhExplicit: LLMCaller = vi.fn(async () => GOOD_JSON);
+    await analyzeSessionCore(HANDS, callLLMZhExplicit, "zh");
+    const zhExplicitMessages = (callLLMZhExplicit as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as ChatMessage[];
+    expect(zhExplicitMessages[0].content).toBe(SESSION_SYSTEM_PROMPT);
   });
 });
 

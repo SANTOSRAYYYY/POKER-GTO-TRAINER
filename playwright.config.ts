@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * E2E 冒烟配置（真实浏览器回归，补 588 个逻辑层 vitest 测不出的 UI 链路）。
+ * E2E 冒烟配置（真实浏览器回归，补 672 个逻辑层 vitest 测不出的 UI 链路）。
  *
  * 浏览器：默认用 `npx playwright install chromium` 下载的 chromium。
  * 若下载失败/太慢，改用系统已装 Chrome —— 把下面 projects 换成：

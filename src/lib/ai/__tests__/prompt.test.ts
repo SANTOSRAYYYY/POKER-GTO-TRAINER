@@ -103,6 +103,68 @@ describe("buildSlimPrompt（默认生产版）", () => {
   });
 });
 
+describe("buildSlimPrompt 英文版（lang='en'，UI 英文时的 LLM 决策 prompt）", () => {
+  const input = makeDecideInput({
+    aiHole: ["As", "Kd"],
+    board: ["Qh", "Jh", "2c"],
+    street: "flop",
+    pot: 60,
+    currentBet: 30,
+    callAmount: 30,
+    legalActions: FACING_RAISE_LEGAL,
+    style: "maniac",
+  });
+  const { system, user } = buildSlimPrompt(input, "en");
+
+  it("system/user 使用英文标签，输出要求为英文 JSON 协议", () => {
+    expect(system).toContain("Maniac");
+    expect(system).toContain("professional No-Limit Texas Hold'em player");
+    expect(system).toContain("Output exactly one line of strict JSON");
+    expect(system).toContain('"reasoning":"one-sentence explanation in English"');
+    expect(user).toContain("[Current situation] Flop, 2-max table");
+    expect(user).toContain("- Your hole cards: As Kd");
+    expect(user).toContain("- Board: Qh Jh 2c");
+    expect(user).toContain("- Pot: 60");
+    expect(user).toContain("- Your position: BB (Seat 1)");
+    expect(user).toContain("[Legal actions]");
+    expect(user).toContain("call (match the bet, costs 20 chips)");
+    expect(user).toContain("output exactly one line of JSON");
+  });
+
+  it("英文版不含中文局面标签；缺省与显式 zh 仍为中文且完全一致", () => {
+    expect(user).not.toContain("你的底牌");
+    expect(user).not.toContain("底池：");
+    expect(user).not.toContain("合法动作");
+    expect(system).not.toContain("输出要求");
+    const zh = buildSlimPrompt(input);
+    expect(zh.user).toContain("你的底牌");
+    expect(zh.user).toContain("底池：60");
+    expect(zh.system).toContain("输出要求");
+    expect(buildSlimPrompt(input, "zh")).toEqual(zh);
+  });
+
+  it("锦标赛事实段英文化；现金局无此行", () => {
+    const tourney = buildSlimPrompt(
+      {
+        ...input,
+        tournament: {
+          playersRemaining: 4,
+          totalPlayers: 9,
+          myRankByChips: 2,
+          myStackBB: 23.4,
+          avgStackBB: 18.8,
+          blindLevelBB: 20,
+          phase: "bubble",
+        },
+      },
+      "en",
+    );
+    expect(tourney.user).toContain("- Tournament: 4/9 players left");
+    expect(tourney.user).toContain("phase: bubble");
+    expect(user).not.toContain("Tournament");
+  });
+});
+
 describe("buildPrompt 多人桌", () => {
   const input = makeDecideInput({
     aiHole: ["As", "Kd"],

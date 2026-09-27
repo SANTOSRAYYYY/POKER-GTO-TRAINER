@@ -22,6 +22,7 @@ import type {
   LLMConfig,
   PlayerAction,
 } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/lang";
 import { chatCompletion } from "@/lib/llm/client";
 import { heuristicDecide } from "./heuristic";
 import { brainStats, type BrainStats } from "./brain";
@@ -74,8 +75,13 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
  * 构造发给 LLM 的消息对。
  * prompt 风格：slim（默认，零注入——胜率注入经大样本验证会诱发机械决策）；
  * full 才计算 brainStats 注入（同时付出 40-80ms 计算成本）。
+ * lang 只作用于 slim 路径（full 为对照实验，保持中文版）。
  */
-function buildMessages(input: DecideInput, config: LLMConfig): ChatMessage[] {
+function buildMessages(
+  input: DecideInput,
+  config: LLMConfig,
+  lang: Lang = "zh",
+): ChatMessage[] {
   if (config.promptStyle === "full") {
     let stats: BrainStats | null = null;
     try {
@@ -89,7 +95,7 @@ function buildMessages(input: DecideInput, config: LLMConfig): ChatMessage[] {
       { role: "user", content: user },
     ];
   }
-  const { system, user } = buildSlimPrompt(input);
+  const { system, user } = buildSlimPrompt(input, lang);
   return [
     { role: "system", content: system },
     { role: "user", content: user },
@@ -166,12 +172,13 @@ async function voteDecide(
 export async function decide(
   input: DecideInput,
   config: LLMConfig | null,
+  lang: Lang = "zh",
 ): Promise<DecideResult> {
   if (config?.apiKey) {
     // 消息构造失败（异常快照等）不阻塞决策——与旧版整体 try/catch 语义一致
     let messages: ChatMessage[] | null = null;
     try {
-      messages = buildMessages(input, config);
+      messages = buildMessages(input, config, lang);
     } catch {
       messages = null;
     }

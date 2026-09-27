@@ -69,6 +69,7 @@ import { buildModel, createOpponentStats, updateStats } from "@/lib/ai/adapt";
 import { useHistoryStore } from "@/lib/store/historyStore";
 import { loadSession, saveSession } from "@/lib/store/sessionPersistence";
 import { withRunoutStreets } from "@/lib/store/runout";
+import { getStoredLang } from "@/lib/i18n/lang";
 import {
   clearNotebook,
   loadDecayedHeroStats,
@@ -806,11 +807,12 @@ export const useGameStore = create<GameStore>()((set, get) => {
         );
         let result: DecideResult;
         try {
-          // heuristic 引擎直连本地启发式（不碰网络）；llm 引擎走 decide（LLM 优先、启发式兜底）
+          // heuristic 引擎直连本地启发式（不碰网络）；llm 引擎走 decide（LLM 优先、启发式兜底）；
+          // decide 第三个参数为当前 UI 语言：英文界面下 LLM 决策 prompt 与 reasoning 用英文
           result =
             get().aiEngine === "heuristic"
               ? heuristicDecide(input, input.style)
-              : await decide(input, get().llmConfig);
+              : await decide(input, get().llmConfig, getStoredLang());
         } catch (err) {
           console.error("[gameStore] AI decide 失败，使用保底动作:", err);
           result = fallbackDecide(input);

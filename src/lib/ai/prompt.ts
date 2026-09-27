@@ -16,8 +16,9 @@ import type {
   TournamentContext,
   TournamentPhase,
 } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/lang";
 import { AI_PROFILES } from "./profiles";
-import { actOrderInfo, positionName } from "./positions";
+import { actOrderInfo, positionName, positionShortName } from "./positions";
 import type { BrainStats } from "./brain";
 
 // ---------------------------------------------------------------------------
@@ -79,6 +80,84 @@ const AMOUNT_SEMANTICS =
 const OUTPUT_REQUIREMENT =
   "【输出要求】只输出一行严格 JSON，不要输出任何其他文字、不要用 markdown 代码块：\n" +
   '{"action":"fold|check|call|bet|raise|allin","amount":数字,"reasoning":"一句话中文说明"}';
+
+// ---------------------------------------------------------------------------
+// 英文版片段（buildSlimPrompt lang="en" 用；局面事实结构与中文版一致，标签英文化）
+// ---------------------------------------------------------------------------
+
+const STREET_NAMES_EN: Record<Street, string> = {
+  preflop: "Preflop",
+  flop: "Flop",
+  turn: "Turn",
+  river: "River",
+  showdown: "Showdown",
+};
+
+const AMOUNT_SEMANTICS_EN =
+  "- amount semantics: for bet/raise/allin, amount is the cumulative total you put in " +
+  "this street (bet-to), not an increment; for call it is the number of chips needed to " +
+  "call; for fold/check amount is 0.";
+
+const OUTPUT_REQUIREMENT_EN =
+  "[Output requirement] Output exactly one line of strict JSON, nothing else, no markdown code block:\n" +
+  '{"action":"fold|check|call|bet|raise|allin","amount":number,"reasoning":"one-sentence explanation in English"}';
+
+/** 锦标赛阶段英文名（slim prompt 事实段用） */
+const PHASE_EN: Record<TournamentPhase, string> = {
+  early: "early",
+  middle: "middle",
+  bubble: "bubble",
+  final: "final table",
+};
+
+function fmtCardsEn(cards: Card[]): string {
+  return cards.length ? cards.join(" ") : "(none)";
+}
+
+function fmtActionEn(a: PlayerAction): string {
+  switch (a.type) {
+    case "bet":
+      return `bet (amount is your total bet this street, min ${a.amount}, max is your all-in)`;
+    case "raise":
+      return `raise (amount is the total you raise to this street, min ${a.amount}, max is your all-in)`;
+    case "allin":
+      return `allin (all-in, amount=${a.amount})`;
+    case "call":
+      return `call (match the bet, costs ${a.amount} chips)`;
+    default:
+      return `${a.type} (amount is fixed at 0)`;
+  }
+}
+
+function describeStreetActionsEn(state: GameState): string {
+  if (!state.streetActions.length) return "(no actions yet this street)";
+  return state.streetActions
+    .map((sa) =>
+      `Seat${sa.seat} ${sa.action.type}${sa.action.amount > 0 ? ` ${sa.action.amount}` : ""}`
+    )
+    .join(" → ");
+}
+
+function describeOpponentEn(p: PlayerState): string {
+  const status = p.folded
+    ? "folded"
+    : p.allIn
+      ? "all-in"
+      : p.hasActed
+        ? "in hand (acted this round)"
+        : "in hand (yet to act)";
+  return `  - Seat ${p.seat}: stack ${p.stack}, bet this street ${p.streetBet}, ${status}`;
+}
+
+/** describeTournament 的英文版：同样只给事实 */
+function describeTournamentEn(t: TournamentContext): string {
+  return (
+    `- Tournament: ${t.playersRemaining}/${t.totalPlayers} players left, ` +
+    `your chip rank #${t.myRankByChips}` +
+    ` (${t.myStackBB.toFixed(0)}bb, average ${t.avgStackBB.toFixed(0)}bb), ` +
+    `phase: ${PHASE_EN[t.phase]}\n`
+  );
+}
 
 const HEADS_UP_COMMON_SENSE =
   "【单挑德州基本策略常识】\n" +
@@ -292,11 +371,16 @@ export function buildPrompt(
  * 注入胜率/策略说教会让模型做机械阈值决策、放弃原生推理（「赢小输大」），
  * 只有零注入的 slim 两场皆正。只保留：风格人设一句话、局面事实、
  * 对手筹码事实、合法动作、JSON 协议；不含策略常识/胜率/画像/回顾。
+ * lang="en" 时输出英文版（局面事实结构不变，标签英文化，reasoning 要求英文）。
  */
-export function buildSlimPrompt(input: DecideInput): {
+export function buildSlimPrompt(
+  input: DecideInput,
+  lang: Lang = "zh",
+): {
   system: string;
   user: string;
 } {
+  if (lang === "en") return buildSlimPromptEn(input);
   const { state, style } = input;
   const profile = AI_PROFILES[style];
   const seat = state.currentSeat ?? 1;
@@ -328,6 +412,46 @@ export function buildSlimPrompt(input: DecideInput): {
     `【合法动作】\n` +
     input.legalActions.map((a) => `- ${fmtAction(a)}`).join("\n") +
     "\n\n请以你的风格人设做出决策，只输出一行 JSON。";
+
+  return { system, user };
+}
+
+/** buildSlimPrompt 的英文版：与中文版逐行同构，仅文案英文化（位置用短名） */
+function buildSlimPromptEn(input: DecideInput): {
+  system: string;
+  user: string;
+} {
+  const { state, style } = input;
+  const profile = AI_PROFILES[style];
+  const seat = state.currentSeat ?? 1;
+  const me = state.players[seat];
+  const opponents = state.players.filter((p) => p.seat !== seat && !p.eliminated);
+  const position = positionShortName(seat, state);
+
+  const system =
+    `You are "${profile.name}", a professional No-Limit Texas Hold'em player.\n` +
+    "Make the optimal decision to a professional standard, using your own judgment rather than any rules of thumb.\n" +
+    AMOUNT_SEMANTICS_EN +
+    "\n" +
+    OUTPUT_REQUIREMENT_EN;
+
+  const user =
+    `[Current situation] ${STREET_NAMES_EN[state.street]}, ${state.players.length}-max table\n` +
+    `- Your hole cards: ${me.holeCards ? fmtCardsEn(me.holeCards) : "unknown"}\n` +
+    `- Board: ${fmtCardsEn(state.board)}\n` +
+    `- Your position: ${position} (Seat ${seat})\n` +
+    `- Pot: ${state.pot}\n` +
+    `- Your stack: ${me.stack}; your bet this street: ${me.streetBet}\n` +
+    // 锦标赛事实段（仅锦标赛模式注入；现金局无此行）
+    (input.tournament ? describeTournamentEn(input.tournament) : "") +
+    `- Opponents (${opponents.length}):\n` +
+    opponents.map(describeOpponentEn).join("\n") +
+    "\n" +
+    `- Actions this street: ${describeStreetActionsEn(state)}\n` +
+    `- To call: ${input.callAmount}\n` +
+    `[Legal actions]\n` +
+    input.legalActions.map((a) => `- ${fmtActionEn(a)}`).join("\n") +
+    "\n\nDecide in character and output exactly one line of JSON.";
 
   return { system, user };
 }

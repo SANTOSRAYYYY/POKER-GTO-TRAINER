@@ -9,16 +9,25 @@
  *   与「客观胜率数据」段；hero 底牌缺失时不注入参考数据段；
  * - system prompt 仍声明同一 JSON 协议（streets/rating/score），
  *   字数约束为放宽后的 120/200，且要求对照决策点参考数据点评；
+ * - 英文版 system prompt（ANALYSIS_/SESSION_SYSTEM_PROMPT_EN）与中文版
+ *   同协议同约束，并要求 "Output JSON with English text"；
+ * - getStoredLang：store 层读取 UI 语言的行为（无 window / 非法值回退 zh）。
  * - parseAnalysisResult 对新 prompt 下的合法输出照常解析（协议兼容）。
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Card, HandRecord, StreetRecord } from "@/lib/types";
 import {
   ANALYSIS_SYSTEM_PROMPT,
+  ANALYSIS_SYSTEM_PROMPT_EN,
+  analysisSystemPromptFor,
   buildAnalysisUserPrompt,
   parseAnalysisResult,
   renderHandForPrompt,
+  SESSION_SYSTEM_PROMPT,
+  SESSION_SYSTEM_PROMPT_EN,
+  sessionSystemPromptFor,
 } from "@/lib/store/historyStore";
+import { getStoredLang } from "@/lib/i18n/lang";
 
 /** 线性同余种子 rng（胜率可复现） */
 function lcg(seed: number): () => number {
@@ -144,5 +153,71 @@ describe("ANALYSIS_SYSTEM_PROMPT 协议契约", () => {
     expect(r.score).toBe(45);
     expect(r.streets).toHaveLength(2);
     expect(r.streets[0].rating).toBe("mistake");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 英文复盘 system prompt（UI 语言 en 时切换，analyzeHand/analyzeSession 使用）
+// ---------------------------------------------------------------------------
+
+describe("英文复盘 system prompt（UI 语言 en 时切换）", () => {
+  it("ANALYSIS_SYSTEM_PROMPT_EN 与中文版同协议同约束，要求英文输出", () => {
+    expect(ANALYSIS_SYSTEM_PROMPT_EN).toContain('"streets"');
+    expect(ANALYSIS_SYSTEM_PROMPT_EN).toContain('"rating"');
+    expect(ANALYSIS_SYSTEM_PROMPT_EN).toContain('"score"');
+    expect(ANALYSIS_SYSTEM_PROMPT_EN).toContain('"preflop" | "flop" | "turn" | "river"');
+    expect(ANALYSIS_SYSTEM_PROMPT_EN).toContain('"good"');
+    expect(ANALYSIS_SYSTEM_PROMPT_EN).toContain('"mistake"');
+    expect(ANALYSIS_SYSTEM_PROMPT_EN).toContain("120"); // comment 长度约束
+    expect(ANALYSIS_SYSTEM_PROMPT_EN).toContain("200"); // overall 长度约束
+    expect(ANALYSIS_SYSTEM_PROMPT_EN).toContain("reference data"); // 对照决策点参考数据
+    expect(ANALYSIS_SYSTEM_PROMPT_EN).toContain("Output JSON with English text");
+    expect(ANALYSIS_SYSTEM_PROMPT_EN).not.toContain("不超过");
+  });
+
+  it("SESSION_SYSTEM_PROMPT_EN 与中文版同协议同约束，要求英文输出", () => {
+    expect(SESSION_SYSTEM_PROMPT_EN).toContain('"strengths"');
+    expect(SESSION_SYSTEM_PROMPT_EN).toContain('"leaks"');
+    expect(SESSION_SYSTEM_PROMPT_EN).toContain('"priorities"');
+    expect(SESSION_SYSTEM_PROMPT_EN).toContain('"score"');
+    expect(SESSION_SYSTEM_PROMPT_EN).toContain("样本1"); // 证据编号与中文 user prompt 一致
+    expect(SESSION_SYSTEM_PROMPT_EN).toContain("Output JSON with English text");
+  });
+
+  it("*SystemPromptFor 按 lang 选择，zh 为默认路径", () => {
+    expect(analysisSystemPromptFor("zh")).toBe(ANALYSIS_SYSTEM_PROMPT);
+    expect(analysisSystemPromptFor("en")).toBe(ANALYSIS_SYSTEM_PROMPT_EN);
+    expect(sessionSystemPromptFor("zh")).toBe(SESSION_SYSTEM_PROMPT);
+    expect(sessionSystemPromptFor("en")).toBe(SESSION_SYSTEM_PROMPT_EN);
+  });
+});
+
+describe("getStoredLang（store 层 UI 语言读取）", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("无 window（SSR/node 环境）回退默认 zh", () => {
+    expect(getStoredLang()).toBe("zh");
+  });
+
+  it("localStorage pokergto_lang=en 返回 en；非法值与缺失回退 zh", () => {
+    const store: Record<string, string> = { pokergto_lang: "en" };
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (k: string) => (k in store ? store[k] : null),
+        setItem: (k: string, v: string) => {
+          store[k] = v;
+        },
+        removeItem: (k: string) => {
+          delete store[k];
+        },
+      },
+    });
+    expect(getStoredLang()).toBe("en");
+    store.pokergto_lang = "fr";
+    expect(getStoredLang()).toBe("zh");
+    delete store.pokergto_lang;
+    expect(getStoredLang()).toBe("zh");
   });
 });
