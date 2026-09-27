@@ -112,6 +112,17 @@ export const PAGES_DICT = {
     zh: "重购期级数（前 N 级）",
     en: "Rebuy period (first N levels)",
   },
+  "lobby.tourney.anteMode": { zh: "Ante 模式", en: "Ante mode" },
+  "lobby.tourney.anteMode.all": { zh: "全体 ante", en: "Everyone antes" },
+  "lobby.tourney.anteMode.allDesc": {
+    zh: "每手所有玩家各投一份 ante",
+    en: "Every player posts an ante each hand",
+  },
+  "lobby.tourney.anteMode.bb": { zh: "大盲 ante (BBA)", en: "Big blind ante (BBA)" },
+  "lobby.tourney.anteMode.bbDesc": {
+    zh: "仅大盲位替全桌投一份 ante，其余座位不投",
+    en: "Only the big blind posts one ante for the whole table",
+  },
   "lobby.rebuys.label": { zh: "每人可重购次数", en: "Rebuys per player" },
   "lobby.rebuys.none": { zh: "不可重购", en: "No rebuys" },
   "lobby.rebuys.times": { zh: "{n} 次", en: "{n}" },

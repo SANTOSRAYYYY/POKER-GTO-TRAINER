@@ -302,7 +302,12 @@ export function buildPrompt(
     "\n\n" +
     OUTPUT_REQUIREMENT;
 
-  const anteTotal = state.ante > 0 ? state.ante * activeCount : 0;
+  const anteTotal =
+    state.ante > 0
+      ? state.anteMode === "bb"
+        ? state.ante
+        : state.ante * activeCount
+      : 0;
   const potLine =
     anteTotal > 0
       ? `- 底池：${state.pot}（其中 ante 死钱 ${anteTotal}）`

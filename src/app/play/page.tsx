@@ -46,6 +46,7 @@ function parseSeats(v: string | undefined): number {
 /**
  * /play?mode=cash|tournament&seats=2-9&aiStyle=random&sb=1&bb=2&buyin=200
  *   &rebuys=0-99&hpl=1-50&blindMode=limited|infinite&rebuyPeriod=0-10
+ *   &anteMode=all|bb
  * 缺省：mode=cash、seats=2、aiStyle=random；现金局盲注 1/2、买入 100bb；
  * 锦标赛忽略 sb/bb/buyin，使用默认升盲结构（1500 筹码 / 每 8 手升级），
  * 其中：
@@ -53,7 +54,8 @@ function parseSeats(v: string | undefined): number {
  * - hpl 为每几手升一级（1-50，默认 8）；
  * - blindMode=infinite 时升盲表扩展为「无限升盲」（原 10 级后大盲继续
  *   翻倍，预生成至 40 级），其余值按限制级别（10 级表到顶停住）处理；
- * - rebuyPeriod 为重购期级数（前 N 级可重购，0-10，默认 4）。
+ * - rebuyPeriod 为重购期级数（前 N 级可重购，0-10，默认 4）；
+ * - anteMode=bb 为 BBA 赛制（仅大盲位替全桌投 ante），其余值按全体 ante。
  * 各参数非法时回退对应默认值。
  *
  * 恢复规则（config 仅作无存档时的回退新局配置）：
@@ -95,12 +97,14 @@ export default async function PlayPage({
       first(sp.blindMode) === "infinite"
         ? extendLevelsInfinite(DEFAULT_TOURNAMENT.levels, INFINITE_TOTAL_LEVELS)
         : DEFAULT_TOURNAMENT.levels;
+    const anteMode = first(sp.anteMode) === "bb" ? "bb" : "all";
     config.tournament = {
       ...DEFAULT_TOURNAMENT,
       levels,
       handsPerLevel,
       rebuysAllowed,
       rebuyPeriodLevels,
+      anteMode,
     };
   }
 
@@ -115,6 +119,7 @@ export default async function PlayPage({
     "rebuys",
     "hpl",
     "blindMode",
+    "anteMode",
     "rebuyPeriod",
   ].some((k) => first(sp[k]) !== undefined);
   const resume = first(sp.resume) === "1" || !hasStartParams;

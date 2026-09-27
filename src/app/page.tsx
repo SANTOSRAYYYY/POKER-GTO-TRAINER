@@ -17,7 +17,7 @@ import {
   extendLevelsInfinite,
   INFINITE_TOTAL_LEVELS,
 } from "@/lib/poker/tournament";
-import type { AIStyle, GameMode } from "@/lib/types";
+import type { AIStyle, AnteMode, GameMode } from "@/lib/types";
 
 const STYLE_OPTIONS: AIStyle[] = [
   "random",
@@ -75,6 +75,7 @@ export default function LobbyPage() {
     DEFAULT_TOURNAMENT.handsPerLevel,
   );
   const [blindMode, setBlindMode] = useState<BlindMode>("limited");
+  const [anteMode, setAnteMode] = useState<AnteMode>("all");
   const [rebuyPeriod, setRebuyPeriod] = useState<number>(4);
   const [activeSession, setActiveSession] = useState<SessionSummary | null>(null);
 
@@ -111,6 +112,7 @@ export default function LobbyPage() {
       rebuys: String(rebuys),
       hpl: String(handsPerLevel),
       blindMode,
+      anteMode,
       rebuyPeriod: String(rebuyPeriod),
     });
     router.push(`/play?${params.toString()}`);
@@ -334,6 +336,41 @@ export default function LobbyPage() {
                       <div className="mt-0.5 text-xs text-zinc-500">{t(bm.descKey)}</div>
                     </button>
                   ))}
+                </div>
+
+                <div className="mt-3">
+                  <label className="mb-1 block text-sm text-zinc-400">
+                    {t("lobby.tourney.anteMode")}
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(
+                      [
+                        {
+                          id: "all",
+                          nameKey: "lobby.tourney.anteMode.all",
+                          descKey: "lobby.tourney.anteMode.allDesc",
+                        },
+                        {
+                          id: "bb",
+                          nameKey: "lobby.tourney.anteMode.bb",
+                          descKey: "lobby.tourney.anteMode.bbDesc",
+                        },
+                      ] as { id: AnteMode; nameKey: DictKey; descKey: DictKey }[]
+                    ).map((am) => (
+                      <button
+                        key={am.id}
+                        onClick={() => setAnteMode(am.id)}
+                        className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                          anteMode === am.id
+                            ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                            : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500"
+                        }`}
+                      >
+                        <div className="text-sm font-medium">{t(am.nameKey)}</div>
+                        <div className="mt-0.5 text-xs text-zinc-500">{t(am.descKey)}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="mt-3">

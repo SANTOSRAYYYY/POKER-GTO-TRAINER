@@ -8,8 +8,9 @@
  * - 座位与行动顺序：翻前从 UTG（大盲左邻第一个在局玩家）开始，翻后从按钮
  *   左邻第一个可行动玩家开始；定位统一用 nextActiveSeat / findNextActor。
  * - 单挑特例：2 人时按钮 = 小盲，UTG 即按钮（翻前按钮先行动，保持 v1 行为）。
- * - ante：每人先投 ante（计入 pot/handBet，是死钱，不计入 streetBet/currentBet），
- *   再投盲注；筹码不足则全下。
+ * - ante：全体模式每人先投 ante（计入 pot/handBet，是死钱，不计入
+ *   streetBet/currentBet），再投盲注；BBA 模式（anteMode='bb'）仅大盲位
+ *   替全桌投一份 ante（先投 ante 再投大盲）；筹码不足则全下。
  * - 下注轮结束条件：所有未弃牌且未全下的玩家都已行动且 streetBet 相等，
  *   或只剩一人未弃牌 / 全员 all-in。
  * - 最小加注：raise 的 amount（bet-to 语义）≥ currentBet + minRaise，
@@ -68,6 +69,7 @@ export function createGame(
 ): GameState {
   const { players: playerCount, smallBlind, bigBlind, stack, buttonSeat } = config;
   const ante = config.ante ?? 0;
+  const anteMode = config.anteMode === "bb" ? "bb" : "all";
   if (!Number.isInteger(playerCount) || playerCount < 2 || playerCount > 9) {
     throw new Error("玩家数必须是 2-9 的整数");
   }
@@ -128,9 +130,17 @@ export function createGame(
     players[seat].holeCards = [pop(), pop()];
   }
 
-  // ante：每人先投（死钱，只计入 handBet/pot，不计入 streetBet）。
+  // 盲注座位：单挑时按钮=小盲；3 人及以上小盲=按钮左邻、大盲=小盲左邻。
+  // 先于 ante 定位：BBA 模式只有大盲位投 ante。
+  const sbSeat =
+    playerCount === 2 ? buttonSeat : nextActiveSeat(players, buttonSeat)!;
+  const bbSeat = nextActiveSeat(players, sbSeat)!;
+
+  // ante：全体模式每人先投；BBA 模式仅大盲位替全桌投一份
+  // （死钱，只计入 handBet/pot，不计入 streetBet）。
   if (ante > 0) {
-    for (const p of players) {
+    const anteSeats = anteMode === "bb" ? [players[bbSeat]] : players;
+    for (const p of anteSeats) {
       const paid = Math.min(ante, p.stack);
       p.stack -= paid;
       p.handBet += paid;
@@ -138,10 +148,6 @@ export function createGame(
     }
   }
 
-  // 盲注：单挑时按钮=小盲；3 人及以上小盲=按钮左邻、大盲=小盲左邻。
-  const sbSeat =
-    playerCount === 2 ? buttonSeat : nextActiveSeat(players, buttonSeat)!;
-  const bbSeat = nextActiveSeat(players, sbSeat)!;
   const postBlind = (seat: Seat, amount: number): void => {
     const p = players[seat];
     const paid = Math.min(amount, p.stack);
@@ -166,6 +172,7 @@ export function createGame(
     smallBlind,
     bigBlind,
     ante,
+    anteMode: config.anteMode ?? "all",
     minRaise: bigBlind,
     currentBet: Math.max(...players.map((p) => p.streetBet)),
     streetActions: [],

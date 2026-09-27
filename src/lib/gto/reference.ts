@@ -215,7 +215,9 @@ export function heroDecisionInput(
   if (!hero || !hero.cards || hero.cards.length !== 2) return null;
 
   const n = hand.players.length;
-  let pot = hand.smallBlind + hand.bigBlind + hand.ante * n;
+  // BBA 模式只有大盲位投一份 ante；缺省/全体模式按人头计
+  const anteTotal = hand.anteMode === "bb" ? hand.ante : hand.ante * n;
+  let pot = hand.smallBlind + hand.bigBlind + anteTotal;
   const folded = new Set<Seat>();
 
   for (let si = 0; si <= streetIdx; si++) {

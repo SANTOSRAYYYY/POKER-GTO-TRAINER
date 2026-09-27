@@ -156,4 +156,10 @@ export const TABLE_DICT = {
   },
   "tour.rebuyDisabled": { zh: "重购已停用", en: "Rebuys disabled" },
   "tour.rebuysLeft": { zh: "剩余重购 {n} 次", en: "{n} rebuys left" },
+  "tour.handCost": {
+    zh: "本手固定支出：ante {ante}（{mode}）+ 轮值盲注",
+    en: "Fixed cost this hand: ante {ante} ({mode}) + rotating blinds",
+  },
+  "tour.handCost.all": { zh: "全体", en: "all players" },
+  "tour.handCost.bba": { zh: "BBA 仅大盲", en: "BBA · big blind only" },
 } as const;

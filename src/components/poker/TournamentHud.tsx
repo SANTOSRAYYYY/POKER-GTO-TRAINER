@@ -4,7 +4,8 @@ import { useGameStore } from "@/lib/store/gameStore";
 import { useI18n } from "@/lib/i18n";
 
 /**
- * 锦标赛 HUD：当前盲注级别（sb/bb/ante）、距升级剩余手数、剩余人数、hero 名次。
+ * 锦标赛 HUD：当前盲注级别（sb/bb/ante）、本手固定支出（ante 模式 + 轮值盲注）、
+ * 距升级剩余手数、剩余人数、hero 名次。
  * 仅锦标赛模式渲染。
  */
 export default function TournamentHud() {
@@ -35,6 +36,18 @@ export default function TournamentHud() {
         <span className="tabular-nums">
           {t("tour.blinds", { sb: game.smallBlind, bb: game.bigBlind })}
           {game.ante > 0 && ` (ante ${game.ante})`}
+        </span>
+      )}
+      {game && game.ante > 0 && (
+        <span className="text-purple-300/80">
+          {t("tour.handCost", {
+            ante: game.ante,
+            mode: t(
+              (tournamentConfig.anteMode ?? "all") === "bb"
+                ? "tour.handCost.bba"
+                : "tour.handCost.all",
+            ),
+          })}
         </span>
       )}
       <span>

@@ -140,8 +140,10 @@ export interface GameState {
   smallBlind: number;
   /** 大盲额度 */
   bigBlind: number;
-  /** 本手前注（每人投入；无 ante 局为 0） */
+  /** 本手前注额度（全体模式每人投入；BBA 模式仅大盲位投入；无 ante 局为 0） */
   ante: number;
+  /** ante 模式：all=全体各投 / bb=仅大盲位投（BBA）；缺省视为 all */
+  anteMode?: AnteMode;
   /**
    * 当前最小加注“增量”（即最小 raise 的 amount = currentBet + minRaise）。
    * 初始 = bigBlind，每次合法加注后更新为本次加注的增量。
@@ -168,6 +170,9 @@ export interface GameState {
   showdown: boolean;
 }
 
+/** ante 投放方式：'all' 全体各投一份（默认）；'bb' 仅大盲位替全桌投（BBA 赛制） */
+export type AnteMode = "all" | "bb";
+
 /**
  * 开局配置（game.createGame）。
  * 只支持对称初始筹码；锦标赛中两手之间的筹码携带/淘汰/升盲由调局模块负责。
@@ -179,6 +184,12 @@ export interface CreateGameConfig {
   bigBlind: number;
   /** 每人前注，默认 0（锦标赛取自 BlindLevel.ante） */
   ante?: number;
+  /**
+   * ante 模式，默认 'all'。
+   * 'bb'（BBA）：仅大盲位投一份 config.ante（先投 ante 再投大盲，不足则全下），
+   * 其余座位不投；ante 仍是死钱（计入 pot/handBet，不计入 streetBet）。
+   */
+  anteMode?: AnteMode;
   /** 每人初始筹码（对称） */
   stack: number;
   /** 本手按钮位座位 */
@@ -219,6 +230,11 @@ export interface TournamentConfig {
    * 0 = 全程不可重购（等同直接淘汰制，rebuysAllowed 失效）。
    */
   rebuyPeriodLevels?: number;
+  /**
+   * ante 模式，默认 'all'（全体各投一份）。
+   * 'bb'（BBA）：仅大盲位替全桌投一份该级 ante，其余座位不投。
+   */
+  anteMode?: AnteMode;
 }
 
 /**
@@ -322,6 +338,8 @@ export interface HandRecord {
   bigBlind: number;
   /** 本手前注（无 ante 局为 0） */
   ante: number;
+  /** ante 模式：all=全体各投 / bb=仅大盲位投（BBA）；缺省视为 all（旧记录口径） */
+  anteMode?: AnteMode;
   /** 按街道顺序的记录（只包含实际进行到的街道） */
   streets: StreetRecord[];
   /** 最终公共牌（5 张或摊牌时的张数；提前 fold 时可能不足 5 张） */

@@ -309,6 +309,77 @@ describe("game(N): ante 前注", () => {
   });
 });
 
+describe("game(N): BBA 大盲 ante（anteMode='bb'）", () => {
+  it("9 人桌：仅大盲位投一份 ante，pot = SB + BB + ante", () => {
+    const s = createGame({
+      players: 9, smallBlind: 5, bigBlind: 10, ante: 10, anteMode: "bb",
+      stack: 100, buttonSeat: 0,
+    });
+    // SB=seat1、BB=seat2；BB 先投 ante 10 再投大盲 10（扣两份）
+    expect(s.players[2].handBet).toBe(20);
+    expect(s.players[2].streetBet).toBe(10); // ante 仍是死钱，不计入下注线
+    expect(s.players[2].stack).toBe(80);
+    expect(s.players[1].handBet).toBe(5); // 小盲不投 ante
+    expect(s.players[1].stack).toBe(95);
+    // 其余座位零投入
+    for (const seat of [0, 3, 4, 5, 6, 7, 8]) {
+      expect(s.players[seat].handBet).toBe(0);
+      expect(s.players[seat].stack).toBe(100);
+    }
+    expect(s.pot).toBe(5 + 10 + 10); // 全桌只有 1 份 ante
+    expect(s.ante).toBe(10);
+    expect(s.currentBet).toBe(10);
+    expect(s.currentSeat).toBe(3); // UTG = 大盲左邻
+    // UTG 未投 ante：跟注补 10，全下 bet-to = 100（满筹码）
+    const actions = legalActions(s);
+    expect(actions).toContainEqual({ type: "call", amount: 10 });
+    expect(actions).toContainEqual({ type: "allin", amount: 100 });
+    expectConservation(s, 900);
+  });
+
+  it("全体模式（默认）回归：9 人桌每人各投一份 ante", () => {
+    const s = createGame({
+      players: 9, smallBlind: 5, bigBlind: 10, ante: 10,
+      stack: 100, buttonSeat: 0,
+    });
+    expect(s.pot).toBe(9 * 10 + 5 + 10);
+    expect(s.players[2].stack).toBe(80); // BB：ante 10 + 大盲 10
+    expect(s.players[1].stack).toBe(85); // SB：ante 10 + 小盲 5
+    expect(s.players[0].stack).toBe(90); // 按钮：仅 ante
+    expect(s.players[3].stack).toBe(90); // UTG：仅 ante
+    expectConservation(s, 900);
+  });
+
+  it("单挑 BBA：按钮=小盲不投 ante，仅大盲位投", () => {
+    const s = createGame({
+      players: 2, smallBlind: 5, bigBlind: 10, ante: 10, anteMode: "bb",
+      stack: 100, buttonSeat: 0,
+    });
+    expect(s.players[0].handBet).toBe(5); // 按钮/小盲：仅小盲
+    expect(s.players[1].handBet).toBe(20); // 大盲：ante 10 + 大盲 10
+    expect(s.players[1].stack).toBe(80);
+    expect(s.pot).toBe(25);
+    expect(s.currentSeat).toBe(0); // 单挑翻前按钮先行动
+    expectConservation(s, 200);
+  });
+
+  it("BBA 大盲短码：先投 ante 再投大盲，不足即全下", () => {
+    const s = createGame({
+      players: 3, smallBlind: 5, bigBlind: 10, ante: 6, anteMode: "bb",
+      stack: 12, buttonSeat: 0,
+    });
+    // BB(seat2)：ante 6 + 大盲 6（短码全下）；SB(seat1)：小盲 5；UTG 不投
+    expect(s.players[2].handBet).toBe(12);
+    expect(s.players[2].streetBet).toBe(6);
+    expect(s.players[2].allIn).toBe(true);
+    expect(s.players[0].handBet).toBe(0);
+    expect(s.players[1].handBet).toBe(5);
+    expect(s.pot).toBe(6 + 6 + 5);
+    expect(s.currentBet).toBe(6);
+    expectConservation(s, 36);
+  });
+});
+
 describe("game(N): short all-in 不重开下注轮", () => {
   // seat0 加注到 30（已行动）；seat1 短码 all-in 到 35（增量 5 < minRaise 20）
   const build = (): GameState =>

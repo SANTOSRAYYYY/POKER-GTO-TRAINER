@@ -191,6 +191,62 @@ describe("startTable 开桌", () => {
   });
 });
 
+describe("BBA 大盲 ante 锦标赛（anteMode='bb'）", () => {
+  it("开局（单挑）：仅大盲位投一份 ante，pot = SB + BB + ante，筹码守恒", async () => {
+    await st().startTable({
+      mode: "tournament",
+      seats: 2,
+      aiStyle: "tag",
+      tournament: { ...DEFAULT_TOURNAMENT, anteMode: "bb" },
+    });
+    const s = st();
+    const g = s.game!;
+    expect(s.tournamentConfig!.anteMode).toBe("bb");
+    // 第 0 级 10/20，ante 20（BBA：仅大盲位投）；
+    // 单挑 hero 按钮=小盲且翻前先行动，AI 尚未动作，快照确定
+    expect(g.ante).toBe(20);
+    expect(g.currentSeat).toBe(HERO_SEAT);
+    expect(g.players[0].handBet).toBe(10); // hero 小盲：不投 ante
+    expect(g.players[0].stack).toBe(1490);
+    expect(g.players[1].handBet).toBe(40); // AI 大盲：ante 20 + 大盲 20
+    expect(g.players[1].stack).toBe(1460);
+    expect(g.pot).toBe(10 + 20 + 20); // 全桌只有 1 份 ante
+    expect(g.players[0].stack + g.players[1].stack + g.pot).toBe(
+      2 * DEFAULT_TOURNAMENT.startStack,
+    );
+  });
+
+  it("筹码不对称的次手：correctStacks 只向大盲位折算 ante，短码非盲位不被误收", async () => {
+    await st().startTable({
+      mode: "tournament",
+      seats: 4,
+      aiStyle: "tag",
+      tournament: { ...DEFAULT_TOURNAMENT, anteMode: "bb" },
+    });
+    // 伪造第 1 手结果：hero 大赢，桌面座位 1 只剩 25（下把手坐按钮位）
+    craftHandOver([3225, 25, 1500, 1250], [0]);
+    st().finalizeHand();
+    await st().advanceToNextHand();
+
+    const g = st().game!;
+    expect(g.handNumber).toBe(2);
+    // 按钮 0→1：SB=引擎座位2、BB=引擎座位3、UTG=hero（座位0，先行动故无 AI 抢先）
+    expect(g.buttonSeat).toBe(1);
+    expect(g.players[1].handBet).toBe(0); // 按钮短码：BBA 下不投 ante
+    expect(g.players[1].stack).toBe(25);
+    expect(g.players[2].handBet).toBe(10); // SB：仅小盲
+    expect(g.players[2].stack).toBe(1490);
+    expect(g.players[3].handBet).toBe(40); // BB：ante 20 + 大盲 20
+    expect(g.players[3].stack).toBe(1210);
+    expect(g.pot).toBe(10 + 20 + 20);
+    expect(
+      g.players.reduce((sum, p) => sum + p.stack, 0) + g.pot,
+    ).toBe(4 * DEFAULT_TOURNAMENT.startStack);
+    expect(g.currentSeat).toBe(HERO_SEAT); // hero UTG 先行动，未被 ante 误伤
+    expect(g.players[HERO_SEAT].handBet).toBe(0);
+  });
+});
+
 describe("HandRecord 新契约（players[]/heroSeat/buttonSeat/ante）", () => {
   it("单挑 hero 弃牌：记录字段完整、aiStyle 按座位归属、对手底牌保密", async () => {
     await st().startTable({

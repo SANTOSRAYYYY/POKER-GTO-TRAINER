@@ -436,6 +436,8 @@ function normalizeConfig(config: TableConfig): {
 /**
  * createGame 只收对称 stack：以 max(stacks) 开局后，把每个座位修正回真实筹码。
  * 引擎先从对称筹码收 ante 再收盲注，修正按同一顺序折算实付额；
+ * 各座所欠 ante 从对称局的死钱部分（handBet − streetBet）推出——全体模式每人
+ * 相同，BBA 模式仅大盲位非零，修正逻辑因此对两种模式一致。
  * 实付不足者按全下处理（allIn），并同步 pot/currentBet。
  * 若翻前起点（UTG）因 ante/盲注全下，顺推到下一个可行动座位。
  */
@@ -443,7 +445,7 @@ function correctStacks(game: GameState, stacks: number[]): void {
   for (let i = 0; i < game.players.length; i++) {
     const p = game.players[i];
     const real = stacks[i];
-    const antePaid = Math.min(game.ante, real);
+    const antePaid = Math.min(p.handBet - p.streetBet, real);
     const blindPaid = Math.min(p.streetBet, real - antePaid);
     p.streetBet = blindPaid;
     p.handBet = antePaid + blindPaid;
@@ -909,6 +911,7 @@ export const useGameStore = create<GameStore>()((set, get) => {
       smallBlind: blinds.smallBlind,
       bigBlind: blinds.bigBlind,
       ante: blinds.ante,
+      anteMode: tournamentConfig?.anteMode ?? "all",
       stack: Math.max(...stacks),
       buttonSeat: buttonEngine,
     });
@@ -1528,6 +1531,7 @@ export const useGameStore = create<GameStore>()((set, get) => {
           smallBlind: game.smallBlind,
           bigBlind: game.bigBlind,
           ante: game.ante,
+          anteMode: st.tournamentConfig?.anteMode ?? "all",
           // 全下跑马时被引擎跳过的空动作街在此补录（见 withRunoutStreets），
           // 保证 streets 覆盖每一张发出的公共牌，回放/教练复盘可见完整牌局
           streets: withRunoutStreets(streetLog, game.board),

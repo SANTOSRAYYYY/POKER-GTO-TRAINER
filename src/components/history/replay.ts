@@ -78,8 +78,10 @@ export function isShowdownStep(hand: HandRecord, step: Step): boolean {
  * 摊牌手在末尾追加终局步骤（streetIdx 哨兵），作为「摊牌」tab 的落点。
  */
 export function buildSteps(hand: HandRecord, t: TFunc): Step[] {
-  const initialPot =
-    hand.smallBlind + hand.bigBlind + hand.ante * hand.players.length;
+  // BBA 模式只有大盲位投一份 ante；缺省/全体模式按人头计
+  const anteTotal =
+    hand.anteMode === "bb" ? hand.ante : hand.ante * hand.players.length;
+  const initialPot = hand.smallBlind + hand.bigBlind + anteTotal;
 
   const steps: Step[] = [];
   let pot = initialPot;
