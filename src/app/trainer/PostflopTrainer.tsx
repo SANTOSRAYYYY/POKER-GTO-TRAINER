@@ -228,9 +228,9 @@ export function PostflopTrainer() {
             </div>
             <p className="mb-3 text-center text-xs text-zinc-600">
               {t("trainer.post.method", {
-                attack: ATTACK_EQUITY_THRESHOLD * 100,
-                raise: DEFENSE_RAISE_THRESHOLD * 100,
-                call: DEFENSE_CALL_THRESHOLD * 100,
+                attack: Math.round(ATTACK_EQUITY_THRESHOLD * 100),
+                raise: Math.round(DEFENSE_RAISE_THRESHOLD * 100),
+                call: Math.round(DEFENSE_CALL_THRESHOLD * 100),
               })}
             </p>
             <button
