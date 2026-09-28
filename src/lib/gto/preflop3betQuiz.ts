@@ -2,6 +2,9 @@
  * src/lib/gto/preflop3betQuiz.ts — 翻前 3bet 应对出题器
  *
  * 场景：你在 BTN/CO（随机）开局加注，盲注位 3bet，轮到你——4bet / 跟注 / 弃牌？
+ * hero 底牌按 open 角色从 hero 开局位（BTN ~48% / CO ~31%）的开局范围抽
+ * （sampleHeroCards，见 heroRange.ts 的「底牌与行动线一致性」设计）——
+ * 你既已开局加注，手里就不会是 72o 这类开局范围外的垃圾牌。
  * 行动线（actionLine，双语两行）三种真实常见路线：小盲 3bet / 大盲 3bet /
  * 大盲（激进型玩家）3bet；范围档位仍由 threeBetRangePct 决定（8% 紧 / 15% 松），
  * 行动线只补上下文叙述。
@@ -18,8 +21,10 @@
  *     < 45% → fold（对 3bet 范围落后太多，弃牌止损）。
  *
  * 难度过滤（isTooObvious，见 trainerDifficulty.ts）：对范围胜率 <25%
- * （纯垃圾无脑弃）或 >75%（坚果级无脑 4bet，如对紧范围 84% 的 AA）→
- * 重发，FILTER_MAX_ATTEMPTS 次上限兜底。
+ * （无脑弃）或 >75%（坚果级无脑 4bet，如对紧范围 84% 的 AA）→
+ * 重发，FILTER_MAX_ATTEMPTS 次上限兜底。底牌限到开局范围后 <25% 的
+ * 纯垃圾已不存在（开局范围最弱牌对 3bet 也有 ~28%+），该下限实际休眠，
+ * >75% 坚果级过滤仍必需（AA/KK 照样会发到）。
  *
  * 实现注记（静态表档位量化）：preflopEquityVsOpenRange 把 rangePct 映射到
  * 最近的 PREFLOP_RANGE_TIERS 档位（[0.15, 0.2, 0.28, 0.4, 0.55]），当前
@@ -27,9 +32,9 @@
  * 与教学语境，判定阈值一致。若 range.ts 未来补充更紧的档位，这里自动生效。
  */
 import type { Card } from "@/lib/types";
-import { newDeck } from "@/lib/poker/cards";
 import { preflopEquityVsOpenRange } from "@/lib/ai/range";
 import { threeBetToText, type LocalizedText } from "@/lib/gto/actionLine";
+import { sampleHeroCards } from "@/lib/gto/heroRange";
 import {
   FILTER_MAX_ATTEMPTS,
   isVsRangePreflopObvious,
@@ -122,27 +127,21 @@ export function drawThreeBetLine(
 }
 
 /**
- * 随机发一个翻前 3bet 场景：hero 2 张无重复，位置 BTN/CO 随机，
- * 对手 3bet 范围紧（8%）/松（15%）随机，并抽一条行动线（哪个盲注 3bet）。
+ * 随机发一个翻前 3bet 场景：位置 BTN/CO 随机，hero 底牌按 open 角色从
+ * 该开局位的开局范围抽（牌与「你开局加注」的行动线一致），对手 3bet
+ * 范围紧（8%）/松（15%）随机，并抽一条行动线（哪个盲注 3bet）。
  * @param rng 随机源（默认 Math.random），注入以便测试可复现。
  */
 export function dealPreflop3BetScenario(
   rng: () => number = Math.random,
 ): Preflop3BetScenario {
-  const deck = newDeck();
-  // 部分 Fisher-Yates：洗前 2 张即可
-  for (let k = 0; k < 2; k++) {
-    const j = k + Math.floor(rng() * (deck.length - k));
-    const tmp = deck[k];
-    deck[k] = deck[j];
-    deck[j] = tmp;
-  }
   const position: ThreeBetPosition = rng() < 0.5 ? "BTN" : "CO";
+  const hero = sampleHeroCards(rng, "open", { openPos: position });
   const threeBetRangePct =
     rng() < 0.5 ? THREEBET_RANGE_TIGHT : THREEBET_RANGE_LOOSE;
   const line = drawThreeBetLine(position, rng);
   return {
-    hero: [deck[0], deck[1]],
+    hero,
     position,
     threeBetRangePct,
     actionLine: line.lines,

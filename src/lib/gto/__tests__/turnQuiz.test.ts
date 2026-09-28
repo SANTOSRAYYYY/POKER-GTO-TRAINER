@@ -14,6 +14,7 @@ import {
   dealTurnScenario,
   drawTurnLine,
   generateTurnQuiz,
+  heroRoleForTurn,
   isTooObvious,
   judgeTurn,
   TURN_BARREL_EQUITY_THRESHOLD,
@@ -27,6 +28,8 @@ import {
   turnRangeSpecFor,
 } from "../turnQuiz";
 import { analyzeDraws, isStrongDraw } from "../postflopQuiz";
+import { heroRangeLabels } from "../heroRange";
+import { cardsToHandType } from "../pushfold";
 import { equityVsRange } from "@/lib/ai/range";
 
 /** 线性同余种子 rng（测试可复现） */
@@ -180,6 +183,7 @@ describe("generateTurnQuiz 混合场景与整题", () => {
       type: "barrel" as const,
       actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
       lineKind: "open" as const,
+      openPos: "CO" as const,
       equity: { win: 0.4399, tie: 0, lose: 0.5601 },
       rangeEquity: 0.4399,
       draws,
@@ -268,5 +272,53 @@ describe("难度过滤（反脑残）", () => {
     const q = generateTurnQuiz(() => 0, 200);
     expect(["aggressive", "passive", "fold"]).toContain(q.answer);
     expect(new Set([...q.hero, ...q.board]).size).toBe(6);
+  });
+});
+
+describe("底牌与行动线一致性（hero 范围抽样接线）", () => {
+  it("抽样 200 次：底牌全部落在 type+lineKind 映射的角色范围内", () => {
+    const rng = lcg(555);
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      const s = dealTurnScenario(rng);
+      seen.add(`${s.type}/${s.lineKind}`);
+      const role = heroRoleForTurn(s.type, s.lineKind);
+      const label = cardsToHandType(s.hero[0], s.hero[1]).label;
+      const range = heroRangeLabels(role, role === "open" ? s.openPos : undefined);
+      expect(
+        range.has(label),
+        `${s.type}/${s.lineKind}（角色 ${role}）发出了范围外的 ${label}`,
+      ).toBe(true);
+    }
+    expect(seen.size).toBe(4); // 两子题型 × 两种线都覆盖
+  });
+
+  it("defense-open 线（hero 大盲跟注方）永无 2♥4♥ 类绝对垃圾（用户实报案例回归）", () => {
+    const rng = lcg(777);
+    const trash = new Set(["72o", "82o", "92o", "94o", "32o", "42o", "83o", "74o",
+      "42s", "72s", "82s", "92s", "32s", "85o", "73o"]);
+    let checked = 0;
+    for (let i = 0; i < 300 && checked < 60; i++) {
+      const s = dealTurnScenario(rng);
+      if (s.type !== "defense" || s.lineKind !== "open") continue;
+      checked++;
+      expect(heroRoleForTurn(s.type, s.lineKind)).toBe("bbDefend");
+      expect(trash.has(cardsToHandType(s.hero[0], s.hero[1]).label)).toBe(false);
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
+  it("barrel-threeBet 线（hero 大盲 3bet 方）底牌全在 threeBet 范围（顶端带/诈唬集）", () => {
+    const rng = lcg(888);
+    let checked = 0;
+    for (let i = 0; i < 300 && checked < 60; i++) {
+      const s = dealTurnScenario(rng);
+      if (s.type !== "barrel" || s.lineKind !== "threeBet") continue;
+      checked++;
+      expect(heroRoleForTurn(s.type, s.lineKind)).toBe("threeBet");
+      const label = cardsToHandType(s.hero[0], s.hero[1]).label;
+      expect(heroRangeLabels("threeBet").has(label)).toBe(true);
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 });

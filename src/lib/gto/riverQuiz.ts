@@ -1,8 +1,10 @@
 /**
  * src/lib/gto/riverQuiz.ts — 河牌圈出题器（river 场景）
  *
- * 出题：随机发 hero 两张底牌 + 5 张公共牌（无重复），子题型三选一（随机），
- * 并随机抽一条覆盖三条街的完整行动线（drawRiverLine，rng 注入）：
+ * 出题：按行动线的 hero 角色从对应范围抽底牌（sampleHeroCards，见
+ * heroRange.ts 的「底牌与行动线一致性」设计）+ 从剩余牌发 5 张公共牌
+ * （无重复），子题型三选一（随机），并随机抽一条覆盖三条街的完整行动线
+ * （drawRiverLine，rng 注入）：
  * - value（薄价值 or 过牌）：你最后行动、无人下注——下注拿价值还是过牌比牌？
  *   行动线两种：open（你开局，c-bet 一枪后转牌双方过牌 → 对手跟注范围前 50%）
  *   / threeBet（你翻前 3bet 后连开两枪都被跟 → 前两街都跟了，范围收窄到前 40%）。
@@ -11,6 +13,10 @@
  * - bluff（诈唬 or 放弃）：你的听牌全没中、无人下注——诈唬偷池还是过牌放弃？
  *   行动线两种：open（你 c-bet 一枪后转牌双方过牌）/ flat（你跟注开局，翻牌
  *   双方过牌、转牌对手过牌放弃）。
+ *
+ * hero 角色映射（heroRoleForRiver）：open 线（你开局）→ open；threeBet 线
+ * （你大盲 3bet）→ threeBet；flat 线（你大盲跟注对手开局）→ bbDefend。
+ * 听牌没中的合理性由此成立：可玩牌才有听牌入池。
  *
  * 判定口径（全部实算）：
  * - 河牌公共牌已齐，vs 随机胜率可精确枚举：riverEquityExact 遍历剩余
@@ -30,7 +36,8 @@
  * 难度过滤（isTooObvious，见 trainerDifficulty.ts）：抓诈题 <20%/>85% 重发；
  * 薄价值题 >85%（无脑价值）或 <25%（纯空气过牌）重发；诈唬题 >85%（坚果级
  * 价值下注毫无决策含量）或 <25%（纯空气——河牌已无听牌可言，过牌=认输的
- * 必诈题）重发，10 次上限兜底。
+ * 必诈题）重发，10 次上限兜底。底牌有范围后下限大多休眠，>85% 坚果级
+ * 过滤仍必需（强范围照样发坚果）。
  *
  * 「摊牌价值」（showdown value）：弱成牌（如小对子）过牌有机会在摊牌赢下
  * 更弱的牌，但一旦下注，更弱的牌会弃、更强的牌会跟——下注反而把赢面打没。
@@ -46,7 +53,13 @@ import {
   drawOpenPos,
   threeBetToText,
   type LocalizedText,
+  type OpenPos,
 } from "@/lib/gto/actionLine";
+import {
+  dealRemainingCards,
+  sampleHeroCards,
+  type HeroRole,
+} from "@/lib/gto/heroRange";
 import {
   FILTER_MAX_ATTEMPTS,
   isDefenseLikeObvious,
@@ -73,6 +86,8 @@ export interface RiverScenario {
   actionLine: LocalizedText[];
   /** 行动线种类（驱动价值题跟注范围收窄与文案） */
   lineKind: RiverLineKind;
+  /** 行动线中的开局位（hero 开局线 = hero 位置；底牌范围对齐用） */
+  openPos: OpenPos;
 }
 
 export interface RiverQuiz extends RiverScenario {
@@ -112,11 +127,11 @@ export function riverValueCallerSpecFor(lineKind: RiverLineKind): RangeSpec {
     : RIVER_VALUE_CALLER_SPEC;
 }
 
-/** 随机抽一条河牌圈行动线（rng 注入可复现）：三个子题型各 2 种真实常见路线 */
+/** 随机抽一条河牌圈行动线（rng 注入可复现）：三个子题型各 2 种真实常见路线；返回开局位供底牌范围对齐 */
 export function drawRiverLine(
   type: RiverScenarioType,
   rng: () => number = Math.random,
-): { kind: RiverLineKind; lines: LocalizedText[] } {
+): { kind: RiverLineKind; lines: LocalizedText[]; pos: OpenPos } {
   const pos = drawOpenPos(rng);
   const size = drawBetSize(rng);
   const threeBet = threeBetToText();
@@ -133,6 +148,7 @@ export function drawRiverLine(
     if (kind === "open") {
       return {
         kind,
+        pos,
         lines: [
           {
             zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲跟注`,
@@ -152,6 +168,7 @@ export function drawRiverLine(
     }
     return {
       kind,
+      pos,
       lines: [
         {
           zh: `翻前：对手（${pos}）开局加注到 2.5bb，你（大盲）3bet 到 ${threeBet.zh}，对手跟注`,
@@ -177,6 +194,7 @@ export function drawRiverLine(
     if (kind === "open") {
       return {
         kind,
+        pos,
         lines: [
           {
             zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲跟注`,
@@ -199,6 +217,7 @@ export function drawRiverLine(
     }
     return {
       kind,
+      pos,
       lines: [
         {
           zh: `翻前：对手（${pos}）开局加注到 2.5bb，你（大盲）3bet 到 ${threeBet.zh}，对手跟注`,
@@ -224,6 +243,7 @@ export function drawRiverLine(
   if (kind === "open") {
     return {
       kind,
+      pos,
       lines: [
         {
           zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲跟注`,
@@ -243,6 +263,7 @@ export function drawRiverLine(
   }
   return {
     kind,
+    pos,
     lines: [
       {
         zh: `翻前：对手（${pos}）开局加注到 2.5bb，你（大盲）跟注`,
@@ -262,31 +283,48 @@ export function drawRiverLine(
 }
 
 /**
- * 随机发一个河牌圈场景：hero 2 张 + 公共牌 5 张，无重复，子题型三等分随机，
- * 并抽一条与子题型匹配的行动线（价值题的行动线决定跟注范围松紧）。
+ * 河牌圈行动线里的 hero 翻前角色（驱动底牌范围，见 heroRange.ts）：
+ * - open 线：你开局大盲跟注（value/bluffcatch/bluff 通用）→ open；
+ * - threeBet 线：你（大盲）3bet 对手开局 → threeBet；
+ * - flat 线（仅 bluff）：对手开局你（大盲）跟注 → bbDefend。
+ */
+export function heroRoleForRiver(lineKind: RiverLineKind): HeroRole {
+  if (lineKind === "threeBet") return "threeBet";
+  if (lineKind === "flat") return "bbDefend";
+  return "open";
+}
+
+/**
+ * 随机发一个河牌圈场景：先抽子题型与行动线，再按行动线的 hero 角色
+ * （heroRoleForRiver）从对应范围抽底牌，最后从剩余牌发 5 张公共牌
+ * （无重复）。价值题的行动线决定跟注范围松紧。
  * @param rng 随机源（默认 Math.random），注入以便测试可复现。
  */
 export function dealRiverScenario(
   rng: () => number = Math.random,
 ): RiverScenario {
-  const deck = newDeck();
-  // 部分 Fisher-Yates：洗前 7 张即可
-  for (let k = 0; k < 7; k++) {
-    const j = k + Math.floor(rng() * (deck.length - k));
-    const tmp = deck[k];
-    deck[k] = deck[j];
-    deck[j] = tmp;
-  }
   const t = rng();
   const type: RiverScenarioType =
     t < 1 / 3 ? "value" : t < 2 / 3 ? "bluffcatch" : "bluff";
   const line = drawRiverLine(type, rng);
+  const role = heroRoleForRiver(line.kind);
+  const hero = sampleHeroCards(rng, role, {
+    openPos: role === "open" ? line.pos : undefined,
+  });
+  const board = dealRemainingCards(rng, hero, 5) as [
+    Card,
+    Card,
+    Card,
+    Card,
+    Card,
+  ];
   return {
-    hero: [deck[0], deck[1]],
-    board: [deck[2], deck[3], deck[4], deck[5], deck[6]],
+    hero,
+    board,
     type,
     actionLine: line.lines,
     lineKind: line.kind,
+    openPos: line.pos,
   };
 }
 

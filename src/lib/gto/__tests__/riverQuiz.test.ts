@@ -16,6 +16,7 @@ import {
   dealRiverScenario,
   drawRiverLine,
   generateRiverQuiz,
+  heroRoleForRiver,
   isTooObvious,
   judgeRiver,
   RIVER_BLUFFCATCH_CALL_THRESHOLD,
@@ -31,6 +32,8 @@ import {
   riverValueCallerSpecFor,
   type RiverQuiz,
 } from "../riverQuiz";
+import { heroRangeLabels } from "../heroRange";
+import { cardsToHandType } from "../pushfold";
 import { equityVsRange } from "@/lib/ai/range";
 
 /** 线性同余种子 rng（测试可复现） */
@@ -229,6 +232,7 @@ describe("generateRiverQuiz 混合场景与整题", () => {
       type: "bluff",
       actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
       lineKind: "open",
+      openPos: "CO",
       equity: riverEquityExact(c("Ah 5d") as [Card, Card], c("Kh 9d 7c 6s 2h")),
       rangeEquity: null,
       answer: "passive",
@@ -244,6 +248,7 @@ describe("generateRiverQuiz 混合场景与整题", () => {
       type: "value",
       actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
       lineKind: "open",
+      openPos: "CO",
       equity: riverEquityExact(c("9h 9d") as [Card, Card], c("Kh 8d 5c 2s 2h")),
       rangeEquity: 0.522,
       answer: "passive",
@@ -256,6 +261,7 @@ describe("generateRiverQuiz 混合场景与整题", () => {
       type: "bluff",
       actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
       lineKind: "open",
+      openPos: "CO",
       equity: riverEquityExact(c("7s 2d") as [Card, Card], c("Ac Kd Qh 9c 4s")),
       rangeEquity: null,
       answer: "aggressive",
@@ -359,5 +365,46 @@ describe("难度过滤（反脑残）", () => {
     const q = generateRiverQuiz(() => 0, 200);
     expect(["aggressive", "passive", "fold"]).toContain(q.answer);
     expect(new Set([...q.hero, ...q.board]).size).toBe(7);
+  });
+});
+
+describe("底牌与行动线一致性（hero 范围抽样接线）", () => {
+  it("抽样 200 次：底牌全部落在 lineKind 映射的角色范围内", () => {
+    const rng = lcg(555);
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      const s = dealRiverScenario(rng);
+      seen.add(`${s.type}/${s.lineKind}`);
+      const role = heroRoleForRiver(s.lineKind);
+      const label = cardsToHandType(s.hero[0], s.hero[1]).label;
+      const range = heroRangeLabels(role, role === "open" ? s.openPos : undefined);
+      expect(
+        range.has(label),
+        `${s.type}/${s.lineKind}（角色 ${role}）发出了范围外的 ${label}`,
+      ).toBe(true);
+    }
+    expect(seen.size).toBe(6); // 三子题型 × 两种线都覆盖
+  });
+
+  it("bluff-flat 线（hero 大盲跟注方）永无 2♥4♥ 类绝对垃圾；bluffcatch 三种角色各就各位", () => {
+    const rng = lcg(777);
+    const trash = new Set(["72o", "82o", "92o", "94o", "32o", "42o", "83o", "74o",
+      "42s", "72s", "82s", "92s", "32s", "85o", "73o"]);
+    const rolesSeen = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      const s = dealRiverScenario(rng);
+      const role = heroRoleForRiver(s.lineKind);
+      rolesSeen.add(role);
+      const label = cardsToHandType(s.hero[0], s.hero[1]).label;
+      expect(trash.has(label)).toBe(false);
+      if (s.type === "bluff" && s.lineKind === "flat") {
+        expect(role).toBe("bbDefend");
+      }
+      if (s.lineKind === "threeBet") {
+        expect(role).toBe("threeBet");
+        expect(heroRangeLabels("threeBet").has(label)).toBe(true);
+      }
+    }
+    expect(rolesSeen.size).toBe(3); // open / threeBet / bbDefend 都出现
   });
 });

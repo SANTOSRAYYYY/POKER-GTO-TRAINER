@@ -1,8 +1,10 @@
 /**
  * src/lib/gto/turnQuiz.ts — 转牌圈出题器（turn 场景）
  *
- * 出题：随机发 hero 两张底牌 + 4 张公共牌（无重复），子题型二选一，
- * 并随机抽一条完整前文行动线（drawTurnLine，rng 注入）：
+ * 出题：按行动线的 hero 角色从对应范围抽底牌（sampleHeroCards，见
+ * heroRange.ts 的「底牌与行动线一致性」设计）+ 从剩余牌发 4 张公共牌
+ * （无重复），子题型二选一，并随机抽一条完整前文行动线（drawTurnLine，
+ * rng 注入）：
  * - barrel（连开第二枪）：翻前你是进攻方（open = 开局加注 / threeBet =
  *   你 3bet），翻牌圈你的持续下注被跟注，转牌轮到你——继续进攻还是
  *   过牌放弃？
@@ -10,6 +12,10 @@
  *   再开第二枪——加注/跟注/弃牌？行动线两种：
  *   - open：对手「翻前开局 + 翻牌 c-bet + 转牌第二枪」→ 范围前 45%；
  *   - threeBet：对手「翻前 3bet 方」连开两枪 → 范围收紧到前 30%。
+ *
+ * hero 角色映射（heroRoleForTurn）：barrel-open / defense-threeBet 线里
+ * hero 是开局方 → open；barrel-threeBet 线里 hero 是大盲 3bet 方 →
+ * threeBet；defense-open 线里 hero 是大盲跟注方 → bbDefend。
  *
  * 判定口径（全部对范围实算，不用对随机胜率）：
  * - barrel：对手是「跟注者」，其范围比下注者更紧——equityVsRange
@@ -26,11 +32,11 @@
  *     < 30% → fold。
  *
  * 难度过滤（isTooObvious，见 trainerDifficulty.ts）：判定胜率 <20%
- * （纯垃圾弃牌，如 2♥4♥ 面对 A♣A♠Q♦5♦ 的第二枪）或 >85%（坚果级）
- * 的防守题、>85% 或 <25% 且无强听牌的第二枪题 → 重发，10 次上限兜底。
+ * （纯垃圾弃牌）或 >85%（坚果级）的防守题、>85% 或 <25% 且无强听牌
+ * 的第二枪题 → 重发，10 次上限兜底。底牌有范围后下限大多休眠，
+ * >85% 坚果级过滤仍必需（强范围照样发坚果）。
  */
 import type { Card } from "@/lib/types";
-import { newDeck } from "@/lib/poker/cards";
 import { equityMulti, type EquityResult } from "@/lib/poker/equity";
 import { equityVsRange, type RangeSpec } from "@/lib/ai/range";
 import {
@@ -38,7 +44,13 @@ import {
   drawOpenPos,
   threeBetToText,
   type LocalizedText,
+  type OpenPos,
 } from "@/lib/gto/actionLine";
+import {
+  dealRemainingCards,
+  sampleHeroCards,
+  type HeroRole,
+} from "@/lib/gto/heroRange";
 import {
   FILTER_MAX_ATTEMPTS,
   isDefenseLikeObvious,
@@ -71,6 +83,8 @@ export interface TurnScenario {
   actionLine: LocalizedText[];
   /** 行动线种类（驱动防守题范围收窄与文案） */
   lineKind: TurnLineKind;
+  /** 行动线中的开局位（hero 开局线 = hero 位置；底牌范围对齐用） */
+  openPos: OpenPos;
 }
 
 export interface TurnQuiz extends TurnScenario {
@@ -115,11 +129,11 @@ export function turnRangeSpecFor(
     : TURN_BETTOR_RANGE_SPEC;
 }
 
-/** 随机抽一条转牌圈行动线（rng 注入可复现）：两个子题型各 2 种真实常见路线 */
+/** 随机抽一条转牌圈行动线（rng 注入可复现）：两个子题型各 2 种真实常见路线；返回开局位供底牌范围对齐 */
 export function drawTurnLine(
   type: TurnScenarioType,
   rng: () => number = Math.random,
-): { kind: TurnLineKind; lines: LocalizedText[] } {
+): { kind: TurnLineKind; lines: LocalizedText[]; pos: OpenPos } {
   const pos = drawOpenPos(rng);
   const size = drawBetSize(rng);
   const kind: TurnLineKind = rng() < 0.5 ? "open" : "threeBet";
@@ -127,6 +141,7 @@ export function drawTurnLine(
     if (kind === "open") {
       return {
         kind,
+        pos,
         lines: [
           {
             zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲跟注`,
@@ -145,6 +160,7 @@ export function drawTurnLine(
     }
     return {
       kind,
+      pos,
       lines: [
         {
           zh: `翻前：对手（${pos}）开局加注到 2.5bb，你（大盲）3bet 到 ${threeBetToText().zh}，对手跟注`,
@@ -164,6 +180,7 @@ export function drawTurnLine(
   if (kind === "open") {
     return {
       kind,
+      pos,
       lines: [
         {
           zh: `翻前：对手（${pos}）开局加注到 2.5bb，你（大盲）跟注`,
@@ -182,6 +199,7 @@ export function drawTurnLine(
   }
   return {
     kind,
+    pos,
     lines: [
       {
         zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲 3bet 到 ${threeBetToText().zh}，你跟注`,
@@ -200,29 +218,43 @@ export function drawTurnLine(
 }
 
 /**
- * 随机发一个转牌圈场景：hero 2 张 + 公共牌 4 张，无重复，子题型随机，
- * 并抽一条与子题型匹配的行动线（防守题的行动线决定下注者范围松紧）。
+ * 转牌圈行动线里的 hero 翻前角色（驱动底牌范围，见 heroRange.ts）：
+ * - barrel-open：你开局大盲跟注 → open；
+ * - barrel-threeBet：你（大盲）3bet 对手开局 → threeBet；
+ * - defense-open：对手开局你（大盲）跟注 → bbDefend；
+ * - defense-threeBet：你开局后跟注大盲的 3bet → open。
+ */
+export function heroRoleForTurn(
+  type: TurnScenarioType,
+  lineKind: TurnLineKind,
+): HeroRole {
+  if (type === "barrel") return lineKind === "threeBet" ? "threeBet" : "open";
+  return lineKind === "threeBet" ? "open" : "bbDefend";
+}
+
+/**
+ * 随机发一个转牌圈场景：先抽子题型与行动线，再按行动线的 hero 角色
+ * （heroRoleForTurn）从对应范围抽底牌，最后从剩余牌发 4 张公共牌
+ * （无重复）。防守题的行动线决定下注者范围松紧。
  * @param rng 随机源（默认 Math.random），注入以便测试可复现。
  */
 export function dealTurnScenario(
   rng: () => number = Math.random,
 ): TurnScenario {
-  const deck = newDeck();
-  // 部分 Fisher-Yates：洗前 6 张即可
-  for (let k = 0; k < 6; k++) {
-    const j = k + Math.floor(rng() * (deck.length - k));
-    const tmp = deck[k];
-    deck[k] = deck[j];
-    deck[j] = tmp;
-  }
   const type: TurnScenarioType = rng() < 0.5 ? "barrel" : "defense";
   const line = drawTurnLine(type, rng);
+  const role = heroRoleForTurn(type, line.kind);
+  const hero = sampleHeroCards(rng, role, {
+    openPos: role === "open" ? line.pos : undefined,
+  });
+  const board = dealRemainingCards(rng, hero, 4) as [Card, Card, Card, Card];
   return {
-    hero: [deck[0], deck[1]],
-    board: [deck[2], deck[3], deck[4], deck[5]],
+    hero,
+    board,
     type,
     actionLine: line.lines,
     lineKind: line.kind,
+    openPos: line.pos,
   };
 }
 

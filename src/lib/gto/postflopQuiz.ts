@@ -1,14 +1,19 @@
 /**
  * src/lib/gto/postflopQuiz.ts — 翻后特训出题器（翻牌圈场景）
  *
- * 出题：随机发 hero 两张底牌 + 3 张公共牌（无重复），题型二选一，
- * 并随机抽一条行动线（drawPostflopLine，见 actionLine.ts）：
+ * 出题：按行动线的 hero 角色从对应范围抽底牌（sampleHeroCards，见
+ * heroRange.ts 的「底牌与行动线一致性」设计）+ 从剩余牌发 3 张公共牌
+ * （无重复），题型二选一，并随机抽一条行动线（drawPostflopLine，见
+ * actionLine.ts）：
  * - attack（进攻题）：你翻前开局（UTG+1~BTN 随机），大盲跟注；翻牌对手
  *   过牌，轮到你——主动进攻还是过牌？
  * - defense（防守题）：对手下注，轮到你——加注/跟注/弃牌？行动线两种：
  *   - open：对手是「翻前跟注者+翻牌反主动下注/持续下注」→ 范围前 60%；
  *   - threeBet：对手「翻前 3bet 后持续下注」→ 范围收紧到前 35%
  *     （defenseRangeSpecFor，范围随行动线收窄）。
+ * 两种题型的行动线里 hero 都是翻前开局方（defense threeBet 线 = 你开局后
+ * 跟注大盲的 3bet），故底牌一律按 open 角色从 hero 开局位的开局范围抽
+ * （heroRoleForPostflop）——2♥4♥ 这类牌永不会以开局者身份出现。
  *
  * 判定口径（v2，修复「第三对子被判加注」的失真）：
  * - attack：对 1 名随机对手实算胜率 ≥ 55% → aggressive；其余 → passive（check）。
@@ -22,9 +27,9 @@
  * 难度过滤（isTooObvious，见 trainerDifficulty.ts）：防守题判定胜率 <20%
  * （纯垃圾弃牌）或 >85%（坚果级无脑加注）、进攻题 >85%（无脑价值）或 <25%
  * 且无强听牌（纯空气过牌）→ 重发，FILTER_MAX_ATTEMPTS 次上限兜底。
+ * 底牌有范围后下限大多休眠，>85% 坚果级过滤仍必需（强范围照样发坚果）。
  */
 import type { Card } from "@/lib/types";
-import { newDeck } from "@/lib/poker/cards";
 import { equityMulti, type EquityResult } from "@/lib/poker/equity";
 import { equityVsRange, type RangeSpec } from "@/lib/ai/range";
 import {
@@ -32,7 +37,13 @@ import {
   drawOpenPos,
   threeBetToText,
   type LocalizedText,
+  type OpenPos,
 } from "@/lib/gto/actionLine";
+import {
+  dealRemainingCards,
+  sampleHeroCards,
+  type HeroRole,
+} from "@/lib/gto/heroRange";
 import {
   FILTER_MAX_ATTEMPTS,
   isDefenseLikeObvious,
@@ -60,6 +71,8 @@ export interface PostflopScenario {
   actionLine: LocalizedText[];
   /** 行动线种类（驱动防守题范围收窄与文案） */
   lineKind: PostflopLineKind;
+  /** 行动线中 hero 的开局位（底牌按该位开局范围抽样，与行动线文本对齐） */
+  openPos: OpenPos;
 }
 
 export interface PostflopQuiz extends PostflopScenario {
@@ -96,15 +109,16 @@ export function defenseRangeSpecFor(lineKind: PostflopLineKind): RangeSpec {
   return lineKind === "threeBet" ? FLOP_DEFENSE_3BET_RANGE_SPEC : DEFENSE_RANGE_SPEC;
 }
 
-/** 随机抽一条翻牌圈行动线（rng 注入可复现）：attack 固定 open 线，defense 二选一 */
+/** 随机抽一条翻牌圈行动线（rng 注入可复现）：attack 固定 open 线，defense 二选一；返回开局位供底牌范围对齐 */
 export function drawPostflopLine(
   type: ScenarioType,
   rng: () => number = Math.random,
-): { kind: PostflopLineKind; lines: LocalizedText[] } {
+): { kind: PostflopLineKind; lines: LocalizedText[]; pos: OpenPos } {
   const pos = drawOpenPos(rng);
   if (type === "attack") {
     return {
       kind: "open",
+      pos,
       lines: [
         {
           zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲跟注`,
@@ -121,6 +135,7 @@ export function drawPostflopLine(
   if (rng() < 0.5) {
     return {
       kind: "open",
+      pos,
       lines: [
         {
           zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲跟注`,
@@ -135,6 +150,7 @@ export function drawPostflopLine(
   }
   return {
     kind: "threeBet",
+    pos,
     lines: [
       {
         zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲 3bet 到 ${threeBetToText().zh}，你跟注`,
@@ -149,29 +165,39 @@ export function drawPostflopLine(
 }
 
 /**
- * 随机发一个翻牌圈场景：hero 2 张 + 公共牌 3 张，无重复，题型随机，
- * 并抽一条与题型匹配的行动线（防守题的行动线决定下注者范围松紧）。
+ * 翻牌圈行动线里的 hero 翻前角色（驱动底牌范围，见 heroRange.ts）：
+ * 所有行动线里 hero 都是开局方——attack/defense-open 线你开局大盲跟注，
+ * defense-threeBet 线你开局后跟注大盲的 3bet——故一律按 open 角色抽底牌。
+ */
+export function heroRoleForPostflop(
+  _type: ScenarioType,
+  _lineKind: PostflopLineKind,
+): HeroRole {
+  return "open";
+}
+
+/**
+ * 随机发一个翻牌圈场景：先抽题型与行动线，再按行动线的 hero 角色
+ * （一律 open）从 hero 开局位的开局范围抽底牌，最后从剩余牌发 3 张
+ * 公共牌（无重复）。防守题的行动线决定下注者范围松紧。
  * @param rng 随机源（默认 Math.random），注入以便测试可复现。
  */
 export function dealPostflopScenario(
   rng: () => number = Math.random,
 ): PostflopScenario {
-  const deck = newDeck();
-  // 部分 Fisher-Yates：洗前 5 张即可
-  for (let k = 0; k < 5; k++) {
-    const j = k + Math.floor(rng() * (deck.length - k));
-    const tmp = deck[k];
-    deck[k] = deck[j];
-    deck[j] = tmp;
-  }
   const type: ScenarioType = rng() < 0.5 ? "attack" : "defense";
   const line = drawPostflopLine(type, rng);
+  const hero = sampleHeroCards(rng, heroRoleForPostflop(type, line.kind), {
+    openPos: line.pos,
+  });
+  const board = dealRemainingCards(rng, hero, 3) as [Card, Card, Card];
   return {
-    hero: [deck[0], deck[1]],
-    board: [deck[2], deck[3], deck[4]],
+    hero,
+    board,
     type,
     actionLine: line.lines,
     lineKind: line.kind,
+    openPos: line.pos,
   };
 }
 

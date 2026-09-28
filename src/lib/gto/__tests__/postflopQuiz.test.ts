@@ -25,6 +25,7 @@ import {
   evaluateScenario,
   FLOP_DEFENSE_3BET_RANGE_SPEC,
   generatePostflopQuiz,
+  heroRoleForPostflop,
   isStrongDraw,
   isTooObvious,
   judgePostflop,
@@ -32,6 +33,8 @@ import {
   type PostflopScenario,
 } from "../postflopQuiz";
 import { FILTER_MAX_ATTEMPTS } from "../trainerDifficulty";
+import { heroRangeLabels } from "../heroRange";
+import { cardsToHandType } from "../pushfold";
 import { equityVsRange } from "@/lib/ai/range";
 
 /** 线性同余种子 rng（测试可复现） */
@@ -49,6 +52,7 @@ const c = (s: string) => s.split(" ") as Card[];
 const TEST_LINE = {
   actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
   lineKind: "open" as const,
+  openPos: "CO" as const,
 };
 
 describe("dealPostflopScenario 发牌", () => {
@@ -291,8 +295,7 @@ describe("行动线生成", () => {
   });
 });
 
-describe("难度过滤（反脑残）", () => {
-  it("防守题：判定胜率 0.1（纯垃圾弃牌）必被重发，0.5 保留", () => {
+describe("难度过滤（反脑残）", () => {  it("防守题：判定胜率 0.1（纯垃圾弃牌）必被重发，0.5 保留", () => {
     expect(isTooObvious(0.1, "defense")).toBe(true);
     expect(isTooObvious(0.19, "defense")).toBe(true);
     expect(isTooObvious(0.5, "defense")).toBe(false);
@@ -337,5 +340,34 @@ describe("难度过滤（反脑残）", () => {
     expect(new Set([...q.hero, ...q.board]).size).toBe(5);
     // 若该恒定场景本就是显而易见的，兜底后按最后一次结果返回（不无限重发）
     expect(FILTER_MAX_ATTEMPTS).toBe(10);
+  });
+});
+
+describe("底牌与行动线一致性（hero 范围抽样接线）", () => {
+  it("抽样 200 次：底牌全部落在行动线开局位的 open 范围内（两种题型都覆盖）", () => {
+    const rng = lcg(555);
+    const types = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      const s = dealPostflopScenario(rng);
+      types.add(s.type);
+      const role = heroRoleForPostflop(s.type, s.lineKind);
+      expect(role).toBe("open"); // 翻牌圈所有行动线里 hero 都是开局方
+      const label = cardsToHandType(s.hero[0], s.hero[1]).label;
+      expect(
+        heroRangeLabels(role, s.openPos).has(label),
+        `${s.type}/${s.lineKind}（${s.openPos}）发出了范围外的 ${label}`,
+      ).toBe(true);
+    }
+    expect(types.size).toBe(2);
+  });
+
+  it("2♥4♥ 类绝对垃圾永不出现（用户实报案例回归）", () => {
+    const rng = lcg(777);
+    const trash = new Set(["72o", "82o", "92o", "94o", "32o", "42o", "83o", "74o",
+      "42s", "72s", "82s", "92s", "32s", "85o", "73o"]);
+    for (let i = 0; i < 200; i++) {
+      const s = dealPostflopScenario(rng);
+      expect(trash.has(cardsToHandType(s.hero[0], s.hero[1]).label)).toBe(false);
+    }
   });
 });

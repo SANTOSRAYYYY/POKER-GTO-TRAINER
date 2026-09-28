@@ -1,15 +1,17 @@
 /**
  * preflop3betQuiz.ts（翻前 3bet 应对出题器）测试
  *
- * - 发牌：hero 2 张互不重复；位置 BTN/CO 与 3bet 范围紧/松合法；种子可复现
+ * - 发牌：hero 2 张互不重复且落在 hero 开局位（BTN/CO）的开局范围内；
+ *   位置 BTN/CO 与 3bet 范围紧/松合法；种子可复现
  * - 行动线：sb/bb/aggro 三种路线都出现、两行双语、首行含 hero 位置
  * - 判定边界：60% 4bet 线 / 45% 跟注线（±0.01 卡点）
  * - 静态表锚点（preflopEquityVsOpenRange 实算值）：
- *   KK/AKs → 4bet；AKo/TT/AJo → 跟注；66/KQs/72o → 弃牌
- *   （AA 84.3% > 75% 被难度过滤，改用 KK 72.6% 作坚果锚点）
+ *   KK/AKs → 4bet；AKo/TT/AJo → 跟注；66/KQs/98o → 弃牌
+ *   （AA 84.3% > 75% 被难度过滤，改用 KK 72.6% 作坚果锚点；
+ *   72o 已不在开局范围，改用 98o 33.1% 作弱牌弃牌锚点）
  * - 难度过滤：isTooObvious 口径（<0.25 / >0.75 重发，0.5 保留）；
  *   生成的题胜率恒在 [0.25, 0.75]；恒定 rng 下 10 次兜底不死循环
- * - 混合场景：50 题内两种位置、两档范围都出现，答案分布含 call 与 fold
+ * - 混合场景：200 题内两种位置、两档范围都出现，答案分布含 call 与 fold
  * - 点评文案含胜率数字与「对紧/松 3bet 范围」字样
  */
 import { describe, expect, it } from "vitest";
@@ -25,6 +27,8 @@ import {
   THREEBET_RANGE_TIGHT,
   threeBetQuizComment,
 } from "../preflop3betQuiz";
+import { heroRangeLabels } from "../heroRange";
+import { cardsToHandType } from "../pushfold";
 
 /** 线性同余种子 rng（测试可复现） */
 function lcg(seed: number): () => number {
@@ -104,11 +108,12 @@ describe("generatePreflop3BetQuiz 静态表锚点（实算胜率表）", () => {
     }
   });
 
-  it("66（44.0% 紧贴 45% 线下方）/ KQs（42.0%）/ 72o（25.3%）→ 弃牌", () => {
+  it("66（44.0% 紧贴 45% 线下方）/ KQs（42.0%）/ 98o（33.1%）→ 弃牌", () => {
+    // 72o（25.3%）已不在 hero 开局范围（底牌按 open 角色抽），改用 98o 作弱牌锚点
     for (const [label, eq] of [
       ["66", 0.44],
       ["KQs", 0.42],
-      ["72o", 0.253],
+      ["98o", 0.331],
     ] as const) {
       const q = quizOf(label);
       expect(q.equity).toBeCloseTo(eq, 3);
@@ -219,5 +224,34 @@ describe("难度过滤（反脑残）", () => {
     const q = generatePreflop3BetQuiz(() => 0);
     expect(["fourbet", "call", "fold"]).toContain(q.answer);
     expect(new Set(q.hero).size).toBe(2);
+  });
+});
+
+describe("底牌与行动线一致性（hero 范围抽样接线）", () => {
+  it("抽样 200 次：底牌全部落在 hero 开局位（BTN/CO）的 open 范围内", () => {
+    const rng = lcg(555);
+    const positions = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      const s = dealPreflop3BetScenario(rng);
+      positions.add(s.position);
+      const label = cardsToHandType(s.hero[0], s.hero[1]).label;
+      expect(
+        heroRangeLabels("open", s.position).has(label),
+        `${s.position} 开局发出了范围外的 ${label}`,
+      ).toBe(true);
+    }
+    expect(positions.size).toBe(2);
+  });
+
+  it("72o 等开局范围外垃圾永不出题（用户实报案例回归）", () => {
+    const rng = lcg(777);
+    const trash = new Set(["72o", "82o", "92o", "94o", "32o", "42o", "83o", "74o",
+      "42s", "72s", "82s", "92s", "32s", "85o", "73o"]);
+    for (let i = 0; i < 200; i++) {
+      const q = generatePreflop3BetQuiz(rng);
+      expect(trash.has(q.handLabel)).toBe(false);
+      // 题面底牌也必在其开局位范围内
+      expect(heroRangeLabels("open", q.position).has(q.handLabel)).toBe(true);
+    }
   });
 });
