@@ -15,9 +15,11 @@ import {
   TURN_BARREL_SEMIBLUFF_MIN,
   TURN_DEFENSE_CALL_THRESHOLD,
   TURN_DEFENSE_RAISE_THRESHOLD,
+  turnRangeSpecFor,
   type TurnQuiz,
   type TurnScenarioType,
 } from "@/lib/gto/turnQuiz";
+import { ActionLineBlock } from "./ActionLine";
 import { TrainerStatsBar } from "./StatsBar";
 
 type TFunc = (key: DictKey, vars?: Record<string, string | number>) => string;
@@ -52,14 +54,17 @@ const CHOICE_KEY: Record<PostflopChoice, DictKey> = {
   fold: "action.fold",
 };
 
-/** 判定后的一句话简评（与 lib/gto/turnQuiz.turnQuizComment 同逻辑、走字典双语） */
+/** 判定后的一句话简评（与 lib/gto/turnQuiz.turnQuizComment 同逻辑、走字典双语；范围宽度随行动线） */
 function quizCommentText(quiz: TurnQuiz, t: TFunc): string {
   const pct = (quiz.rangeEquity * 100).toFixed(1);
   const tie =
     quiz.equity.tie >= 0.005
       ? t("trainer.post.tieNote", { pct: (quiz.equity.tie * 100).toFixed(1) })
       : "";
-  const vars = { pct, tie };
+  const rpct = Math.round(
+    turnRangeSpecFor(quiz.type, quiz.lineKind).topPct * 100,
+  );
+  const vars = { pct, tie, rpct };
   switch (quiz.answer) {
     case "aggressive":
       if (quiz.type === "barrel") {
@@ -169,7 +174,9 @@ export function TurnTrainer() {
         <p className="mb-1 text-xs font-medium text-zinc-500">
           {t(QUESTION_KEY[quiz.type])}
         </p>
-        <p className="mb-4 text-sm text-zinc-400">{t(SCENARIO_KEY[quiz.type])}</p>
+        <p className="mb-3 text-sm text-zinc-400">{t(SCENARIO_KEY[quiz.type])}</p>
+
+        <ActionLineBlock lines={quiz.actionLine} />
 
         <div className="mb-5 space-y-3">
           <div className="flex items-center justify-center gap-2">

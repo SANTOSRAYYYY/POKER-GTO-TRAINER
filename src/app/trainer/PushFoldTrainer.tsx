@@ -6,36 +6,17 @@ import { useI18n } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n/dict";
 import {
   PUSH_COMBO_PCT,
-  cardsToHandType,
-  nearestTableDepth,
-  pushFoldAction,
   type PushFoldAction,
   type PushFoldDepth,
 } from "@/lib/gto/pushfold";
-import type { Card, Rank, Suit } from "@/lib/types";
+import {
+  generatePushFoldQuiz,
+  type PushFoldQuiz,
+} from "@/lib/gto/pushfoldQuiz";
+import { ActionLineBlock } from "./ActionLine";
 import { TrainerStatsBar } from "./StatsBar";
 
-const RANKS: Rank[] = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
-const SUITS: Suit[] = ["s", "h", "d", "c"];
-const DECK: Card[] = SUITS.flatMap((s) => RANKS.map((r) => `${r}${s}` as Card));
-
 type TFunc = (key: DictKey, vars?: Record<string, string | number>) => string;
-
-interface Quiz {
-  cards: [Card, Card];
-  stackBB: number;
-}
-
-/** 随机出一道题：单挑 SB（BTN）位两张底牌 + 5-15bb 随机整数深度 */
-function dealQuiz(): Quiz {
-  const i = Math.floor(Math.random() * DECK.length);
-  let j = Math.floor(Math.random() * (DECK.length - 1));
-  if (j >= i) j++;
-  return {
-    cards: [DECK[i], DECK[j]],
-    stackBB: 5 + Math.floor(Math.random() * 11),
-  };
-}
 
 interface WrongEntry {
   label: string;
@@ -64,13 +45,13 @@ function verdictText(
   return t("trainer.pf.note.fold", { quant, label, depth, pct });
 }
 
-/** 翻前 push/fold 模式（单挑 SB 位 5-15bb，Nash 近似表） */
+/** 翻前 push/fold 模式（单挑 SB 位 5-15bb，Nash 近似表；显而易见的手牌已被出题器过滤） */
 export function PushFoldTrainer() {
   const { t } = useI18n();
   // 首题在客户端挂载后再发（Math.random 出题，避免 SSR/hydration 不一致）
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [quiz, setQuiz] = useState<PushFoldQuiz | null>(null);
   useEffect(() => {
-    setQuiz(dealQuiz());
+    setQuiz(generatePushFoldQuiz());
   }, []);
   const [answered, setAnswered] = useState<{
     chose: PushFoldAction;
@@ -84,9 +65,7 @@ export function PushFoldTrainer() {
 
   const answer = (chose: PushFoldAction) => {
     if (!quiz || answered) return;
-    const hand = cardsToHandType(quiz.cards[0], quiz.cards[1]);
-    const depth = nearestTableDepth(quiz.stackBB);
-    const expected = pushFoldAction(hand.hi, hand.lo, hand.suited, depth);
+    const expected = quiz.answer;
     const correct = chose === expected;
     setAnswered({ chose, correct });
     setTotal((v) => v + 1);
@@ -102,9 +81,9 @@ export function PushFoldTrainer() {
       setWrongs((w) =>
         [
           {
-            label: hand.label,
+            label: quiz.handLabel,
             stackBB: quiz.stackBB,
-            depth,
+            depth: quiz.depth,
             chose,
             expected,
           },
@@ -115,7 +94,7 @@ export function PushFoldTrainer() {
   };
 
   const next = () => {
-    setQuiz(dealQuiz());
+    setQuiz(generatePushFoldQuiz());
     setAnswered(null);
   };
 
@@ -127,23 +106,16 @@ export function PushFoldTrainer() {
         </section>
       );
     }
-    const hand = cardsToHandType(quiz.cards[0], quiz.cards[1]);
-    const depth = nearestTableDepth(quiz.stackBB);
-    const expected = pushFoldAction(hand.hi, hand.lo, hand.suited, depth);
+    const expected = quiz.answer;
+    const pair = quiz.handLabel.length === 2;
     return (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-        <p className="mb-4 text-sm text-zinc-400">
-          {t("trainer.pf.scene1")}
-          <span className="font-medium text-zinc-200">{t("trainer.pf.scenePos")}</span>
-          {t("trainer.pf.scene2")}
-          <span className="font-bold text-emerald-400">{quiz.stackBB}bb</span>
-          {t("trainer.pf.scene3")}
-        </p>
+        <ActionLineBlock lines={quiz.actionLine} />
         <div className="mb-5 flex items-center justify-center gap-3">
           <PlayingCard card={quiz.cards[0]} size="lg" />
           <PlayingCard card={quiz.cards[1]} size="lg" />
           <span className="ml-2 text-lg font-semibold text-zinc-300">
-            {hand.label}
+            {quiz.handLabel}
           </span>
         </div>
 
@@ -176,11 +148,11 @@ export function PushFoldTrainer() {
                 {expected === "push" ? t("trainer.pf.verdictPush") : t("trainer.pf.verdictFold")}
               </span>{" "}
               {verdictText(
-                hand.label,
-                hand.hi === hand.lo,
+                quiz.handLabel,
+                pair,
                 expected,
                 quiz.stackBB,
-                depth,
+                quiz.depth,
                 t,
               )}
             </div>

@@ -8,12 +8,14 @@ import {
   ATTACK_EQUITY_THRESHOLD,
   DEFENSE_CALL_THRESHOLD,
   DEFENSE_RAISE_THRESHOLD,
+  defenseRangeSpecFor,
   generatePostflopQuiz,
   isStrongDraw,
   type PostflopChoice,
   type PostflopQuiz,
   type ScenarioType,
 } from "@/lib/gto/postflopQuiz";
+import { ActionLineBlock } from "./ActionLine";
 import { TrainerStatsBar } from "./StatsBar";
 
 type TFunc = (key: DictKey, vars?: Record<string, string | number>) => string;
@@ -38,7 +40,7 @@ const CHOICE_KEY: Record<PostflopChoice, DictKey> = {
   fold: "action.fold",
 };
 
-/** 判定后的一句话简评（与 lib/gto/postflopQuiz.quizComment 同逻辑、走字典双语） */
+/** 判定后的一句话简评（与 lib/gto/postflopQuiz.quizComment 同逻辑、走字典双语；范围宽度随行动线） */
 function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
   const pct = (quiz.equity.win * 100).toFixed(1);
   const dPct =
@@ -49,6 +51,7 @@ function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
     quiz.equity.tie >= 0.005
       ? t("trainer.post.tieNote", { pct: (quiz.equity.tie * 100).toFixed(1) })
       : "";
+  const rpct = Math.round(defenseRangeSpecFor(quiz.lineKind).topPct * 100);
   switch (quiz.answer) {
     case "aggressive":
       if (quiz.type === "attack") {
@@ -68,15 +71,16 @@ function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
       return t("trainer.post.comment.defenseAggressive", {
         pct: quiz.defenseEquity !== null ? dPct : pct,
         tie,
+        rpct,
       });
     case "fold":
-      return t("trainer.post.comment.fold", { pct: dPct, tie });
+      return t("trainer.post.comment.fold", { pct: dPct, tie, rpct });
     case "passive":
       return t(
         quiz.type === "attack"
           ? "trainer.post.comment.attackPassive"
           : "trainer.post.comment.defensePassive",
-        { pct: quiz.type === "attack" ? pct : dPct, tie },
+        { pct: quiz.type === "attack" ? pct : dPct, tie, rpct },
       );
   }
 }
@@ -159,7 +163,9 @@ export function PostflopTrainer() {
         <p className="mb-1 text-xs font-medium text-zinc-500">
           {quiz.type === "attack" ? t("trainer.post.attackQ") : t("trainer.post.defenseQ")}
         </p>
-        <p className="mb-4 text-sm text-zinc-400">{t(SCENARIO_KEY[quiz.type])}</p>
+        <p className="mb-3 text-sm text-zinc-400">{t(SCENARIO_KEY[quiz.type])}</p>
+
+        <ActionLineBlock lines={quiz.actionLine} />
 
         <div className="mb-5 space-y-3">
           <div className="flex items-center justify-center gap-2">

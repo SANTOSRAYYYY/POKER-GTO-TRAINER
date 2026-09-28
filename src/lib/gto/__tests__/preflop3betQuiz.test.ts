@@ -2,18 +2,23 @@
  * preflop3betQuiz.ts（翻前 3bet 应对出题器）测试
  *
  * - 发牌：hero 2 张互不重复；位置 BTN/CO 与 3bet 范围紧/松合法；种子可复现
+ * - 行动线：sb/bb/aggro 三种路线都出现、两行双语、首行含 hero 位置
  * - 判定边界：60% 4bet 线 / 45% 跟注线（±0.01 卡点）
  * - 静态表锚点（preflopEquityVsOpenRange 实算值）：
- *   AA/AKs → 4bet；AKo/TT/AJo → 跟注；66/KQs/72o → 弃牌
+ *   KK/AKs → 4bet；AKo/TT/AJo → 跟注；66/KQs/72o → 弃牌
+ *   （AA 84.3% > 75% 被难度过滤，改用 KK 72.6% 作坚果锚点）
+ * - 难度过滤：isTooObvious 口径（<0.25 / >0.75 重发，0.5 保留）；
+ *   生成的题胜率恒在 [0.25, 0.75]；恒定 rng 下 10 次兜底不死循环
  * - 混合场景：50 题内两种位置、两档范围都出现，答案分布含 call 与 fold
  * - 点评文案含胜率数字与「对紧/松 3bet 范围」字样
  */
 import { describe, expect, it } from "vitest";
-import type { Card } from "@/lib/types";
 import {
   dealPreflop3BetScenario,
+  drawThreeBetLine,
   FOURBET_THRESHOLD,
   generatePreflop3BetQuiz,
+  isTooObvious,
   judge3bet,
   THREEBET_CALL_THRESHOLD,
   THREEBET_RANGE_LOOSE,
@@ -78,10 +83,10 @@ describe("generatePreflop3BetQuiz 静态表锚点（实算胜率表）", () => {
     throw new Error(`未抽到 ${label}`);
   }
 
-  it("AA（84.3%）与 AKs（60.6%）→ 4bet", () => {
-    const aa = quizOf("AA");
-    expect(aa.equity).toBeCloseTo(0.843, 3);
-    expect(aa.answer).toBe("fourbet");
+  it("KK（72.6%）与 AKs（60.6%）→ 4bet（AA 84.3% 超过 75% 无脑线，被难度过滤不出题）", () => {
+    const kk = quizOf("KK");
+    expect(kk.equity).toBeCloseTo(0.726, 3);
+    expect(kk.answer).toBe("fourbet");
     const aks = quizOf("AKs");
     expect(aks.equity).toBeCloseTo(0.606, 3);
     expect(aks.answer).toBe("fourbet");
@@ -121,12 +126,14 @@ describe("generatePreflop3BetQuiz 静态表锚点（实算胜率表）", () => {
 });
 
 describe("generatePreflop3BetQuiz 混合场景与点评", () => {
-  it("50 题内两种位置、两档范围都出现，三种答案都有且弃牌占多数", () => {
+  it("200 题内两种位置、两档范围都出现，三种答案都有且弃牌占多数", () => {
+    // 难度过滤后 fourbet 只剩 [60%,75%] 带（KK/QQ/JJ/AKs，约 1.7% 的手牌），
+    // 50 题抽样有 ~43% 概率抽不到 fourbet——放宽到 200 题使固定种子稳定覆盖
     const rng = lcg(42);
     const positions = new Set<string>();
     const tiers = new Set<number>();
     const counts = new Map<string, number>();
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 200; i++) {
       const q = generatePreflop3BetQuiz(rng);
       positions.add(q.position);
       tiers.add(q.threeBetRangePct);
@@ -152,5 +159,65 @@ describe("generatePreflop3BetQuiz 混合场景与点评", () => {
       const tightness = q.threeBetRangePct === THREEBET_RANGE_TIGHT ? "紧" : "松";
       expect(text).toContain(`对${tightness} 3bet 范围`);
     }
+  });
+});
+
+describe("行动线生成", () => {
+  it("sb/bb/aggro 三种路线都出现，两行双语、首行含 hero 开局位", () => {
+    const rng = lcg(11);
+    const kinds = new Set<string>();
+    for (let i = 0; i < 90; i++) {
+      const s = dealPreflop3BetScenario(rng);
+      kinds.add(s.lineKind);
+      expect(s.actionLine.length).toBe(2);
+      for (const line of s.actionLine) {
+        expect(line.zh.length).toBeGreaterThan(4);
+        expect(line.en.length).toBeGreaterThan(4);
+      }
+      expect(s.actionLine[0].zh).toContain(`你（${s.position}）开局加注`);
+      expect(s.actionLine[1].zh).toContain("3bet");
+      expect(s.actionLine[1].zh).toContain("轮到你");
+    }
+    expect(kinds.size).toBe(3);
+  });
+
+  it("aggro 线标注激进画像，sb 线说明大盲弃牌", () => {
+    expect(drawThreeBetLine("BTN", () => 0.9).kind).toBe("aggro");
+    expect(drawThreeBetLine("BTN", () => 0.9).lines[1].zh).toContain("激进");
+    expect(drawThreeBetLine("BTN", () => 0.1).kind).toBe("sb");
+    expect(drawThreeBetLine("BTN", () => 0.1).lines[1].zh).toContain("大盲弃牌");
+    expect(drawThreeBetLine("BTN", () => 0.5).kind).toBe("bb");
+  });
+
+  it("drawThreeBetLine 同一种子可复现", () => {
+    expect(drawThreeBetLine("CO", lcg(5))).toEqual(drawThreeBetLine("CO", lcg(5)));
+  });
+});
+
+describe("难度过滤（反脑残）", () => {
+  it("对范围胜率 <25%（纯垃圾无脑弃）或 >75%（坚果级无脑 4bet）重发，0.5 保留", () => {
+    expect(isTooObvious(0.1)).toBe(true);
+    expect(isTooObvious(0.843)).toBe(true); // AA 对紧 3bet 范围
+    expect(isTooObvious(0.5)).toBe(false);
+    expect(isTooObvious(0.25)).toBe(false); // 边界保留
+    expect(isTooObvious(0.75)).toBe(false);
+    expect(isTooObvious(0.726)).toBe(false); // KK 保留
+  });
+
+  it("生成的 100 道题胜率全部落在 [0.25, 0.75]（AA 不再出现）", () => {
+    const rng = lcg(4242);
+    for (let i = 0; i < 100; i++) {
+      const q = generatePreflop3BetQuiz(rng);
+      expect(q.equity).toBeGreaterThanOrEqual(0.25);
+      expect(q.equity).toBeLessThanOrEqual(0.75);
+      expect(q.handLabel).not.toBe("AA");
+      expect(q.answer).toBe(judge3bet(q.equity));
+    }
+  });
+
+  it("恒定 rng 极端情形：10 次上限兜底返回合法题，不死循环", () => {
+    const q = generatePreflop3BetQuiz(() => 0);
+    expect(["fourbet", "call", "fold"]).toContain(q.answer);
+    expect(new Set(q.hero).size).toBe(2);
   });
 });

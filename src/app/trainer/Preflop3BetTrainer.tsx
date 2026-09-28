@@ -12,6 +12,7 @@ import {
   type Preflop3BetQuiz,
   type ThreeBetChoice,
 } from "@/lib/gto/preflop3betQuiz";
+import { ActionLineBlock } from "./ActionLine";
 import { TrainerStatsBar } from "./StatsBar";
 
 type TFunc = (key: DictKey, vars?: Record<string, string | number>) => string;
@@ -116,9 +117,9 @@ export function Preflop3BetTrainer() {
     }
     return (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
+        <ActionLineBlock lines={quiz.actionLine} />
         <p className="mb-4 text-sm text-zinc-400">
           {t("trainer.3bet.scene", {
-            pos: quiz.position,
             range: t(rangeKey(quiz.threeBetRangePct === THREEBET_RANGE_TIGHT)),
             pct: Math.round(quiz.threeBetRangePct * 100),
           })}

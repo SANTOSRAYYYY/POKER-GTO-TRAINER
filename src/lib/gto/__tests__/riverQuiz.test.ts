@@ -14,7 +14,9 @@ import { describe, expect, it } from "vitest";
 import type { Card } from "@/lib/types";
 import {
   dealRiverScenario,
+  drawRiverLine,
   generateRiverQuiz,
+  isTooObvious,
   judgeRiver,
   RIVER_BLUFFCATCH_CALL_THRESHOLD,
   RIVER_BLUFFCATCH_POLAR_SPEC,
@@ -22,9 +24,11 @@ import {
   RIVER_SHOWDOWN_VALUE_MAX,
   RIVER_THIN_VALUE_MIN,
   RIVER_VALUE_BET_THRESHOLD,
+  RIVER_VALUE_CALLER_2STREET_SPEC,
   RIVER_VALUE_CALLER_SPEC,
   riverEquityExact,
   riverQuizComment,
+  riverValueCallerSpecFor,
   type RiverQuiz,
 } from "../riverQuiz";
 import { equityVsRange } from "@/lib/ai/range";
@@ -223,6 +227,8 @@ describe("generateRiverQuiz 混合场景与整题", () => {
       hero: c("Ah 5d") as [Card, Card],
       board: c("Kh 9d 7c 6s 2h") as [Card, Card, Card, Card, Card],
       type: "bluff",
+      actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
+      lineKind: "open",
       equity: riverEquityExact(c("Ah 5d") as [Card, Card], c("Kh 9d 7c 6s 2h")),
       rangeEquity: null,
       answer: "passive",
@@ -236,6 +242,8 @@ describe("generateRiverQuiz 混合场景与整题", () => {
       hero: c("9h 9d") as [Card, Card],
       board: c("Kh 8d 5c 2s 2h") as [Card, Card, Card, Card, Card],
       type: "value",
+      actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
+      lineKind: "open",
       equity: riverEquityExact(c("9h 9d") as [Card, Card], c("Kh 8d 5c 2s 2h")),
       rangeEquity: 0.522,
       answer: "passive",
@@ -246,10 +254,110 @@ describe("generateRiverQuiz 混合场景与整题", () => {
       hero: c("7s 2d") as [Card, Card],
       board: c("Ac Kd Qh 9c 4s") as [Card, Card, Card, Card, Card],
       type: "bluff",
+      actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
+      lineKind: "open",
       equity: riverEquityExact(c("7s 2d") as [Card, Card], c("Ac Kd Qh 9c 4s")),
       rangeEquity: null,
       answer: "aggressive",
     };
     expect(riverQuizComment(airBluff)).toContain("摊牌价值");
+  });
+});
+
+describe("行动线生成", () => {
+  it("三个子题型的行动线各 4 行、覆盖到河牌、双语、行内无重复，kind 合法", () => {
+    const rng = lcg(77);
+    const kindsByType = new Map<string, Set<string>>();
+    for (let i = 0; i < 90; i++) {
+      const s = dealRiverScenario(rng);
+      expect(s.actionLine.length).toBe(4);
+      expect(new Set(s.actionLine.map((l) => l.zh)).size).toBe(4);
+      for (const line of s.actionLine) {
+        expect(line.zh.length).toBeGreaterThan(4);
+        expect(line.en.length).toBeGreaterThan(4);
+      }
+      expect(s.actionLine[0].zh).toContain("翻前");
+      expect(s.actionLine[3].zh).toContain("河牌");
+      const kinds = kindsByType.get(s.type) ?? new Set<string>();
+      kinds.add(s.lineKind);
+      kindsByType.set(s.type, kinds);
+    }
+    expect(kindsByType.get("value")!.size).toBe(2);
+    expect(kindsByType.get("bluffcatch")!.size).toBe(2);
+    expect(kindsByType.get("bluff")!.size).toBe(2);
+    // bluff 没有 threeBet 线，flat 线是其第二种路线
+    expect([...kindsByType.get("bluff")!].sort()).toEqual(["flat", "open"]);
+  });
+
+  it("范围收窄联动：value 的 threeBet 线（前两街都跟了）topPct 0.4 < open 线 0.5；抓诈极化范围不变", () => {
+    expect(riverValueCallerSpecFor("open")).toEqual(RIVER_VALUE_CALLER_SPEC);
+    expect(riverValueCallerSpecFor("flat")).toEqual(RIVER_VALUE_CALLER_SPEC);
+    expect(riverValueCallerSpecFor("threeBet")).toEqual(
+      RIVER_VALUE_CALLER_2STREET_SPEC,
+    );
+    expect(riverValueCallerSpecFor("threeBet").topPct).toBeLessThan(
+      riverValueCallerSpecFor("open").topPct,
+    );
+    // 抓诈题极化范围不随行动线收窄
+    expect(RIVER_BLUFFCATCH_POLAR_SPEC).toEqual({ topPct: 0.25, bluffPct: 0.35 });
+  });
+
+  it("drawRiverLine 同一种子可复现", () => {
+    expect(drawRiverLine("value", lcg(5))).toEqual(drawRiverLine("value", lcg(5)));
+  });
+});
+
+describe("难度过滤（反脑残）", () => {
+  it("抓诈题：判定胜率 0.1（纯垃圾面对满池弃牌）必被重发，0.5 保留，>0.85 重发", () => {
+    expect(isTooObvious(0.1, "bluffcatch", 0.1)).toBe(true);
+    expect(isTooObvious(0.5, "bluffcatch", 0.5)).toBe(false);
+    expect(isTooObvious(0.9, "bluffcatch", 0.9)).toBe(true);
+    expect(isTooObvious(0.5, "bluffcatch", 0.2)).toBe(false); // 边界：<20% 才重发
+  });
+
+  it("薄价值题：对跟注范围 >85%（无脑价值）或 <25%（纯空气过牌）重发", () => {
+    expect(isTooObvious(0.9, "value", 0.9)).toBe(true);
+    expect(isTooObvious(0.3, "value", 0.1)).toBe(true);
+    expect(isTooObvious(0.5, "value", 0.5)).toBe(false);
+    expect(isTooObvious(0.3, "value", 0.25)).toBe(false); // 边界保留
+  });
+
+  it("诈唬题：精确胜率 <25%（纯空气必诈）或 >85%（坚果级）重发，摊牌价值带保留", () => {
+    expect(isTooObvious(0.1, "bluff")).toBe(true);
+    expect(isTooObvious(0.9, "bluff")).toBe(true);
+    expect(isTooObvious(0.35, "bluff")).toBe(false);
+    expect(isTooObvious(0.5, "bluff")).toBe(false);
+  });
+
+  it(
+    "生成的 40 道题全部不在显而易见区",
+    () => {
+      const rng = lcg(2028);
+      for (let i = 0; i < 40; i++) {
+        const q = generateRiverQuiz(rng, 400);
+        expect(
+          isTooObvious(q.equity.win, q.type, q.rangeEquity ?? undefined),
+        ).toBe(false);
+        if (q.type === "bluffcatch") {
+          expect(q.rangeEquity!).toBeGreaterThanOrEqual(0.2);
+          expect(q.rangeEquity!).toBeLessThanOrEqual(0.85);
+        }
+        if (q.type === "value") {
+          expect(q.rangeEquity!).toBeGreaterThanOrEqual(0.25);
+          expect(q.rangeEquity!).toBeLessThanOrEqual(0.85);
+        }
+        if (q.type === "bluff") {
+          expect(q.equity.win).toBeGreaterThanOrEqual(0.25);
+          expect(q.equity.win).toBeLessThanOrEqual(0.85);
+        }
+      }
+    },
+    30000,
+  );
+
+  it("恒定 rng 极端情形：10 次上限兜底返回合法题，不死循环", () => {
+    const q = generateRiverQuiz(() => 0, 200);
+    expect(["aggressive", "passive", "fold"]).toContain(q.answer);
+    expect(new Set([...q.hero, ...q.board]).size).toBe(7);
   });
 });

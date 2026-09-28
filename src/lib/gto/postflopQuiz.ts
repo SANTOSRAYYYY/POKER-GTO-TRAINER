@@ -1,34 +1,65 @@
 /**
  * src/lib/gto/postflopQuiz.ts — 翻后特训出题器（翻牌圈场景）
  *
- * 出题：随机发 hero 两张底牌 + 3 张公共牌（无重复），题型二选一：
- * - attack（进攻题）：翻牌圈无人下注，轮到你——主动进攻还是过牌？
- * - defense（防守题）：对手下注半个底池，轮到你——加注/跟注/弃牌？
+ * 出题：随机发 hero 两张底牌 + 3 张公共牌（无重复），题型二选一，
+ * 并随机抽一条行动线（drawPostflopLine，见 actionLine.ts）：
+ * - attack（进攻题）：你翻前开局（UTG+1~BTN 随机），大盲跟注；翻牌对手
+ *   过牌，轮到你——主动进攻还是过牌？
+ * - defense（防守题）：对手下注，轮到你——加注/跟注/弃牌？行动线两种：
+ *   - open：对手是「翻前跟注者+翻牌反主动下注/持续下注」→ 范围前 60%；
+ *   - threeBet：对手「翻前 3bet 后持续下注」→ 范围收紧到前 35%
+ *     （defenseRangeSpecFor，范围随行动线收窄）。
  *
  * 判定口径（v2，修复「第三对子被判加注」的失真）：
  * - attack：对 1 名随机对手实算胜率 ≥ 55% → aggressive；其余 → passive（check）。
- * - defense：对手已下注，其范围不是随机——用 equityVsRange（下注者隐含范围：
- *   前 60% 强度 + 15% 诈唬混入）实算胜率：
+ * - defense：对手已下注，其范围不是随机——用 equityVsRange（下注者隐含范围，
+ *   按行动线取 spec + 15% 诈唬混入）实算胜率：
  *     ≥ 68% → aggressive（价值加注）；
  *     ≥ 28% → passive（call：半池注赔率 25% + 实现折扣余量）；
  *     < 28% → fold。
  *   中间档一律跟注——中对/弱对加注只会打走差的留下强的。
+ *
+ * 难度过滤（isTooObvious，见 trainerDifficulty.ts）：防守题判定胜率 <20%
+ * （纯垃圾弃牌）或 >85%（坚果级无脑加注）、进攻题 >85%（无脑价值）或 <25%
+ * 且无强听牌（纯空气过牌）→ 重发，FILTER_MAX_ATTEMPTS 次上限兜底。
  */
 import type { Card } from "@/lib/types";
 import { newDeck } from "@/lib/poker/cards";
 import { equityMulti, type EquityResult } from "@/lib/poker/equity";
-import { equityVsRange } from "@/lib/ai/range";
+import { equityVsRange, type RangeSpec } from "@/lib/ai/range";
+import {
+  drawBetSize,
+  drawOpenPos,
+  threeBetToText,
+  type LocalizedText,
+} from "@/lib/gto/actionLine";
+import {
+  FILTER_MAX_ATTEMPTS,
+  isDefenseLikeObvious,
+  isOffenseLikeObvious,
+} from "@/lib/gto/trainerDifficulty";
 
-/** 题型：进攻题（无人下注）/ 防守题（面对半池注） */
+/** 题型：进攻题（无人下注）/ 防守题（面对下注） */
 export type ScenarioType = "attack" | "defense";
 
 /** 三选项：进攻 / 过牌·跟注 / 弃牌 */
 export type PostflopChoice = "aggressive" | "passive" | "fold";
 
+/**
+ * 行动线种类：
+ * - open：常规开局池——hero 开局（attack）/ 对手开局（defense）；
+ * - threeBet：3bet 池——对手翻前 3bet 后持续下注（仅 defense，范围更紧）。
+ */
+export type PostflopLineKind = "open" | "threeBet";
+
 export interface PostflopScenario {
   hero: [Card, Card];
   board: [Card, Card, Card];
   type: ScenarioType;
+  /** 本题的前文行动线（双语多行，页面渲染用） */
+  actionLine: LocalizedText[];
+  /** 行动线种类（驱动防守题范围收窄与文案） */
+  lineKind: PostflopLineKind;
 }
 
 export interface PostflopQuiz extends PostflopScenario {
@@ -48,13 +79,78 @@ export const ATTACK_EQUITY_THRESHOLD = 0.55;
 export const DEFENSE_RAISE_THRESHOLD = 0.68;
 /** 防守跟注线：对下注者范围胜率 ≥ 28%（半池赔率 25% + 实现折扣） */
 export const DEFENSE_CALL_THRESHOLD = 0.28;
-/** 防守题的下注者隐含范围：强度前 60% + 15% 诈唬混入（标准 c-bet 近似） */
+/** 防守题的下注者隐含范围（常规开局池）：强度前 60% + 15% 诈唬混入（标准 c-bet 近似） */
 export const DEFENSE_RANGE_SPEC = { topPct: 0.6, bluffPct: 0.15 } as const;
+/** 防守题的下注者隐含范围（3bet 池持续下注）：收紧到前 35% + 15% 诈唬混入 */
+export const FLOP_DEFENSE_3BET_RANGE_SPEC = { topPct: 0.35, bluffPct: 0.15 } as const;
 /** 出题预计算的蒙特卡洛迭代次数（约几十 ms） */
 export const QUIZ_ITERATIONS = 2000;
 
 /**
- * 随机发一个翻牌圈场景：hero 2 张 + 公共牌 3 张，无重复，题型随机。
+ * 防守题范围随行动线收窄：
+ * - open（翻前跟注者+翻牌下注者）→ DEFENSE_RANGE_SPEC（前 60%）；
+ * - threeBet（对手翻前 3bet 后持续下注）→ FLOP_DEFENSE_3BET_RANGE_SPEC（前 35%）。
+ * 进攻题无下注者范围概念（判定用对随机胜率），此函数仅供 defense 使用。
+ */
+export function defenseRangeSpecFor(lineKind: PostflopLineKind): RangeSpec {
+  return lineKind === "threeBet" ? FLOP_DEFENSE_3BET_RANGE_SPEC : DEFENSE_RANGE_SPEC;
+}
+
+/** 随机抽一条翻牌圈行动线（rng 注入可复现）：attack 固定 open 线，defense 二选一 */
+export function drawPostflopLine(
+  type: ScenarioType,
+  rng: () => number = Math.random,
+): { kind: PostflopLineKind; lines: LocalizedText[] } {
+  const pos = drawOpenPos(rng);
+  if (type === "attack") {
+    return {
+      kind: "open",
+      lines: [
+        {
+          zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲跟注`,
+          en: `Preflop: you (${pos}) open-raise to 2.5bb and the big blind calls`,
+        },
+        {
+          zh: "翻牌圈：对手过牌，轮到你行动",
+          en: "Flop: the big blind checks to you",
+        },
+      ],
+    };
+  }
+  const size = drawBetSize(rng);
+  if (rng() < 0.5) {
+    return {
+      kind: "open",
+      lines: [
+        {
+          zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲跟注`,
+          en: `Preflop: you (${pos}) open-raise to 2.5bb and the big blind calls`,
+        },
+        {
+          zh: `翻牌圈：对手反主动下注 ${size.zh}，轮到你`,
+          en: `Flop: the big blind leads out for ${size.en} — action on you`,
+        },
+      ],
+    };
+  }
+  return {
+    kind: "threeBet",
+    lines: [
+      {
+        zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲 3bet 到 ${threeBetToText().zh}，你跟注`,
+        en: `Preflop: you (${pos}) open-raise to 2.5bb; the big blind 3-bets to ${threeBetToText().en} and you call`,
+      },
+      {
+        zh: `翻牌圈：对手持续下注 ${size.zh}，轮到你`,
+        en: `Flop: the 3-bettor continuation-bets ${size.en} — action on you`,
+      },
+    ],
+  };
+}
+
+/**
+ * 随机发一个翻牌圈场景：hero 2 张 + 公共牌 3 张，无重复，题型随机，
+ * 并抽一条与题型匹配的行动线（防守题的行动线决定下注者范围松紧）。
  * @param rng 随机源（默认 Math.random），注入以便测试可复现。
  */
 export function dealPostflopScenario(
@@ -68,10 +164,14 @@ export function dealPostflopScenario(
     deck[k] = deck[j];
     deck[j] = tmp;
   }
+  const type: ScenarioType = rng() < 0.5 ? "attack" : "defense";
+  const line = drawPostflopLine(type, rng);
   return {
     hero: [deck[0], deck[1]],
     board: [deck[2], deck[3], deck[4]],
-    type: rng() < 0.5 ? "attack" : "defense",
+    type,
+    actionLine: line.lines,
+    lineKind: line.kind,
   };
 }
 
@@ -150,30 +250,59 @@ export function evaluateScenario(
   return equityMulti([...scenario.hero], [...scenario.board], 1, iterations);
 }
 
-/** 出一道完整的题：发场景 + 实算胜率 + 推导答案（同步，约几十 ms，调用方负责异步化） */
+/**
+ * 难度过滤（反脑残，纯函数）：win 传判定胜率（防守题 = 对下注者范围的胜率）。
+ * - defense：<20%（纯垃圾弃牌）或 >85%（坚果级无脑加注/跟注）→ 重发；
+ * - attack：>85%（无脑价值）或 <25% 且无强听牌（纯空气过牌毫无决策含量）→ 重发。
+ */
+export function isTooObvious(
+  win: number,
+  type: ScenarioType,
+  draws?: DrawInfo,
+): boolean {
+  if (type === "defense") return isDefenseLikeObvious(win);
+  return isOffenseLikeObvious(win, !!draws && isStrongDraw(draws));
+}
+
+/**
+ * 出一道完整的题：发场景（含行动线）+ 实算胜率 + 推导答案
+ * （同步，约几十 ms，调用方负责异步化）。
+ * 显而易见的情形（isTooObvious）重发，FILTER_MAX_ATTEMPTS 次上限兜底——
+ * 连续抽到极端牌时按最后一次结果出题，保证不死循环。
+ */
 export function generatePostflopQuiz(
   rng: () => number = Math.random,
   iterations: number = QUIZ_ITERATIONS,
 ): PostflopQuiz {
-  const scenario = dealPostflopScenario(rng);
-  const equity = evaluateScenario(scenario, iterations);
-  const defenseEquity =
-    scenario.type === "defense"
-      ? equityVsRange(scenario.hero, scenario.board, DEFENSE_RANGE_SPEC, iterations, rng)
-      : null;
-  const draws = analyzeDraws(scenario.hero, scenario.board);
-  return {
-    ...scenario,
-    equity,
-    defenseEquity,
-    draws,
-    answer: judgePostflop(
+  for (let attempt = 0; ; attempt++) {
+    const scenario = dealPostflopScenario(rng);
+    const equity = evaluateScenario(scenario, iterations);
+    const defenseEquity =
+      scenario.type === "defense"
+        ? equityVsRange(
+            scenario.hero,
+            scenario.board,
+            defenseRangeSpecFor(scenario.lineKind),
+            iterations,
+            rng,
+          )
+        : null;
+    const draws = analyzeDraws(scenario.hero, scenario.board);
+    const answer = judgePostflop(
       equity.win,
       scenario.type,
       defenseEquity ?? undefined,
       draws,
-    ),
-  };
+    );
+    const judgeWin = defenseEquity ?? equity.win;
+    if (
+      attempt + 1 < FILTER_MAX_ATTEMPTS &&
+      isTooObvious(judgeWin, scenario.type, draws)
+    ) {
+      continue; // 显而易见的题重发
+    }
+    return { ...scenario, equity, defenseEquity, draws, answer };
+  }
 }
 
 export const CHOICE_LABEL: Record<PostflopChoice, string> = {
@@ -182,7 +311,7 @@ export const CHOICE_LABEL: Record<PostflopChoice, string> = {
   fold: "弃牌",
 };
 
-/** 判定后的一句话简评（防守题引用对下注者范围的胜率） */
+/** 判定后的一句话简评（防守题引用对下注者范围的胜率，范围宽度随行动线） */
 export function quizComment(quiz: PostflopQuiz): string {
   const pct = (quiz.equity.win * 100).toFixed(1);
   const tie =
@@ -193,6 +322,7 @@ export function quizComment(quiz: PostflopQuiz): string {
     quiz.defenseEquity !== null
       ? (quiz.defenseEquity * 100).toFixed(1)
       : null;
+  const rPct = Math.round(defenseRangeSpecFor(quiz.lineKind).topPct * 100);
   switch (quiz.answer) {
     case "aggressive": {
       if (quiz.type === "attack") {
@@ -205,13 +335,13 @@ export function quizComment(quiz: PostflopQuiz): string {
         }
         return `实算胜率 ${pct}%${tie}，越过 55% 进攻线——牌力明显领先随机手，主动下注拿价值、直接收池`;
       }
-      return `对下注者范围（前 60%）实算胜率 ${dPct}%${tie}，超过 68% 加注线——价值加注榨取，别给便宜看牌`;
+      return `对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，超过 68% 加注线——价值加注榨取，别给便宜看牌`;
     }
     case "fold":
-      return `对下注者范围（前 60%）实算胜率 ${dPct}%${tie}，不足 28%——半池注需 25% 赔率也够不上，弃牌`;
+      return `对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，不足 28%——半池注需 25% 赔率也够不上，弃牌`;
     case "passive":
       return quiz.type === "attack"
         ? `实算胜率 ${pct}%${tie}，不够进攻线——过牌控池、免费看转牌，别用弱牌造池`
-        : `对下注者范围（前 60%）实算胜率 ${dPct}%${tie}，够 28% 跟注线但不够 68% 加注线——中对/弱对的标准打法是跟注看转牌，加注只会打走差的留下强的`;
+        : `对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，够 28% 跟注线但不够 68% 加注线——中对/弱对的标准打法是跟注看转牌，加注只会打走差的留下强的`;
   }
 }

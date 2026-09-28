@@ -15,9 +15,11 @@ import {
   RIVER_SHOWDOWN_VALUE_MAX,
   RIVER_THIN_VALUE_MIN,
   RIVER_VALUE_BET_THRESHOLD,
+  riverValueCallerSpecFor,
   type RiverQuiz,
   type RiverScenarioType,
 } from "@/lib/gto/riverQuiz";
+import { ActionLineBlock } from "./ActionLine";
 import { TrainerStatsBar } from "./StatsBar";
 
 type TFunc = (key: DictKey, vars?: Record<string, string | number>) => string;
@@ -55,7 +57,7 @@ const CHOICE_KEY: Record<PostflopChoice, DictKey> = {
   fold: "action.fold",
 };
 
-/** 判定后的一句话简评（与 lib/gto/riverQuiz.riverQuizComment 同逻辑、走字典双语） */
+/** 判定后的一句话简评（与 lib/gto/riverQuiz.riverQuizComment 同逻辑、走字典双语；价值题范围宽度随行动线） */
 function quizCommentText(quiz: RiverQuiz, t: TFunc): string {
   const shown = quiz.rangeEquity ?? quiz.equity.win;
   const pct = (shown * 100).toFixed(1);
@@ -63,7 +65,8 @@ function quizCommentText(quiz: RiverQuiz, t: TFunc): string {
     quiz.equity.tie >= 0.005
       ? t("trainer.post.tieNote", { pct: (quiz.equity.tie * 100).toFixed(1) })
       : "";
-  const vars = { pct, tie };
+  const rpct = Math.round(riverValueCallerSpecFor(quiz.lineKind).topPct * 100);
+  const vars = { pct, tie, rpct };
   switch (quiz.answer) {
     case "aggressive":
       if (quiz.type === "value") return t("trainer.river.comment.valueBet", vars);
@@ -169,7 +172,9 @@ export function RiverTrainer() {
         <p className="mb-1 text-xs font-medium text-zinc-500">
           {t(QUESTION_KEY[quiz.type])}
         </p>
-        <p className="mb-4 text-sm text-zinc-400">{t(SCENARIO_KEY[quiz.type])}</p>
+        <p className="mb-3 text-sm text-zinc-400">{t(SCENARIO_KEY[quiz.type])}</p>
+
+        <ActionLineBlock lines={quiz.actionLine} />
 
         <div className="mb-5 space-y-3">
           <div className="flex items-center justify-center gap-2">

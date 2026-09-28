@@ -12,15 +12,19 @@ import { describe, expect, it } from "vitest";
 import type { Card } from "@/lib/types";
 import {
   dealTurnScenario,
+  drawTurnLine,
   generateTurnQuiz,
+  isTooObvious,
   judgeTurn,
   TURN_BARREL_EQUITY_THRESHOLD,
   TURN_BARREL_SEMIBLUFF_MIN,
-  TURN_CALLER_RANGE_SPEC,
+  TURN_BETTOR_3BET_RANGE_SPEC,
   TURN_BETTOR_RANGE_SPEC,
+  TURN_CALLER_RANGE_SPEC,
   TURN_DEFENSE_CALL_THRESHOLD,
   TURN_DEFENSE_RAISE_THRESHOLD,
   turnQuizComment,
+  turnRangeSpecFor,
 } from "../turnQuiz";
 import { analyzeDraws, isStrongDraw } from "../postflopQuiz";
 import { equityVsRange } from "@/lib/ai/range";
@@ -174,6 +178,8 @@ describe("generateTurnQuiz 混合场景与整题", () => {
       hero,
       board,
       type: "barrel" as const,
+      actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
+      lineKind: "open" as const,
       equity: { win: 0.4399, tie: 0, lose: 0.5601 },
       rangeEquity: 0.4399,
       draws,
@@ -183,5 +189,84 @@ describe("generateTurnQuiz 混合场景与整题", () => {
     const text = turnQuizComment(q);
     expect(text).toContain("44.0");
     expect(text).toContain("半诈唬");
+  });
+});
+
+describe("行动线生成", () => {
+  it("两个子题型的行动线各 3 行、双语、行内无重复，两种 kind 都出现", () => {
+    const rng = lcg(77);
+    const barrelKinds = new Set<string>();
+    const defenseKinds = new Set<string>();
+    for (let i = 0; i < 80; i++) {
+      const s = dealTurnScenario(rng);
+      expect(s.actionLine.length).toBe(3);
+      expect(new Set(s.actionLine.map((l) => l.zh)).size).toBe(3);
+      for (const line of s.actionLine) {
+        expect(line.zh.length).toBeGreaterThan(4);
+        expect(line.en.length).toBeGreaterThan(4);
+      }
+      expect(s.actionLine[0].zh).toContain("翻前");
+      if (s.type === "barrel") barrelKinds.add(s.lineKind);
+      else defenseKinds.add(s.lineKind);
+    }
+    expect(barrelKinds.size).toBe(2);
+    expect(defenseKinds.size).toBe(2);
+  });
+
+  it("范围收窄联动：defense 的 threeBet 线 topPct 0.3 < open 线 0.45；barrel 恒 0.45", () => {
+    expect(turnRangeSpecFor("barrel", "open")).toEqual(TURN_CALLER_RANGE_SPEC);
+    expect(turnRangeSpecFor("barrel", "threeBet")).toEqual(TURN_CALLER_RANGE_SPEC);
+    expect(turnRangeSpecFor("defense", "open")).toEqual(TURN_BETTOR_RANGE_SPEC);
+    expect(turnRangeSpecFor("defense", "threeBet")).toEqual(
+      TURN_BETTOR_3BET_RANGE_SPEC,
+    );
+    expect(turnRangeSpecFor("defense", "threeBet").topPct).toBeLessThan(
+      turnRangeSpecFor("defense", "open").topPct,
+    );
+  });
+
+  it("drawTurnLine 同一种子可复现", () => {
+    expect(drawTurnLine("defense", lcg(5))).toEqual(drawTurnLine("defense", lcg(5)));
+  });
+});
+
+describe("难度过滤（反脑残）", () => {
+  it("防守题：判定胜率 0.1（纯垃圾面对第二枪弃牌）必被重发，0.5 保留", () => {
+    expect(isTooObvious(0.1, "defense")).toBe(true);
+    expect(isTooObvious(0.5, "defense")).toBe(false);
+    expect(isTooObvious(0.9, "defense")).toBe(true);
+    expect(isTooObvious(0.2, "defense")).toBe(false);
+    expect(isTooObvious(0.85, "defense")).toBe(false);
+  });
+
+  it("第二枪题：>85% 无脑价值重发；<25% 无听牌重发、有强听牌保留", () => {
+    const noDraw = { flushDraw: false, straightOuts: 0 };
+    const strongDraw = { flushDraw: true, straightOuts: 0 };
+    expect(isTooObvious(0.9, "barrel", noDraw)).toBe(true);
+    expect(isTooObvious(0.1, "barrel", noDraw)).toBe(true);
+    expect(isTooObvious(0.1, "barrel", strongDraw)).toBe(false);
+    expect(isTooObvious(0.5, "barrel", noDraw)).toBe(false);
+  });
+
+  it(
+    "生成的 40 道题全部不在显而易见区",
+    () => {
+      const rng = lcg(2027);
+      for (let i = 0; i < 40; i++) {
+        const q = generateTurnQuiz(rng, 400);
+        expect(isTooObvious(q.rangeEquity, q.type, q.draws)).toBe(false);
+        if (q.type === "defense") {
+          expect(q.rangeEquity).toBeGreaterThanOrEqual(0.2);
+          expect(q.rangeEquity).toBeLessThanOrEqual(0.85);
+        }
+      }
+    },
+    30000,
+  );
+
+  it("恒定 rng 极端情形：10 次上限兜底返回合法题，不死循环", () => {
+    const q = generateTurnQuiz(() => 0, 200);
+    expect(["aggressive", "passive", "fold"]).toContain(q.answer);
+    expect(new Set([...q.hero, ...q.board]).size).toBe(6);
   });
 });
