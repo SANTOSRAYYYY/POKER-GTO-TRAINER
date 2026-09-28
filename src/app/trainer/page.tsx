@@ -5,13 +5,26 @@ import { Nav } from "@/components/history/Nav";
 import { useI18n } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n/dict";
 import { PushFoldTrainer } from "./PushFoldTrainer";
+import { Preflop3BetTrainer } from "./Preflop3BetTrainer";
 import { PostflopTrainer } from "./PostflopTrainer";
+import { TurnTrainer } from "./TurnTrainer";
+import { RiverTrainer } from "./RiverTrainer";
 
-type Mode = "pushfold" | "postflop";
+/**
+ * 五个独立 tab 而非「转牌·河牌合并」：每族题型的统计与错题回顾要求独立计数，
+ * 独立 tab 下各组件沿用同一模式（各自 StatsBar + 错题列表）即可满足；
+ * 合并 tab 需要在组件内再切分两套计数，结构与既有组件不一致。
+ * 标签保持短词（翻前 Push/Fold / 翻前 3bet / 翻牌圈 / 转牌圈 / 河牌圈），
+ * 移动端用 text-xs 收窄。首个 tab 仍是 Push/Fold（e2e 依赖默认页的「全下」按钮）。
+ */
+type Mode = "pushfold" | "threebet" | "postflop" | "turn" | "river";
 
 const TABS: { key: Mode; labelKey: DictKey }[] = [
   { key: "pushfold", labelKey: "trainer.tab.pushfold" },
+  { key: "threebet", labelKey: "trainer.tab.threebet" },
   { key: "postflop", labelKey: "trainer.tab.postflop" },
+  { key: "turn", labelKey: "trainer.tab.turn" },
+  { key: "river", labelKey: "trainer.tab.river" },
 ];
 
 export default function TrainerPage() {
@@ -33,7 +46,7 @@ export default function TrainerPage() {
             <button
               key={tab.key}
               onClick={() => setMode(tab.key)}
-              className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 rounded-md px-1 py-2 text-xs font-medium transition-colors sm:text-sm ${
                 mode === tab.key
                   ? "bg-emerald-500/15 text-emerald-400"
                   : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
@@ -44,7 +57,11 @@ export default function TrainerPage() {
           ))}
         </div>
 
-        {mode === "pushfold" ? <PushFoldTrainer /> : <PostflopTrainer />}
+        {mode === "pushfold" && <PushFoldTrainer />}
+        {mode === "threebet" && <Preflop3BetTrainer />}
+        {mode === "postflop" && <PostflopTrainer />}
+        {mode === "turn" && <TurnTrainer />}
+        {mode === "river" && <RiverTrainer />}
       </div>
     </main>
   );

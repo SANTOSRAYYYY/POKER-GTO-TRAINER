@@ -660,11 +660,14 @@ export const PAGES_DICT = {
   // ================= 训练器（src/app/trainer/**） =================
   "trainer.title": { zh: "训练器", en: "Trainer" },
   "trainer.subtitle": {
-    zh: "翻前短码全下/弃牌 · 翻后实算胜率决策，两种模式分开计分",
-    en: "Preflop short-stack shove/fold · postflop decisions judged by real computed equity — scored separately",
+    zh: "翻前短码全下/弃牌 · 翻前 3bet 应对 · 翻牌/转牌/河牌圈实算胜率决策，五种模式分开计分",
+    en: "Preflop short-stack shove/fold · preflop 3-bet defense · flop/turn/river decisions judged by real computed equity — five modes scored separately",
   },
-  "trainer.tab.pushfold": { zh: "翻前 Push/Fold", en: "Preflop Push/Fold" },
-  "trainer.tab.postflop": { zh: "翻后特训", en: "Postflop drills" },
+  "trainer.tab.pushfold": { zh: "翻前 Push/Fold", en: "Push/Fold" },
+  "trainer.tab.threebet": { zh: "翻前 3bet", en: "3-bet" },
+  "trainer.tab.postflop": { zh: "翻牌圈", en: "Flop" },
+  "trainer.tab.turn": { zh: "转牌圈", en: "Turn" },
+  "trainer.tab.river": { zh: "河牌圈", en: "River" },
   "trainer.stats.streak": { zh: "连对（最佳 {best}）", en: "Streak (best {best})" },
   "trainer.stats.accuracy": {
     zh: "正确率（{correct}/{total}）",
@@ -776,6 +779,172 @@ export const PAGES_DICT = {
   "trainer.post.comment.defensePassive": {
     zh: "对下注者范围（前 60%）实算胜率 {pct}%{tie}，够 28% 跟注线但不够 68% 加注线——中对/弱对标准打法是跟注看转牌，加注只会打走差的留下强的",
     en: "Equity vs the bettor's range (top 60%): {pct}%{tie}, above the 28% call line but short of the 68% raise line — the standard play with a medium/weak pair is to call; raising only folds out worse and keeps in better",
+  },
+
+  // ---- 翻前 3bet 应对（Preflop3BetTrainer / lib/gto/preflop3betQuiz.ts） ----
+  "trainer.3bet.rule": {
+    zh: "BTN/CO 开局遇盲注位 3bet · 按对 3bet 范围的翻前实算胜率判定（169 牌型静态表）：≥60% 4bet / ≥45% 跟注 / 否则弃牌",
+    en: "You open from BTN/CO and face a blind's 3-bet · judged by real preflop equity vs the 3-bet range (169-hand static table): 4-bet ≥60% / call ≥45% / else fold",
+  },
+  "trainer.3bet.scene": {
+    zh: "你在 {pos} 开局加注，盲注位 3bet（{range}，约顶部 {pct}% 牌型），轮到你——4bet、跟注还是弃牌？",
+    en: "You open-raise from {pos}; the blind 3-bets ({range}, top ≈{pct}% of hands). Action on you — 4-bet, call, or fold?",
+  },
+  "trainer.3bet.choice.fourbet": { zh: "4bet 再加注", en: "4-bet" },
+  "trainer.3bet.range.tight": { zh: "紧 3bet 范围", en: "tight 3-bet range" },
+  "trainer.3bet.range.loose": { zh: "松 3bet 范围", en: "loose 3-bet range" },
+  "trainer.3bet.winVs3bet": {
+    zh: "胜率（对 3bet 范围）",
+    en: "Equity (vs 3-bet range)",
+  },
+  "trainer.3bet.method": {
+    zh: "判定口径：169 牌型 × 范围档位的翻前胜率静态表（离线蒙特卡洛 4000 次/格生成）· 4bet 线 {fourbet}% / 跟注线 {call}%",
+    en: "Method: precomputed 169-hand × range-tier equity table (4000-iteration offline Monte Carlo per cell) · 4-bet line {fourbet}% / call line {call}%",
+  },
+  "trainer.3bet.comment.fourbet": {
+    zh: "{label} 对{range}（顶部约 {pct}%）翻前胜率 {eq}%，越过 60% 4bet 线——反手加注施压，别给便宜看翻牌",
+    en: "{label} has {eq}% equity vs a {range} (top ≈{pct}%), above the 60% 4-bet line — re-raise and apply pressure; don't give a cheap flop",
+  },
+  "trainer.3bet.comment.call": {
+    zh: "{label} 对{range}翻前胜率 {eq}%，在 45-60% 之间——够跟注利用位置看翻后；4bet 只会打走差的留下强的",
+    en: "{label} has {eq}% vs a {range}, inside the 45-60% band — call and use position postflop; 4-betting only folds out worse and keeps in better",
+  },
+  "trainer.3bet.comment.fold": {
+    zh: "{label} 对{range}翻前胜率 {eq}%，不足 45%——落后太多，弃牌止损（开局遇 3bet，大部分牌都该弃）",
+    en: "{label} has {eq}% vs a {range}, below 45% — too far behind; fold and save it (most opens should fold to a 3-bet)",
+  },
+  "trainer.3bet.wrongMeta": {
+    zh: "{pos} · {range} · 胜率 {pct}%",
+    en: "{pos} · {range} · equity {pct}%",
+  },
+
+  // ---- 转牌圈（TurnTrainer / lib/gto/turnQuiz.ts） ----
+  "trainer.turn.rule": {
+    zh: "转牌圈场景 · 第二枪题按对跟注者范围（前 45%）胜率判定：≥55% 继续进攻，35-55% 且强听牌算半诈唬进攻 · 面对第二枪按对下注者范围（前 45%）判定：≥68% 加注 / ≥30% 跟注 / 否则弃牌",
+    en: "Turn scenarios · double-barrel judged vs the caller's range (top 45%): fire again ≥55%, semi-bluff at 35-55% with a strong draw · facing a second barrel judged vs the bettor's range (top 45%): raise ≥68% / call ≥30% / else fold",
+  },
+  "trainer.turn.barrelQ": { zh: "第二枪题", en: "Double-barrel spot" },
+  "trainer.turn.defenseQ": {
+    zh: "面对第二枪（对手半池注）",
+    en: "Facing a second barrel (half-pot bet)",
+  },
+  "trainer.turn.barrelShort": { zh: "第二枪题", en: "Barrel" },
+  "trainer.turn.defenseShort": { zh: "面对第二枪", en: "Facing barrel" },
+  "trainer.turn.scenario.barrel": {
+    zh: "转牌圈。翻前你是进攻方，翻牌圈你的持续下注被跟注——转牌轮到你：继续开第二枪，还是过牌放弃？",
+    en: "On the turn. You were the preflop aggressor and your flop c-bet was called — the turn is on you: fire a second barrel, or check and give up?",
+  },
+  "trainer.turn.scenario.defense": {
+    zh: "转牌圈。你跟注了对手翻牌圈的持续下注，对手转牌再开第二枪（半个底池）——加注、跟注还是弃牌？",
+    en: "On the turn. You called the flop c-bet and your opponent fires a second barrel (half pot) — raise, call, or fold?",
+  },
+  "trainer.turn.method": {
+    zh: "实算口径：蒙特卡洛 {iters} 次 · 第二枪对跟注者范围（前 45% + 10% 诈唬混入）：进攻线 {barrel}%，强听牌半诈唬带 {semi}-{barrel}% · 面对第二枪对下注者范围（前 45%）：加注线 {raise}% / 跟注线 {call}%",
+    en: "Method: {iters}-iteration Monte Carlo · barrel judged vs caller's range (top 45% + 10% bluffs): attack line {barrel}%, semi-bluff band {semi}-{barrel}% with a strong draw · facing the barrel vs bettor's range (top 45%): raise {raise}% / call {call}%",
+  },
+  "trainer.turn.winVsCaller": {
+    zh: "胜率（对跟注者范围）",
+    en: "Equity (vs caller's range)",
+  },
+  "trainer.turn.winVsBettor": {
+    zh: "胜率（对下注者范围）",
+    en: "Equity (vs bettor's range)",
+  },
+  "trainer.turn.comment.barrelValue": {
+    zh: "对跟注者范围（前 45%）实算胜率 {pct}%{tie}，越过 55% 第二枪线——继续进攻拿价值，别给免费河牌",
+    en: "Equity vs the caller's range (top 45%): {pct}%{tie}, above the 55% barrel line — keep firing for value; don't give a free river",
+  },
+  "trainer.turn.comment.barrelSemibluff": {
+    zh: "对跟注者范围（前 45%）实算胜率 {pct}%{tie}，{draw}——标准半诈唬第二枪：对手弃牌直接收池，被跟也有大量补牌",
+    en: "Equity vs the caller's range (top 45%): {pct}%{tie}, with {draw} — textbook semi-bluff barrel: win it now if they fold, plenty of outs if called",
+  },
+  "trainer.turn.comment.barrelGiveUp": {
+    zh: "对跟注者范围（前 45%）实算胜率 {pct}%{tie}，不足 35% 或无强听牌——过牌放弃：能跟翻牌下注的范围不弱，弱牌别再造池",
+    en: "Equity vs the caller's range (top 45%): {pct}%{tie}, below 35% with no strong draw — check and give up: a range that called the flop isn't weak; don't keep building the pot",
+  },
+  "trainer.turn.comment.defenseAggressive": {
+    zh: "对第二枪范围（前 45%）实算胜率 {pct}%{tie}，超过 68% 加注线——价值加注榨取，别给便宜看河牌",
+    en: "Equity vs the second-barrel range (top 45%): {pct}%{tie}, above the 68% raise line — raise for value and don't give a cheap river",
+  },
+  "trainer.turn.comment.defensePassive": {
+    zh: "对第二枪范围（前 45%）实算胜率 {pct}%{tie}，够 30% 跟注线但不够 68% 加注线——跟注看河牌，加注只会打走差的留下强的",
+    en: "Equity vs the second-barrel range (top 45%): {pct}%{tie}, above the 30% call line but short of 68% — call and see the river; raising only folds out worse and keeps in better",
+  },
+  "trainer.turn.comment.fold": {
+    zh: "对第二枪范围（前 45%）实算胜率 {pct}%{tie}，不足 30%——对手转牌还下注范围更紧，半池注赔率也够不上，弃牌",
+    en: "Equity vs the second-barrel range (top 45%): {pct}%{tie}, below 30% — a turn bettor's range is tighter and the half-pot price doesn't save you: fold",
+  },
+
+  // ---- 河牌圈（RiverTrainer / lib/gto/riverQuiz.ts） ----
+  "trainer.river.rule": {
+    zh: "河牌圈场景（公共牌 5 张齐，对随机胜率精确枚举全部组合）· 价值题对跟注范围（前 50%）≥60% 下注 · 抓诈题对极化范围（前 25% + 35% 诈唬）≥33% 跟注 · 诈唬题 <25% 无摊牌价值才诈唬，25-45% 过牌，≥45% 价值下注",
+    en: "River scenarios (board complete; vs-random equity enumerated exactly over all combos) · thin value vs calling range (top 50%): bet ≥60% · bluff-catch vs polarized range (top 25% + 35% bluffs): call ≥33% · bluff: bet only below 25% (no showdown value), check 25-45%, value-bet ≥45%",
+  },
+  "trainer.river.valueQ": { zh: "薄价值题", en: "Thin-value spot" },
+  "trainer.river.bluffcatchQ": {
+    zh: "抓诈题（对手满池注）",
+    en: "Bluff-catch spot (pot-sized bet)",
+  },
+  "trainer.river.bluffQ": { zh: "诈唬题", en: "Bluff spot" },
+  "trainer.river.valueShort": { zh: "薄价值", en: "Value" },
+  "trainer.river.bluffcatchShort": { zh: "抓诈", en: "Bluff-catch" },
+  "trainer.river.bluffShort": { zh: "诈唬", en: "Bluff" },
+  "trainer.river.scenario.value": {
+    zh: "河牌圈。五张公共牌已齐，你最后行动、无人下注——下注拿价值，还是过牌比牌？",
+    en: "On the river. The board is complete; you're last to act with no bet — bet for value, or check it down?",
+  },
+  "trainer.river.scenario.bluffcatch": {
+    zh: "河牌圈。对手下注一个满池，轮到你——跟注抓诈，还是弃牌？",
+    en: "On the river. Your opponent bets a full pot — call to catch a bluff, or fold?",
+  },
+  "trainer.river.scenario.bluff": {
+    zh: "河牌圈。你的听牌全没中，无人下注——诈唬下注偷池，还是过牌放弃？",
+    en: "On the river. All your draws missed and no one has bet — bluff at the pot, or check and give up?",
+  },
+  "trainer.river.method": {
+    zh: "实算口径：对随机胜率精确枚举（剩余 45 张牌的全部 {combos} 组合）· 价值题对跟注范围（前 50% + 5% 诈唬混入）下注线 {value}% · 抓诈题对极化范围（前 25% + 35% 诈唬混入）跟注线 {catch}%（满池注赔率 33%）· 诈唬题胜率 <{bluff}% 才诈唬 / {bluff}-{showdown}% 有摊牌价值过牌 / ≥{showdown}% 价值下注",
+    en: "Method: exact enumeration vs random (all {combos} combos of the 45 remaining cards) · value line {value}% vs calling range (top 50% + 5% bluffs) · bluff-catch call line {catch}% vs polarized range (top 25% + 35% bluffs; pot-sized bet = 33% pot odds) · bluff only below {bluff}%, check with showdown value {bluff}-{showdown}%, value-bet ≥{showdown}%",
+  },
+  "trainer.river.winExact": { zh: "胜率（精确枚举）", en: "Equity (exact)" },
+  "trainer.river.winVsCaller": {
+    zh: "胜率（对跟注范围）",
+    en: "Equity (vs calling range)",
+  },
+  "trainer.river.winVsPolar": {
+    zh: "胜率（对极化范围）",
+    en: "Equity (vs polarized range)",
+  },
+  "trainer.river.comment.valueBet": {
+    zh: "对跟注范围（前 50%）实算胜率 {pct}%{tie}，越过 60% 价值线——下注拿价值：更差的牌会跟注，别浪费最后一条街",
+    en: "Equity vs the calling range (top 50%): {pct}%{tie}, above the 60% value line — bet for value: worse hands will call; don't waste the last street",
+  },
+  "trainer.river.comment.valueCheckThin": {
+    zh: "对跟注范围（前 50%）实算胜率 {pct}%{tie}，在 45-60% 之间——薄价值不够薄别贪：下注多半只被更强的牌跟；过牌利用摊牌价值免费比牌",
+    en: "Equity vs the calling range (top 50%): {pct}%{tie}, in the 45-60% band — too thin to value-bet: a bet mostly gets called by better; check and use your showdown value",
+  },
+  "trainer.river.comment.valueCheckWeak": {
+    zh: "对跟注范围（前 50%）实算胜率 {pct}%{tie}，不足 45%——下注等于诈唬而非价值；有摊牌价值的牌就过牌比牌",
+    en: "Equity vs the calling range (top 50%): {pct}%{tie}, below 45% — a bet here is a bluff, not value; with showdown value, check it down",
+  },
+  "trainer.river.comment.bluffcatchCall": {
+    zh: "对极化范围（前 25% 强牌 + 35% 诈唬）实算胜率 {pct}%{tie}，越过 33% 满池赔率线——跟注抓诈：满池注只需三分之一胜率保本",
+    en: "Equity vs the polarized range (top 25% value + 35% bluffs): {pct}%{tie}, above the 33% pot-odds line — call to catch a bluff: a pot-sized bet needs only one-third equity to break even",
+  },
+  "trainer.river.comment.bluffcatchFold": {
+    zh: "对极化范围（前 25% 强牌 + 35% 诈唬）实算胜率 {pct}%{tie}，不足 33%——你连对方的诈唬组合都压不过，无摊牌价值也无抓诈价值，弃牌",
+    en: "Equity vs the polarized range (top 25% value + 35% bluffs): {pct}%{tie}, below 33% — you don't even beat the bluff combos; no showdown value, no bluff-catch value: fold",
+  },
+  "trainer.river.comment.bluffBet": {
+    zh: "精确胜率 {pct}%{tie}，不足 25%——听牌全没中、毫无摊牌价值，过牌等于认输；唯有诈唬下注能赢这个池（河牌极化策略：强牌与纯空气下注，中间牌过牌）",
+    en: "Exact equity {pct}%{tie}, below 25% — all draws missed and zero showdown value: checking is giving up; only a bluff can win the pot (polarized river strategy: bet the nuts and the air, check the middle)",
+  },
+  "trainer.river.comment.bluffCheck": {
+    zh: "精确胜率 {pct}%{tie}，在 25-45% 之间——弱牌有摊牌价值：过牌有机会赢下更弱的牌；诈唬只会打走更弱的、被更强的跟注，把赢面打没",
+    en: "Exact equity {pct}%{tie}, in the 25-45% band — a weak hand with showdown value: checking can still beat weaker hands; a bluff only folds out worse and gets called by better, destroying your equity",
+  },
+  "trainer.river.comment.valueBetBig": {
+    zh: "精确胜率 {pct}%{tie}，超过 45%——牌力明显领先随机手，主动下注拿价值（这是价值不是诈唬）",
+    en: "Exact equity {pct}%{tie}, above 45% — clearly ahead of a random hand: bet for value (this is value, not a bluff)",
   },
 
   // ================= 范围表（src/app/ranges/page.tsx） =================
