@@ -15,7 +15,14 @@ import {
   type PostflopQuiz,
   type ScenarioType,
 } from "@/lib/gto/postflopQuiz";
+import {
+  flopAttackLine,
+  flopDefenseCallLine,
+  flopDefenseRaiseLine,
+  potPlayers,
+} from "@/lib/gto/multiway";
 import { ActionLineBlock } from "./ActionLine";
+import { PotBadge } from "./PotBadge";
 import { TrainerStatsBar } from "./StatsBar";
 
 type TFunc = (key: DictKey, vars?: Record<string, string | number>) => string;
@@ -40,7 +47,7 @@ const CHOICE_KEY: Record<PostflopChoice, DictKey> = {
   fold: "action.fold",
 };
 
-/** 判定后的一句话简评（与 lib/gto/postflopQuiz.quizComment 同逻辑、走字典双语；范围宽度随行动线） */
+/** 判定后的一句话简评（与 lib/gto/postflopQuiz.quizComment 同逻辑、走字典双语；范围宽度随行动线；多人池带底池人数提示与动态门槛） */
 function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
   const pct = (quiz.equity.win * 100).toFixed(1);
   const dPct =
@@ -52,10 +59,21 @@ function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
       ? t("trainer.post.tieNote", { pct: (quiz.equity.tie * 100).toFixed(1) })
       : "";
   const rpct = Math.round(defenseRangeSpecFor(quiz.lineKind).topPct * 100);
+  const atk = Math.round(flopAttackLine(quiz.opponents) * 100);
+  const raise = Math.round(flopDefenseRaiseLine(quiz.opponents) * 100);
+  const call = Math.round(flopDefenseCallLine(quiz.opponents) * 100);
+  const note =
+    quiz.opponents > 1
+      ? t("trainer.pot.note", { n: potPlayers(quiz.opponents) })
+      : "";
   switch (quiz.answer) {
     case "aggressive":
       if (quiz.type === "attack") {
-        if (quiz.equity.win < ATTACK_EQUITY_THRESHOLD && isStrongDraw(quiz.draws)) {
+        if (
+          quiz.equity.win < flopAttackLine(quiz.opponents) &&
+          isStrongDraw(quiz.draws)
+        ) {
+          // 半诈唬进攻（仅单挑可达：多人池不放宽）
           const drawParts: string[] = [];
           if (quiz.draws.straightOuts >= 8)
             drawParts.push(t("trainer.post.draw.straight", { outs: quiz.draws.straightOuts }));
@@ -66,22 +84,39 @@ function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
             draw: drawParts.join(" + "),
           });
         }
-        return t("trainer.post.comment.attackAggressive", { pct, tie });
+        return note + t("trainer.post.comment.attackAggressive", { pct, tie, atk });
       }
-      return t("trainer.post.comment.defenseAggressive", {
+      return note + t("trainer.post.comment.defenseAggressive", {
         pct: quiz.defenseEquity !== null ? dPct : pct,
         tie,
         rpct,
+        raise,
       });
     case "fold":
-      return t("trainer.post.comment.fold", { pct: dPct, tie, rpct });
+      return note + t("trainer.post.comment.fold", { pct: dPct, tie, rpct, call });
     case "passive":
-      return t(
-        quiz.type === "attack"
-          ? "trainer.post.comment.attackPassive"
-          : "trainer.post.comment.defensePassive",
-        { pct: quiz.type === "attack" ? pct : dPct, tie, rpct },
-      );
+      if (quiz.type === "attack") {
+        if (quiz.opponents > 1 && isStrongDraw(quiz.draws)) {
+          // 多人池不放宽半诈唬：强听牌也只够过牌
+          const drawParts: string[] = [];
+          if (quiz.draws.straightOuts >= 8)
+            drawParts.push(t("trainer.post.draw.straight", { outs: quiz.draws.straightOuts }));
+          if (quiz.draws.flushDraw) drawParts.push(t("trainer.post.draw.flush"));
+          return note + t("trainer.post.comment.attackPassiveMulti", {
+            pct,
+            tie,
+            draw: drawParts.join(" + "),
+          });
+        }
+        return note + t("trainer.post.comment.attackPassive", { pct, tie });
+      }
+      return note + t("trainer.post.comment.defensePassive", {
+        pct: dPct,
+        tie,
+        rpct,
+        call,
+        raise,
+      });
   }
 }
 
@@ -160,9 +195,12 @@ export function PostflopTrainer() {
     }
     return (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-        <p className="mb-1 text-xs font-medium text-zinc-500">
-          {quiz.type === "attack" ? t("trainer.post.attackQ") : t("trainer.post.defenseQ")}
-        </p>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <p className="text-xs font-medium text-zinc-500">
+            {quiz.type === "attack" ? t("trainer.post.attackQ") : t("trainer.post.defenseQ")}
+          </p>
+          <PotBadge opponents={quiz.opponents} />
+        </div>
         <p className="mb-3 text-sm text-zinc-400">{t(SCENARIO_KEY[quiz.type])}</p>
 
         <ActionLineBlock lines={quiz.actionLine} />

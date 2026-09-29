@@ -196,7 +196,7 @@ describe("generateRiverQuiz 混合场景与整题", () => {
         types.add(q.type);
         answers.add(q.answer);
         expect(q.answer).toBe(
-          judgeRiver(q.equity.win, q.type, q.rangeEquity ?? undefined),
+          judgeRiver(q.equity.win, q.type, q.rangeEquity ?? undefined, q.opponents),
         );
         expect(q.equity.win + q.equity.tie + q.equity.lose).toBeCloseTo(1, 9);
         if (q.type === "bluff") expect(q.rangeEquity).toBeNull();
@@ -233,6 +233,7 @@ describe("generateRiverQuiz 混合场景与整题", () => {
       actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
       lineKind: "open",
       openPos: "CO",
+      opponents: 1,
       equity: riverEquityExact(c("Ah 5d") as [Card, Card], c("Kh 9d 7c 6s 2h")),
       rangeEquity: null,
       answer: "passive",
@@ -249,6 +250,7 @@ describe("generateRiverQuiz 混合场景与整题", () => {
       actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
       lineKind: "open",
       openPos: "CO",
+      opponents: 1,
       equity: riverEquityExact(c("9h 9d") as [Card, Card], c("Kh 8d 5c 2s 2h")),
       rangeEquity: 0.522,
       answer: "passive",
@@ -262,6 +264,7 @@ describe("generateRiverQuiz 混合场景与整题", () => {
       actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
       lineKind: "open",
       openPos: "CO",
+      opponents: 1,
       equity: riverEquityExact(c("7s 2d") as [Card, Card], c("Ac Kd Qh 9c 4s")),
       rangeEquity: null,
       answer: "aggressive",
@@ -375,7 +378,7 @@ describe("底牌与行动线一致性（hero 范围抽样接线）", () => {
     for (let i = 0; i < 200; i++) {
       const s = dealRiverScenario(rng);
       seen.add(`${s.type}/${s.lineKind}`);
-      const role = heroRoleForRiver(s.lineKind);
+      const role = heroRoleForRiver(s.lineKind, s.type, s.opponents);
       const label = cardsToHandType(s.hero[0], s.hero[1]).label;
       const range = heroRangeLabels(role, role === "open" ? s.openPos : undefined);
       expect(
@@ -393,7 +396,7 @@ describe("底牌与行动线一致性（hero 范围抽样接线）", () => {
     const rolesSeen = new Set<string>();
     for (let i = 0; i < 200; i++) {
       const s = dealRiverScenario(rng);
-      const role = heroRoleForRiver(s.lineKind);
+      const role = heroRoleForRiver(s.lineKind, s.type, s.opponents);
       rolesSeen.add(role);
       const label = cardsToHandType(s.hero[0], s.hero[1]).label;
       expect(trash.has(label)).toBe(false);

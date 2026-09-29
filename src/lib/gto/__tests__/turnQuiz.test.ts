@@ -150,7 +150,9 @@ describe("generateTurnQuiz 混合场景与整题", () => {
         types.add(q.type);
         answers.add(q.answer);
         // 答案与判定函数一致
-        expect(q.answer).toBe(judgeTurn(q.rangeEquity, q.type, q.draws));
+        expect(q.answer).toBe(
+          judgeTurn(q.rangeEquity, q.type, q.draws, q.opponents),
+        );
         expect(q.rangeEquity).toBeGreaterThanOrEqual(0);
         expect(q.rangeEquity).toBeLessThanOrEqual(1);
       }
@@ -184,6 +186,7 @@ describe("generateTurnQuiz 混合场景与整题", () => {
       actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
       lineKind: "open" as const,
       openPos: "CO" as const,
+      opponents: 1 as const,
       equity: { win: 0.4399, tie: 0, lose: 0.5601 },
       rangeEquity: 0.4399,
       draws,

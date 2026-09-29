@@ -19,7 +19,13 @@ import {
   type RiverQuiz,
   type RiverScenarioType,
 } from "@/lib/gto/riverQuiz";
+import {
+  potPlayers,
+  riverBluffcatchCallLine,
+  riverValueBetLine,
+} from "@/lib/gto/multiway";
 import { ActionLineBlock } from "./ActionLine";
+import { PotBadge } from "./PotBadge";
 import { TrainerStatsBar } from "./StatsBar";
 
 type TFunc = (key: DictKey, vars?: Record<string, string | number>) => string;
@@ -57,7 +63,7 @@ const CHOICE_KEY: Record<PostflopChoice, DictKey> = {
   fold: "action.fold",
 };
 
-/** 判定后的一句话简评（与 lib/gto/riverQuiz.riverQuizComment 同逻辑、走字典双语；价值题范围宽度随行动线） */
+/** 判定后的一句话简评（与 lib/gto/riverQuiz.riverQuizComment 同逻辑、走字典双语；价值题范围宽度随行动线；多人池带底池人数提示与动态门槛） */
 function quizCommentText(quiz: RiverQuiz, t: TFunc): string {
   const shown = quiz.rangeEquity ?? quiz.equity.win;
   const pct = (shown * 100).toFixed(1);
@@ -66,27 +72,36 @@ function quizCommentText(quiz: RiverQuiz, t: TFunc): string {
       ? t("trainer.post.tieNote", { pct: (quiz.equity.tie * 100).toFixed(1) })
       : "";
   const rpct = Math.round(riverValueCallerSpecFor(quiz.lineKind).topPct * 100);
+  const line =
+    quiz.type === "value"
+      ? Math.round(riverValueBetLine(quiz.opponents) * 100)
+      : Math.round(riverBluffcatchCallLine(quiz.opponents) * 100);
+  const note =
+    quiz.opponents > 1
+      ? t("trainer.pot.note", { n: potPlayers(quiz.opponents) })
+      : "";
   const vars = { pct, tie, rpct };
   switch (quiz.answer) {
     case "aggressive":
-      if (quiz.type === "value") return t("trainer.river.comment.valueBet", vars);
+      if (quiz.type === "value")
+        return note + t("trainer.river.comment.valueBet", { ...vars, line });
       if (quiz.type === "bluff" && quiz.equity.win < RIVER_BLUFF_MAX_EQUITY) {
         return t("trainer.river.comment.bluffBet", vars);
       }
-      return t("trainer.river.comment.valueBetBig", vars);
+      return note + t("trainer.river.comment.valueBetBig", vars);
     case "fold":
-      return t("trainer.river.comment.bluffcatchFold", vars);
+      return note + t("trainer.river.comment.bluffcatchFold", { ...vars, line });
     case "passive":
       if (quiz.type === "value") {
-        return t(
+        return note + t(
           (quiz.rangeEquity ?? 0) >= RIVER_THIN_VALUE_MIN
             ? "trainer.river.comment.valueCheckThin"
             : "trainer.river.comment.valueCheckWeak",
-          vars,
+          { ...vars, line },
         );
       }
       if (quiz.type === "bluffcatch") {
-        return t("trainer.river.comment.bluffcatchCall", vars);
+        return note + t("trainer.river.comment.bluffcatchCall", { ...vars, line });
       }
       return t("trainer.river.comment.bluffCheck", vars);
   }
@@ -169,9 +184,12 @@ export function RiverTrainer() {
     }
     return (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-        <p className="mb-1 text-xs font-medium text-zinc-500">
-          {t(QUESTION_KEY[quiz.type])}
-        </p>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <p className="text-xs font-medium text-zinc-500">
+            {t(QUESTION_KEY[quiz.type])}
+          </p>
+          <PotBadge opponents={quiz.opponents} />
+        </div>
         <p className="mb-3 text-sm text-zinc-400">{t(SCENARIO_KEY[quiz.type])}</p>
 
         <ActionLineBlock lines={quiz.actionLine} />

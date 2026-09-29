@@ -19,7 +19,14 @@ import {
   type TurnQuiz,
   type TurnScenarioType,
 } from "@/lib/gto/turnQuiz";
+import {
+  potPlayers,
+  turnBarrelLine,
+  turnDefenseCallLine,
+  turnDefenseRaiseLine,
+} from "@/lib/gto/multiway";
 import { ActionLineBlock } from "./ActionLine";
+import { PotBadge } from "./PotBadge";
 import { TrainerStatsBar } from "./StatsBar";
 
 type TFunc = (key: DictKey, vars?: Record<string, string | number>) => string;
@@ -54,7 +61,7 @@ const CHOICE_KEY: Record<PostflopChoice, DictKey> = {
   fold: "action.fold",
 };
 
-/** 判定后的一句话简评（与 lib/gto/turnQuiz.turnQuizComment 同逻辑、走字典双语；范围宽度随行动线） */
+/** 判定后的一句话简评（与 lib/gto/turnQuiz.turnQuizComment 同逻辑、走字典双语；范围宽度随行动线；多人池带底池人数提示与动态门槛） */
 function quizCommentText(quiz: TurnQuiz, t: TFunc): string {
   const pct = (quiz.rangeEquity * 100).toFixed(1);
   const tie =
@@ -64,14 +71,22 @@ function quizCommentText(quiz: TurnQuiz, t: TFunc): string {
   const rpct = Math.round(
     turnRangeSpecFor(quiz.type, quiz.lineKind).topPct * 100,
   );
+  const line = Math.round(turnBarrelLine(quiz.opponents) * 100);
+  const raise = Math.round(turnDefenseRaiseLine(quiz.opponents) * 100);
+  const call = Math.round(turnDefenseCallLine(quiz.opponents) * 100);
+  const note =
+    quiz.opponents > 1
+      ? t("trainer.pot.note", { n: potPlayers(quiz.opponents) })
+      : "";
   const vars = { pct, tie, rpct };
   switch (quiz.answer) {
     case "aggressive":
       if (quiz.type === "barrel") {
         if (
-          quiz.rangeEquity < TURN_BARREL_EQUITY_THRESHOLD &&
+          quiz.rangeEquity < turnBarrelLine(quiz.opponents) &&
           isStrongDraw(quiz.draws)
         ) {
+          // 半诈唬第二枪（仅单挑可达：多人池不放宽）
           const drawParts: string[] = [];
           if (quiz.draws.straightOuts >= 8)
             drawParts.push(t("trainer.post.draw.straight", { outs: quiz.draws.straightOuts }));
@@ -81,18 +96,31 @@ function quizCommentText(quiz: TurnQuiz, t: TFunc): string {
             draw: drawParts.join(" + "),
           });
         }
-        return t("trainer.turn.comment.barrelValue", vars);
+        return note + t("trainer.turn.comment.barrelValue", { ...vars, line });
       }
-      return t("trainer.turn.comment.defenseAggressive", vars);
+      return note + t("trainer.turn.comment.defenseAggressive", { ...vars, raise });
     case "fold":
-      return t("trainer.turn.comment.fold", vars);
+      return note + t("trainer.turn.comment.fold", { ...vars, call });
     case "passive":
-      return t(
-        quiz.type === "barrel"
-          ? "trainer.turn.comment.barrelGiveUp"
-          : "trainer.turn.comment.defensePassive",
-        vars,
-      );
+      if (quiz.type === "barrel") {
+        if (quiz.opponents > 1 && isStrongDraw(quiz.draws)) {
+          // 多人池不放宽半诈唬：强听牌也只够过牌放弃
+          const drawParts: string[] = [];
+          if (quiz.draws.straightOuts >= 8)
+            drawParts.push(t("trainer.post.draw.straight", { outs: quiz.draws.straightOuts }));
+          if (quiz.draws.flushDraw) drawParts.push(t("trainer.post.draw.flush"));
+          return note + t("trainer.turn.comment.barrelGiveUpMulti", {
+            ...vars,
+            draw: drawParts.join(" + "),
+          });
+        }
+        return note + t("trainer.turn.comment.barrelGiveUp", vars);
+      }
+      return note + t("trainer.turn.comment.defensePassive", {
+        ...vars,
+        call,
+        raise,
+      });
   }
 }
 
@@ -171,9 +199,12 @@ export function TurnTrainer() {
     }
     return (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-        <p className="mb-1 text-xs font-medium text-zinc-500">
-          {t(QUESTION_KEY[quiz.type])}
-        </p>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <p className="text-xs font-medium text-zinc-500">
+            {t(QUESTION_KEY[quiz.type])}
+          </p>
+          <PotBadge opponents={quiz.opponents} />
+        </div>
         <p className="mb-3 text-sm text-zinc-400">{t(SCENARIO_KEY[quiz.type])}</p>
 
         <ActionLineBlock lines={quiz.actionLine} />

@@ -53,6 +53,7 @@ const TEST_LINE = {
   actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
   lineKind: "open" as const,
   openPos: "CO" as const,
+  opponents: 1 as const,
 };
 
 describe("dealPostflopScenario 发牌", () => {
@@ -173,7 +174,7 @@ describe("generatePostflopQuiz 整题", () => {
     for (let seed = 100; seed < 110; seed++) {
       const q = generatePostflopQuiz(lcg(seed), 800);
       expect(q.answer).toBe(
-        judgePostflop(q.equity.win, q.type, q.defenseEquity ?? undefined, q.draws),
+        judgePostflop(q.equity.win, q.type, q.defenseEquity ?? undefined, q.draws, q.opponents),
       );
       expect(q.equity.win + q.equity.tie + q.equity.lose).toBeCloseTo(1, 5);
       if (q.type === "defense") {
@@ -240,7 +241,11 @@ describe("行动线生成", () => {
       expect(s.actionLine.length).toBe(2);
       if (s.type === "attack") {
         expect(s.lineKind).toBe("open");
-        expect(s.actionLine[1].zh).toContain("对手过牌");
+        if (s.opponents === 1) {
+          expect(s.actionLine[1].zh).toContain("对手过牌");
+        } else {
+          expect(s.actionLine[1].zh).toContain("轮到你");
+        }
       } else {
         defenseKinds.add(s.lineKind);
         expect(["open", "threeBet"]).toContain(s.lineKind);
@@ -350,8 +355,13 @@ describe("底牌与行动线一致性（hero 范围抽样接线）", () => {
     for (let i = 0; i < 200; i++) {
       const s = dealPostflopScenario(rng);
       types.add(s.type);
-      const role = heroRoleForPostflop(s.type, s.lineKind);
-      expect(role).toBe("open"); // 翻牌圈所有行动线里 hero 都是开局方
+      const role = heroRoleForPostflop(s.type, s.lineKind, s.opponents);
+      // 单挑行动线里 hero 都是开局方；多人池 hero 是跟注者（attack=BTN 跟注 / defense=大盲跟注）
+      if (s.opponents === 1) {
+        expect(role).toBe("open");
+      } else {
+        expect(role).toBe(s.type === "attack" ? "caller" : "bbDefend");
+      }
       const label = cardsToHandType(s.hero[0], s.hero[1]).label;
       expect(
         heroRangeLabels(role, s.openPos).has(label),
