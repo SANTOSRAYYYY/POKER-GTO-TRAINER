@@ -34,3 +34,4 @@ scripts/selfplay/llm-keys.env
 
 # android/ 原生工程源码提交进仓库（可直接用 Android Studio 打开），
 # 其构建产物由 cap add android 生成的 android/.gitignore 负责忽略
+.tools/
