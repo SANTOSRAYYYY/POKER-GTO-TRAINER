@@ -327,6 +327,17 @@ export interface HandRecord {
   id: string;
   /** 结束时的 Unix 毫秒时间戳 */
   timestamp: number;
+  /**
+   * 对局模式（现金/锦标赛）。归档时写入（v2 修复后）；
+   * 旧记录缺省，isTournamentHand 回退到 finishPlace 启发式判定。
+   */
+  mode?: GameMode;
+  /**
+   * 锦标赛开赛总人数（config.seats）；仅锦标赛模式填写。
+   * 淘汰者在两手之间即被移出引擎桌，players.length 是本手开局人数而非开赛
+   * 人数（夺冠手恒为单挑），nine_max_title 等判定须用本字段。
+   */
+  tournamentSeats?: number;
   /** 本手所有在座玩家（含 hero，按座位升序）的快照 */
   players: HandPlayerRecord[];
   /** 人类玩家座位 */

@@ -1,0 +1,34 @@
+{
+  "rangesSwitch": {
+    "before": "可玩 17%（加注 28 / 跟注 0 / 弃牌 141，共 169 格）",
+    "after": "可玩 67%（加注 14 / 跟注 100 / 弃牌 55，共 169 格）",
+    "changed": true
+  },
+  "trainerTabs": {
+    "翻前 Push/Fold": true,
+    "翻前 3bet": true,
+    "翻牌圈": true,
+    "转牌圈": true,
+    "河牌圈": true
+  },
+  "trainerNextOk": true,
+  "historyEmptyCtaHref": "/",
+  "statsEmptyCtaHref": "/play",
+  "settingsSaveOk": true,
+  "testBtnDisabledNoKey": true,
+  "lobbyTournamentPreview": true,
+  "lobbyModeSwitchBack": true,
+  "corruptHistory": {
+    "headingVisible": false,
+    "rows": 0,
+    "body": "This page couldn’t load\n\nReload to try again, or go back.\n\nReload\nBack"
+  },
+  "corruptStats": {
+    "headingVisible": false,
+    "body": "This page couldn’t load\n\nReload to try again, or go back.\n\nReload\nBack"
+  },
+  "corruptReplayBody": "This page couldn’t load\n\nReload to try again, or go back.\n\nReload\nBack",
+  "corruptConsoleErrors": [],
+  "mobileHistoryOverflow": false,
+  "mobileReplayOverflow": false
+}

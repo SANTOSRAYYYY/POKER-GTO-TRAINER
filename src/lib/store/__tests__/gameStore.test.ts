@@ -12,8 +12,13 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { GameState, HandRecord, Seat } from "@/lib/types";
+import { DEFAULT_BLIND_LEVELS } from "@/lib/types";
 import { applyAction, createGame } from "@/lib/poker/game";
-import { DEFAULT_TOURNAMENT } from "@/lib/poker/tournament";
+import {
+  DEFAULT_TOURNAMENT,
+  extendLevelsInfinite,
+  INFINITE_TOTAL_LEVELS,
+} from "@/lib/poker/tournament";
 import {
   cappedCallAmount,
   computeHeroProfit,
@@ -287,6 +292,8 @@ describe("HandRecord 新契约（players[]/heroSeat/buttonSeat/ante）", () => {
     expect(rec.heroSeat).toBe(0);
     expect(rec.buttonSeat).toBe(0);
     expect(rec.ante).toBe(0);
+    expect(rec.mode).toBe("cash");
+    expect(rec.tournamentSeats).toBeUndefined(); // 现金局不记开赛人数
     expect(rec.result).toBe("lose");
     expect(rec.profit).toBe(-1);
     expect(rec.showdown).toBe(false);
@@ -391,6 +398,8 @@ describe("锦标赛淘汰与名次", () => {
     expect(s.tableStacks).toEqual([1450, 3050, 1500, 0]);
 
     expect(rec).not.toBeNull();
+    expect(rec!.mode).toBe("tournament");
+    expect(rec!.tournamentSeats).toBe(4); // 开赛人数（config.seats），非本手在座人数
     expect(rec!.players[3]).toMatchObject({ profit: -1500, finishPlace: 4 });
     expect(rec!.players[1].profit).toBe(1550);
     expect(rec!.profit).toBe(-50); // hero：1450 − 1500
@@ -928,5 +937,216 @@ describe("重购注入不污染盈亏记账", () => {
     expect(st().session.heroProfit).toBe(
       savedHands.reduce((sum, h) => sum + h.profit, 0),
     );
+  });
+});
+
+describe("盲注超过全场筹码的强制全下跑马（BUG-E1/E2 软锁修复）", () => {
+  /** 驱动整桌打到冠军：轮到 hero 就弃牌；观战快进链在测试环境零延迟自跑到冠军 */
+  async function driveToChampion(maxHands: number): Promise<void> {
+    for (let i = 0; i < maxHands && !st().tournamentOver; i++) {
+      const s = st();
+      if (!s.game) break;
+      if (s.pendingHeroBust) {
+        await s.resolveTournamentRebuy(false);
+        continue;
+      }
+      if (s.game.handOver) {
+        await s.advanceToNextHand();
+        continue;
+      }
+      if (s.game.currentSeat === HERO_SEAT) {
+        await s.act({ type: "fold", amount: 0 });
+        continue;
+      }
+      break; // 防御：AI 循环在测试环境同步跑完，不应停在 AI 回合
+    }
+  }
+
+  it("BUG-E1：升盲后 max(stacks) < 大盲不再卡死——短码强制 all-in，锦标赛打到冠军", async () => {
+    // 审计 B3 复现：第 2 级 bb=2000 超过全场总筹码 300
+    await st().startTable({
+      mode: "tournament",
+      seats: 3,
+      aiStyle: "tag",
+      tournament: {
+        startStack: 100,
+        handsPerLevel: 1,
+        levels: [
+          { smallBlind: 5, bigBlind: 10, ante: 0 },
+          { smallBlind: 1000, bigBlind: 2000, ante: 0 },
+        ],
+      },
+    });
+    // 第 1 手：hero（按钮=UTG）弃牌，AI 打完
+    expect(st().game!.currentSeat).toBe(HERO_SEAT);
+    await st().act({ type: "fold", amount: 0 });
+    expect(st().game!.handOver).toBe(true);
+    expect(st().blindLevel).toBe(1); // 升入 bb=2000 级
+
+    // 修复前：createGame 校验抛错被吞成 lastError，handNumber 永远停在 1
+    await st().advanceToNextHand();
+    expect(st().lastError).toBeNull();
+    expect(st().game!.handNumber).toBe(2);
+
+    // 之后每手都是短码/全员强制跑马：数手内必出冠军，筹码守恒
+    await driveToChampion(20);
+    const s = st();
+    expect(s.lastError).toBeNull();
+    expect(s.tournamentOver).toBe(true);
+    expect(s.championSeat).not.toBeNull();
+    expect(s.finishPlaces[s.championSeat!]).toBe(1);
+    expect(s.tableStacks.reduce((a, b) => a + b, 0)).toBe(3 * 100);
+  });
+
+  it("BUG-E1 端到端：8 人无限升盲打到冠军（≤600 手）", async () => {
+    await st().startTable({
+      mode: "tournament",
+      seats: 8,
+      aiStyle: "tag",
+      tournament: {
+        startStack: 1500,
+        handsPerLevel: 8,
+        levels: extendLevelsInfinite(DEFAULT_BLIND_LEVELS, INFINITE_TOTAL_LEVELS),
+      },
+    });
+    await driveToChampion(600);
+    const s = st();
+    expect(s.lastError).toBeNull();
+    expect(s.tournamentOver).toBe(true);
+    expect(s.championSeat).not.toBeNull();
+    expect(s.finishPlaces[s.championSeat!]).toBe(1);
+    // 名次互不相同且恰好覆盖 1..8
+    expect([...s.finishPlaces].sort((a, b) => a! - b!)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8,
+    ]);
+    // 筹码守恒：无重购注入，总额恒为 8×1500
+    expect(s.tableStacks.reduce((a, b) => a + b, 0)).toBe(8 * 1500);
+    expect(s.game!.handNumber).toBeLessThanOrEqual(600);
+  }, 60000);
+
+  it("BUG-E2：correctStacks 修正后全员全下 → 开局即摊牌跑马，不抛错卡死", async () => {
+    // 审计 B4 复现：级别 50/100/ante100，筹码 [200,100,150]，按钮在桌座 1——
+    // 对称局（stack=200+）UTG 可行动，按真实筹码修正后全员被 ante/盲注吃光
+    await st().startTable({
+      mode: "tournament",
+      seats: 3,
+      aiStyle: "tag",
+      tournament: {
+        startStack: 150,
+        handsPerLevel: 1,
+        levels: [
+          { smallBlind: 5, bigBlind: 10, ante: 0 },
+          { smallBlind: 50, bigBlind: 100, ante: 100 },
+        ],
+      },
+    });
+    craftHandOver([200, 100, 150], [0]);
+    st().finalizeHand();
+    expect(st().blindLevel).toBe(1);
+
+    // 修复前：correctStacks 抛错被吞成 lastError，handNumber 永远停在 1
+    await st().advanceToNextHand();
+    const s = st();
+    expect(s.lastError).toBeNull();
+    expect(s.game!.handNumber).toBe(2);
+    // 全员 ante+盲注后全下：开局即摊牌，公共牌一次发完并结算
+    expect(s.game!.handOver).toBe(true);
+    expect(s.game!.showdown).toBe(true);
+    expect(s.game!.board).toHaveLength(5);
+    expect(s.handSettled).toBe(true);
+    // 筹码守恒：pot 清零，450 全在各座筹码中
+    expect(s.game!.players.reduce((sum, p) => sum + p.stack, 0)).toBe(450);
+
+    // 不卡死：继续推进直到冠军
+    await driveToChampion(20);
+    expect(st().lastError).toBeNull();
+    expect(st().tournamentOver).toBe(true);
+    expect(st().tableStacks.reduce((a, b) => a + b, 0)).toBe(3 * 150);
+  });
+});
+
+describe("hero 待决淘汰名次与同手出局者同一规则（开手筹码少者名次靠后）", () => {
+  /**
+   * 构造「hero（开手 200）与桌座 2（开手 1500）同手归零」：
+   * 第 1 手重排筹码并预消耗桌座 2 的重购次数（归零自动重购），
+   * 第 2 手双出局。返回时 finalize 已跑、hero 处 pendingHeroBust 待决态。
+   */
+  async function setupHeroShortDoubleBust(): Promise<void> {
+    await st().startTable({
+      mode: "tournament",
+      seats: 4,
+      aiStyle: "tag",
+      tournament: { ...DEFAULT_TOURNAMENT, rebuysAllowed: 1 },
+    });
+    craftHandOver([200, 2900, 0, 2900], [1]);
+    st().finalizeHand();
+    // 桌座 2 归零但在重购期：自动重购消耗其唯一次数，不淘汰
+    expect(st().rebuysUsed[2]).toBe(1);
+    expect(st().tableStacks).toEqual([200, 2900, 1500, 2900]);
+    await st().advanceToNextHand();
+    // 第 2 手开手筹码（名次排序基准）
+    expect(st().stacks).toEqual([200, 2900, 1500, 2900]);
+    craftHandOver([0, 4600, 0, 2900], [1]);
+    st().finalizeHand();
+  }
+
+  it("hero 开手最少 → 拒绝重购拿最差名次，更深的同手出局者顺移一位", async () => {
+    await setupHeroShortDoubleBust();
+    // 桌座 2 先按「hero 幸存」假定记第 4；hero 待决名次按同一规则应为第 4
+    expect(st().finishPlaces[2]).toBe(4);
+    expect(st().pendingHeroBust).toEqual({ place: 4, championSeat: null });
+
+    const p = st().resolveTournamentRebuy(false);
+    st().setFastForward(false); // 冻结观战推进链，锁定断言现场
+    await p;
+    const s = st();
+    expect(s.finishPlaces[0]).toBe(4); // hero 开手最少 → 名次最靠后
+    expect(s.finishPlaces[2]).toBe(3); // 桌座 2 顺移一位，名次不撞车
+    expect(s.eliminated).toEqual([true, false, true, false]);
+    expect(s.bustEvents).toContainEqual({ seat: 0, place: 4 });
+  });
+
+  it("hero 开手最少但选择重购：同手出局者名次保持，hero 不占名次", async () => {
+    await setupHeroShortDoubleBust();
+    expect(st().finishPlaces[2]).toBe(4);
+
+    await st().resolveTournamentRebuy(true);
+    const s = st();
+    expect(s.pendingHeroBust).toBeNull();
+    expect(s.rebuysUsed[0]).toBe(1);
+    expect(s.finishPlaces[0]).toBeNull(); // hero 重购继续，无名次
+    // 幸存 3 人（含重购的 hero），桌座 2 第 4 恰为正确，不顺移
+    expect(s.finishPlaces[2]).toBe(4);
+    expect(s.eliminated).toEqual([false, false, true, false]);
+  });
+
+  it("hero 开手更深 → 拿同手出局者中最好名次，同桌出局者不顺移", async () => {
+    await st().startTable({
+      mode: "tournament",
+      seats: 4,
+      aiStyle: "tag",
+      tournament: { ...DEFAULT_TOURNAMENT, rebuysAllowed: 1 },
+    });
+    // 第 1 手：桌座 3 归零并自动重购（预消耗次数）
+    craftHandOver([1600, 2300, 2000, 0], [1]);
+    st().finalizeHand();
+    expect(st().rebuysUsed[3]).toBe(1);
+    expect(st().tableStacks).toEqual([1600, 2300, 2000, 1500]);
+    await st().advanceToNextHand();
+    // 第 2 手：hero（开手 1600）与桌座 3（开手 1500）同手归零
+    expect(st().stacks).toEqual([1600, 2300, 2000, 1500]);
+    craftHandOver([0, 4100, 3300, 0], [1]);
+    st().finalizeHand();
+    // 桌座 3 开手更少 → 第 4；hero 更深 → 同手出局者中最好（第 3）
+    expect(st().finishPlaces[3]).toBe(4);
+    expect(st().pendingHeroBust).toEqual({ place: 3, championSeat: null });
+
+    const p = st().resolveTournamentRebuy(false);
+    st().setFastForward(false);
+    await p;
+    const s = st();
+    expect(s.finishPlaces[0]).toBe(3);
+    expect(s.finishPlaces[3]).toBe(4); // 1500 < 1600：不劣于 hero 不成立，不顺移
+    expect(s.eliminated).toEqual([true, false, false, true]);
   });
 });

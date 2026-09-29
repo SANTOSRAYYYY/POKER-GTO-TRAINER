@@ -97,6 +97,25 @@ describe("renderHandForPrompt 空动作跑马街渲染", () => {
   });
 });
 
+describe("renderHandForPrompt 局型标注（mode 字段优先，审计 A1）", () => {
+  it("mode='tournament' 的前期手（无 finishPlace）标注为锦标赛而非现金局", () => {
+    const text = renderHandForPrompt(
+      makeRunoutHand({ mode: "tournament", tournamentSeats: 9 }),
+    );
+    expect(text).toContain("锦标赛（SNG）");
+    expect(text).not.toContain("现金局");
+  });
+
+  it("mode='cash' 标注现金局；缺 mode 的旧记录回退 finishPlace 启发式", () => {
+    expect(renderHandForPrompt(makeRunoutHand({ mode: "cash" }))).toContain("现金局");
+    // 旧记录：无 mode 且无 finishPlace → 现金局；带 finishPlace → 锦标赛
+    expect(renderHandForPrompt(makeRunoutHand())).toContain("现金局");
+    const legacy = makeRunoutHand();
+    legacy.players = legacy.players.map((p) => ({ ...p, finishPlace: 2 }));
+    expect(renderHandForPrompt(legacy)).toContain("锦标赛（SNG）");
+  });
+});
+
 describe("buildAnalysisUserPrompt 注入组装", () => {
   it("含决策点参考数据段：hero 翻前 all-in 决策一行，跑马街不产生决策行", () => {
     vi.spyOn(Math, "random").mockImplementation(lcg(41));

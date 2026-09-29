@@ -37,8 +37,12 @@
  * spec+同 opponents 逐比特一致。训练器多人池防守判定曾用它做「下注者强
  * spec + 跟注者封顶 spec」混合采样，后发现「联合胜率 + 阈值步进」对多人
  * 摊薄重复计费，防守侧已改为只对下注者评估（见 gto/multiway.ts 两套口径）；
- * 本函数保留为逐角色联合胜率的公共资产。brain 的 AI 决策口径不变（仍走
- * equityVsRange 单 spec）。
+ * 本函数保留为逐角色联合胜率的公共资产。brain 侧对应机制为
+ * multiwayDefenseV2Enabled（brain.ts）：facingBet 多人池时只评估对下注者
+ * 的胜率——inferFacingSpec 的 aggressionLevel 按 1 传（spec 不做 ×0.8 多人
+ * 收紧）且 equityVsRange 只抽下注者 1 人；Phase 10 台架验收未过采纳线
+ * （合并 -12.8 bb/100 [-19.0,-6.5]，n=36000）→ 默认关闭，恢复「联合摊薄 +
+ * 全员强 spec」旧框架（rangeMultiwayJoint 生效），机制保留供 A/B。
  *
  * blocker 效应（Phase 8，旋钮 brain 侧 blockerEnabled）：hero 底牌对范围组合
  * 的组合权重修正——hero 持某花色 A 时，对手该花色的同花听组合（hole+board

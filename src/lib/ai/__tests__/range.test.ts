@@ -143,7 +143,8 @@ describe("equityVsRange 蒙特卡洛合理性", () => {
     expect(e2).toBeGreaterThan(e4);
     expect(e4).toBeLessThan(0.3);
     expect(e4).toBeLessThan(e1 - 0.2);
-  });
+    // MC 重（3×8000 迭代 + 建池）：全套并发下可超 5s 默认超时（审计 C3）→ 显式 15s
+  }, 15_000);
 
   it("opponents=1 时与旧单对手口径逐比特一致（同 seed）", () => {
     resetRangeCaches();
@@ -182,7 +183,7 @@ describe("equityVsRanges 逐角色多人池范围胜率", () => {
     resetRangeCaches();
     const legacy = equityVsRange(hero, board, strong, 6000, mulberry32(7), 3);
     expect(Math.abs(joint - legacy)).toBeLessThan(0.02);
-  });
+  }, 15_000);
 
   it("逐角色混合：跟注者封顶显著抬高胜率（介于「全强」与「全封顶」之间）", () => {
     resetRangeCaches();
@@ -194,7 +195,8 @@ describe("equityVsRanges 逐角色多人池范围胜率", () => {
     // 实测：allStrong ≈0.25 / mixed ≈0.30 / allCapped ≈0.33
     expect(mixed).toBeGreaterThan(allStrong + 0.02);
     expect(mixed).toBeLessThan(allCapped - 0.01);
-  });
+    // MC 重（3×8000 迭代 + 两个池构建）：全套并发下可超 5s 默认超时 → 显式 15s
+  }, 15_000);
 
   it("specs 长度 2（三人池）：摊薄更少，胜率高于同组合四人池", () => {
     resetRangeCaches();
@@ -205,7 +207,7 @@ describe("equityVsRanges 逐角色多人池范围胜率", () => {
     expect(threeWay).toBeGreaterThan(fourWay + 0.05);
     expect(threeWay).toBeGreaterThan(0);
     expect(threeWay).toBeLessThan(1);
-  });
+  }, 15_000);
 
   it("河牌（公共牌已齐）混合 spec：坚果对任何 spec 组合恒胜", () => {
     resetRangeCaches();
@@ -380,10 +382,52 @@ describe("rangeMode 接入 brain：加注战被统治手牌（88 弱葫芦 on 22
     }
   });
 
-  it("多人池口径旋钮：rangeMultiwayJoint 默认开时 4 对手稳定弃牌，关闭退回旧近似则继续", () => {
+  it("多人池面注 V2 显式开启：4 对手只按对下注者口径评估，中对稳定继续", () => {
     // Ah7h（中对 7）on Ks7d2c 面对 0.3 池小注、4 名对手：
-    // 联合口径胜率 ≈0.14 << 阈值 0.36 → 弃牌；旧单对手近似 ≈0.51 > 0.36 → 跟注。
-    // 两侧间距 ≥3.5σ（按 brain 决策的 175 次迭代缓存估计 σ≈0.038 计）。
+    // V2 框架（multiwayDefenseV2Enabled 显式开启，默认关——Phase 10 台架
+    // 未过采纳线）只对下注者评估——spec 不收紧（top55%）、只抽下注者 1 人，
+    // 胜率 ≈0.65 > 门槛 ≈0.30（赔率 0.23 + tag 0.04 + 实现率税 0.01×3）→
+    // 稳定跟注。旧联合框架（默认）下同局面胜率 ≈0.14 必弃（见下一条对照）。
+    const mk = () => {
+      const input = makeDecideInput({
+        aiHole: ["Ah", "7h"],
+        board: ["Ks", "7d", "2c"],
+        street: "flop",
+        pot: 100,
+        currentBet: 30,
+        aiStack: 250,
+        callAmount: 30,
+        playerCount: 5,
+        aiSeat: 4,
+        buttonSeat: 0,
+        legalActions: [
+          { type: "fold", amount: 0 },
+          { type: "call", amount: 30 },
+          { type: "raise", amount: 60 },
+          { type: "allin", amount: 250 },
+        ],
+        style: "tag",
+      });
+      input.state.streetActions = [SA(0, "bet", 30)];
+      return input;
+    };
+    const N = 40;
+    resetBrainCaches();
+    let continues = 0;
+    const rngA = mulberry32(4242);
+    for (let i = 0; i < N; i++) {
+      const r = brainDecide(mk(), "tag", rngA, { multiwayDefenseV2Enabled: true });
+      assertLegal(r.action, mk());
+      if (r.action.type !== "fold") continues++;
+    }
+    expect(continues / N).toBeGreaterThanOrEqual(0.9);
+  });
+
+  it("多人池面注默认（V2 关，旧联合框架）：4 对手联合摊薄稳定弃牌，rangeMultiwayJoint:false 退回旧近似则继续", () => {
+    // 同上一局面。默认口径（V1 联合）胜率 ≈0.14 << 阈值 ≈0.39
+    // （0.23+0.04+0.03×3）→ 弃牌；rangeMultiwayJoint:false（全员强 spec 抽单
+    // 对手）≈0.51 > 0.39 → 跟注。两侧间距 ≥3.5σ（按 brain 决策的 175 次迭代
+    // 缓存估计 σ≈0.038 计）。
     const mk = () => {
       const input = makeDecideInput({
         aiHole: ["Ah", "7h"],
@@ -412,7 +456,7 @@ describe("rangeMode 接入 brain：加注战被统治手牌（88 弱葫芦 on 22
     let jointFolds = 0;
     const rngA = mulberry32(4242);
     for (let i = 0; i < N; i++) {
-      const r = brainDecide(mk(), "tag", rngA); // 默认 rangeMultiwayJoint: true
+      const r = brainDecide(mk(), "tag", rngA); // 默认 multiwayDefenseV2Enabled: false
       assertLegal(r.action, mk());
       if (r.action.type === "fold") jointFolds++;
     }
@@ -427,6 +471,41 @@ describe("rangeMode 接入 brain：加注战被统治手牌（88 弱葫芦 on 22
       if (r.action.type !== "fold") legacyContinues++;
     }
     expect(legacyContinues / N).toBeGreaterThanOrEqual(0.8);
+  });
+
+  it("单挑路径逐比特回归：opponents=1 时 V2 开/关决策深相等（同 seed）", () => {
+    // V2 只改多人池（opponents>1）面注路径；单挑两侧应逐比特一致
+    const mk = () => {
+      const input = makeDecideInput({
+        aiHole: ["Ah", "7h"],
+        board: ["Ks", "7d", "2c"],
+        street: "flop",
+        pot: 100,
+        currentBet: 30,
+        aiStack: 250,
+        callAmount: 30,
+        playerCount: 2,
+        aiSeat: 1,
+        buttonSeat: 0,
+        legalActions: [
+          { type: "fold", amount: 0 },
+          { type: "call", amount: 30 },
+          { type: "raise", amount: 60 },
+          { type: "allin", amount: 250 },
+        ],
+        style: "tag",
+      });
+      input.state.streetActions = [SA(0, "bet", 30)];
+      return input;
+    };
+    resetBrainCaches();
+    for (let i = 0; i < 20; i++) {
+      const on = brainDecide(mk(), "tag", mulberry32(0xc0ffee));
+      const off = brainDecide(mk(), "tag", mulberry32(0xc0ffee), {
+        multiwayDefenseV2Enabled: false,
+      });
+      expect(off).toEqual(on);
+    }
   });
 
   it("无人下注的主动决策不受范围推断影响（无 streetActions 时仍按随机胜率下注）", () => {

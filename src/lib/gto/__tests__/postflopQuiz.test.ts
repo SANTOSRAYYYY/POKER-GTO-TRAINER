@@ -30,6 +30,7 @@ import {
   isTooObvious,
   judgePostflop,
   quizComment,
+  type PostflopQuiz,
   type PostflopScenario,
 } from "../postflopQuiz";
 import { FILTER_MAX_ATTEMPTS } from "../trainerDifficulty";
@@ -55,6 +56,7 @@ const TEST_LINE = {
   lineKind: "open" as const,
   openPos: "CO" as const,
   opponents: 1 as const,
+  betSize: null,
 };
 
 describe("dealPostflopScenario 发牌", () => {
@@ -204,28 +206,115 @@ describe("generatePostflopQuiz 整题", () => {
     expect(defenseWin).toBeLessThan(DEFENSE_RAISE_THRESHOLD);
   });
 
-  it("答案与 judgePostflop(win, type, defenseEquity, draws) 一致，概率和≈1", () => {
-    for (let seed = 100; seed < 110; seed++) {
-      const q = generatePostflopQuiz(lcg(seed), 800);
-      expect(q.answer).toBe(
-        judgePostflop(q.equity.win, q.type, q.defenseEquity ?? undefined, q.draws, q.opponents),
-      );
-      expect(q.equity.win + q.equity.tie + q.equity.lose).toBeCloseTo(1, 5);
-      if (q.type === "defense") {
-        expect(q.defenseEquity).not.toBeNull();
-        expect(q.defenseEquity!).toBeGreaterThanOrEqual(0);
-        expect(q.defenseEquity!).toBeLessThanOrEqual(1);
-      } else {
-        expect(q.defenseEquity).toBeNull();
+  it(
+    "答案与 judgePostflop(win, type, defenseEquity, draws) 一致，概率和≈1",
+    () => {
+      for (let seed = 100; seed < 110; seed++) {
+        const q = generatePostflopQuiz(lcg(seed), 800);
+        expect(q.answer).toBe(
+          judgePostflop(q.equity.win, q.type, q.defenseEquity ?? undefined, q.draws, q.opponents),
+        );
+        expect(q.equity.win + q.equity.tie + q.equity.lose).toBeCloseTo(1, 5);
+        if (q.type === "defense") {
+          expect(q.defenseEquity).not.toBeNull();
+          expect(q.defenseEquity!).toBeGreaterThanOrEqual(0);
+          expect(q.defenseEquity!).toBeLessThanOrEqual(1);
+        } else {
+          expect(q.defenseEquity).toBeNull();
+        }
       }
-    }
-  });
+    },
+    // A3 边界带复核（20000 次迭代）拉高单题耗时，放宽超时
+    30000,
+  );
 
   it("quizComment 返回含胜率百分比的非空简评", () => {
     const q = generatePostflopQuiz(lcg(1), 500);
     const text = quizComment(q);
     expect(text.length).toBeGreaterThan(10);
     expect(text).toContain((q.equity.win * 100).toFixed(1));
+  });
+});
+
+describe("fold 点评按行动线实际尺度算直接赔率（A2）", () => {
+  const foldQuiz = (over: Partial<PostflopQuiz>): PostflopQuiz => ({
+    hero: c("7c 2d") as [Card, Card],
+    board: c("As Kh Qd") as [Card, Card, Card],
+    type: "defense",
+    ...TEST_LINE,
+    equity: { win: 0.12, tie: 0, lose: 0.88 },
+    defenseEquity: 0.12,
+    draws: { flushDraw: false, straightOuts: 0 },
+    answer: "fold",
+    ...over,
+  });
+
+  it("半池注 + 胜率 < 25%：「1/2 底池注需 25% 赔率也够不上」", () => {
+    const text = quizComment(
+      foldQuiz({
+        betSize: { zh: "1/2 底池", en: "half pot", frac: 0.5 },
+        defenseEquity: 0.12,
+      }),
+    );
+    expect(text).toContain("1/2 底池");
+    expect(text).toContain("25%");
+    expect(text).toContain("够不上");
+  });
+
+  it("2/3 池注：动态算 28.6%，不再写死半池 25%", () => {
+    const text = quizComment(
+      foldQuiz({
+        betSize: { zh: "2/3 底池", en: "2/3 pot", frac: 2 / 3 },
+        defenseEquity: 0.12,
+      }),
+    );
+    expect(text).toContain("2/3 底池");
+    expect(text).toContain("28.6%");
+    expect(text).not.toContain("半池");
+  });
+
+  it("胜率 ∈ [直接赔率, 跟注线)：「接近赔率但不足」而非「赔率也够不上」", () => {
+    // 半池注：0.26 ∈ [0.25, 0.28)——字面够直接赔率但仍弃牌（实现率税 + 范围紧）
+    const text = quizComment(
+      foldQuiz({
+        betSize: { zh: "1/2 底池", en: "half pot", frac: 0.5 },
+        defenseEquity: 0.26,
+      }),
+    );
+    expect(text).toContain("接近赔率但不足");
+    expect(text).not.toContain("够不上");
+    // 2/3 池注：0.27 ∈ [0.25, 0.286)？不——0.27 < 28.6% 直接赔率，仍「够不上」
+    const text2 = quizComment(
+      foldQuiz({
+        betSize: { zh: "2/3 底池", en: "2/3 pot", frac: 2 / 3 },
+        defenseEquity: 0.27,
+      }),
+    );
+    expect(text2).toContain("够不上");
+    expect(text2).toContain("28.6%");
+  });
+
+  it("dealt 场景：defense 题必带 betSize（1/2 或 2/3 池），attack 题恒 null", () => {
+    const rng = lcg(33);
+    let defenseChecked = 0;
+    let attackChecked = 0;
+    for (let i = 0; i < 200 && (defenseChecked < 30 || attackChecked < 30); i++) {
+      const s = dealPostflopScenario(rng);
+      if (s.type === "defense") {
+        defenseChecked++;
+        expect(s.betSize).not.toBeNull();
+        expect([0.5, 2 / 3]).toContain(s.betSize!.frac);
+        // 尺度文本与行动线一致
+        expect(
+          s.actionLine.some((l) => l.zh.includes(s.betSize!.zh)),
+        ).toBe(true);
+      } else {
+        attackChecked++;
+        expect(s.betSize).toBeNull();
+      }
+    }
+    expect(defenseChecked).toBeGreaterThan(0);
+    expect(attackChecked).toBeGreaterThan(0);
   });
 });
 
@@ -356,10 +445,12 @@ describe("难度过滤（反脑残）", () => {  it("防守题：判定胜率 0.
   });
 
   it(
-    "生成的 40 道题全部不在显而易见区（防守题判定胜率 ∈ [0.2, 0.85]）",
+    "生成的题全部不在显而易见区（防守题判定胜率 ∈ [0.2, 0.85]）",
     () => {
+      // 题量由 40 减到 24：A3 边界带复核（每次 20000 迭代 ≈2-3s）在小迭代
+      // 基数下命中率高，统计性断言无需原题量
       const rng = lcg(2026);
-      for (let i = 0; i < 40; i++) {
+      for (let i = 0; i < 24; i++) {
         const q = generatePostflopQuiz(rng, 400);
         expect(
           isTooObvious(q.defenseEquity ?? q.equity.win, q.type, q.draws),
@@ -370,7 +461,7 @@ describe("难度过滤（反脑残）", () => {  it("防守题：判定胜率 0.
         }
       }
     },
-    30000,
+    120000,
   );
 
   it("恒定 rng 极端情形：10 次上限兜底返回合法题，不死循环", () => {

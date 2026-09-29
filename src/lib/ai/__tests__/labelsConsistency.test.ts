@@ -6,13 +6,20 @@
  * 本测试锁定两套 API 对每个座位给出完全一致的短名，并锁定 9 人桌全序列。
  */
 import { describe, expect, it } from "vitest";
-import type { GameState, Seat } from "@/lib/types";
+import type { ConcreteAIStyle, GameState, Seat } from "@/lib/types";
 import {
   POSITION_SHORT_NAMES,
   positionName,
   seatPositionName,
 } from "@/lib/ai/positions";
-import { seatPosition, seatPositionCn } from "@/components/history/labels";
+import {
+  POSITION_LABEL,
+  seatPosition,
+  seatPositionCn,
+  STYLE_NAME,
+  STYLE_NAME_EN,
+  styleName,
+} from "@/components/history/labels";
 import { makePlayer } from "@/lib/ai/__tests__/helpers";
 
 function mkState(playerCount: number, buttonSeat: Seat): GameState {
@@ -99,5 +106,52 @@ describe("位置命名映射（唯一权威表）", () => {
     expect(seatPositionCn(1, 0, 9)).toBe("小盲");
     expect(seatPositionCn(2, 0, 9)).toBe("大盲");
     expect(seatPositionCn(3, 0, 4)).toBe("关煞位/枪口位");
+  });
+});
+
+describe("双语标注（Bug 3 修复：EN 模式不再残留中文）", () => {
+  /** POSITION_SHORT_NAMES（2-9 人桌）出现过的全部短名 */
+  const ALL_SHORTS = [
+    ...new Set(Object.values(POSITION_SHORT_NAMES).flat()),
+  ];
+
+  it("位置标注：每个短名双语非空，且与 POSITION_SHORT_NAMES 键集合一致", () => {
+    expect(Object.keys(POSITION_LABEL).sort()).toEqual(ALL_SHORTS.sort());
+    for (const short of ALL_SHORTS) {
+      const label = POSITION_LABEL[short];
+      expect(label, short).toBeDefined();
+      expect(label.zh.length, `${short}.zh`).toBeGreaterThan(0);
+      expect(label.en.length, `${short}.en`).toBeGreaterThan(0);
+    }
+  });
+
+  it("seatPositionCn 按 lang 选择：默认 zh 不变，en 返回英文标注", () => {
+    expect(seatPositionCn(0, 0, 9)).toBe("按钮位");
+    expect(seatPositionCn(0, 0, 9, "zh")).toBe("按钮位");
+    expect(seatPositionCn(0, 0, 9, "en")).toBe("Button");
+    expect(seatPositionCn(1, 0, 9, "en")).toBe("Small blind");
+    expect(seatPositionCn(0, 0, 2, "en")).toBe("Button / Small blind");
+    // 无标注的短名原样返回；非法人数仍为空串
+    expect(seatPositionCn(0, 0, 10, "en")).toBe("");
+  });
+
+  it("风格名：每个 ConcreteAIStyle 双语非空，styleName 按 lang 选择", () => {
+    const styles: ConcreteAIStyle[] = [
+      "nit",
+      "tag",
+      "lag",
+      "maniac",
+      "calling_station",
+      "gto",
+    ];
+    for (const s of styles) {
+      expect(STYLE_NAME[s].length, `${s}.zh`).toBeGreaterThan(0);
+      expect(STYLE_NAME_EN[s].length, `${s}.en`).toBeGreaterThan(0);
+      expect(styleName(s)).toBe(STYLE_NAME[s]); // 默认 zh（LLM prompt 口径不变）
+      expect(styleName(s, "zh")).toBe(STYLE_NAME[s]);
+      expect(styleName(s, "en")).toBe(STYLE_NAME_EN[s]);
+    }
+    expect(styleName("tag", "en")).toBe("TAG");
+    expect(styleName("maniac", "en")).toBe("Maniac");
   });
 });

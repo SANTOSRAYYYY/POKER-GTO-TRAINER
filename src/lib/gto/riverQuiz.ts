@@ -10,13 +10,20 @@
  *   / threeBet（你翻前 3bet 后连开两枪都被跟 → 前两街都跟了，范围收窄到前 40%）。
  * - bluffcatch（抓诈 or 弃牌）：对手下注一个满池——跟注抓诈还是弃牌？
  *   行动线两种（open / threeBet），极化范围不变（前 25% 强牌 + 35% 诈唬混入）。
- * - bluff（诈唬 or 放弃）：你的听牌全没中、无人下注——诈唬偷池还是过牌放弃？
+ * - bluff（诈唬 or 放弃）：无人下注——诈唬偷池还是过牌放弃？
  *   行动线两种：open（你 c-bet 一枪后转牌双方过牌）/ flat（你跟注开局，翻牌
  *   双方过牌、转牌对手过牌放弃）。
  *
  * hero 角色映射（heroRoleForRiver）：open 线（你开局）→ open；threeBet 线
  * （你大盲 3bet）→ threeBet；flat 线（你大盲跟注对手开局）→ bbDefend。
  * 听牌没中的合理性由此成立：可玩牌才有听牌入池。
+ *
+ * 诈唬题文本与底牌一致性（2026-09-29 A1 修复）：行动线末句的「你的听牌全
+ * 没中」只对真·空气使用——出题时用 heroRiverHand 做成牌检测（hero 底牌在
+ * 5 张公共牌上是否参与成对/成顺/成花；evaluate7 口径，河牌 7 张已定无听牌
+ * 可言，analyzeDraws 不适用）：hero 有成牌时末句改为如实描述（价值带「你
+ * 击中了牌面」/ 中间带「这手牌有摊牌价值」）；成牌但精确胜率 <25% 的稀有
+ * 弱成牌直接重发——成牌题选诈唬=错，真诈唬答案只颁给纯空气。
  *
  * 判定口径（全部实算）：
  * - 河牌公共牌已齐，单挑 vs 随机胜率可精确枚举：riverEquityExact 遍历剩余
@@ -50,10 +57,14 @@
  * 单挑（opponents=1）行为逐比特不变。
  *
  * 难度过滤（isTooObvious，见 trainerDifficulty.ts）：抓诈题 <20%/>85% 重发；
- * 薄价值题 >85%（无脑价值）或 <25%（纯空气过牌）重发；诈唬题 >85%（坚果级
- * 价值下注毫无决策含量）或 <25%（纯空气——河牌已无听牌可言，过牌=认输的
- * 必诈题）重发，10 次上限兜底。底牌有范围后下限大多休眠，>85% 坚果级
- * 过滤仍必需（强范围照样发坚果）。
+ * 薄价值题 >85%（无脑价值）或 <25%（纯空气过牌）重发；诈唬题只保留 >85%
+ * （坚果级价值下注毫无决策含量）重发——**豁免 <25% 下限**（2026-09-29 A1
+ * 修复）：纯空气必诈恰是诈唬题的教学本体（judgeRiver：<25% → 诈唬），
+ * 过滤它这族题就永远不出真诈唬答案。10 次上限兜底。
+ *
+ * 判定精度（2026-09-29 A3）：value/bluffcatch 的判定胜率（equityVsRange，
+ * 2000 次蒙特卡洛）落在判定阈值 ±3pp 边界带内时，自动用 20000 次迭代复核
+ * 一次再定答案（见 borderline.ts）；bluff 题单挑精确枚举无 MC 噪声，不触发。
  *
  * 「摊牌价值」（showdown value）：弱成牌（如小对子）过牌有机会在摊牌赢下
  * 更弱的牌，但一旦下注，更弱的牌会弃、更强的牌会跟——下注反而把赢面打没。
@@ -80,7 +91,9 @@ import {
   FILTER_MAX_ATTEMPTS,
   isDefenseLikeObvious,
   isOffenseLikeObvious,
+  OBVIOUS_NUTS_MIN,
 } from "@/lib/gto/trainerDifficulty";
+import { rejudgeIfBorderline } from "@/lib/gto/borderline";
 import {
   drawMultiwayOpenerPos,
   drawOpponentCount,
@@ -483,10 +496,73 @@ export function riverEquityExact(
   return { win: win / n, tie: tie / n, lose: lose / n };
 }
 
+/** 牌型 category 的分数权重（与 evaluator.ts 编码约定一致：score = category × 13^5 + …） */
+const CATEGORY_WEIGHT = 13 ** 5;
+
+/** 河牌圈 hero 的成牌状态（诈唬题文本校准与「成牌不判诈唬」语义校验用，A1） */
+export interface RiverHandInfo {
+  /** hero+board 7 张最优牌型 category（0 高牌 / 1 一对 / 2 两对 / … / 8 同花顺） */
+  category: number;
+  /** hero 底牌是否参与成牌：最优牌型 ≥ 一对 且 严格强于 board 单独 5 张（底牌真实改进牌面；A 高踢脚改进不算成牌） */
+  made: boolean;
+}
+
+/**
+ * hero 在 5 张公共牌上的成牌检测（纯函数）：
+ * - category = evaluate7(hero+board) 的牌型档；
+ * - made = category ≥ 一对 且 heroScore > evaluate7(board)——底牌必须真实
+ *   改进牌面：board 天成顺/天花时 hero 无贡献（board plays）、A 高仅改进
+ *   踢脚，都不算「成牌」，仍属纯空气。
+ * 河牌 7 张牌已定、听牌全部清算，成牌检测用 evaluate7 参与性口径（不用
+ * postflopQuiz 的 analyzeDraws——那是翻牌/转牌的听牌分析，河牌无听牌可言）。
+ */
+export function heroRiverHand(
+  hero: [Card, Card],
+  board: Card[],
+): RiverHandInfo {
+  if (board.length !== 5) throw new Error("heroRiverHand 需要 5 张公共牌");
+  const heroScore = evaluate7([...hero, ...board]);
+  const boardScore = evaluate7(board);
+  const category = Math.floor(heroScore / CATEGORY_WEIGHT);
+  return { category, made: category >= 1 && heroScore > boardScore };
+}
+
+/**
+ * 诈唬题行动线末句校准（A1：「你的听牌全没中」只对真·空气使用）：
+ * - 纯空气（made=false）：原样返回（drawRiverLine 写死的「听牌全没中」为真）；
+ * - 成牌：末句按胜率带改为如实描述——≥45% 价值带「你击中了牌面」，
+ *   否则摊牌价值带「这手牌有摊牌价值」。open / flat 两种线各自套用原句式。
+ */
+export function calibrateBluffActionLine(
+  lines: LocalizedText[],
+  lineKind: RiverLineKind,
+  made: boolean,
+  win: number,
+): LocalizedText[] {
+  if (!made) return lines;
+  const head =
+    lineKind === "flat"
+      ? { zh: "河牌圈：轮到你行动", en: "River: action on you" }
+      : { zh: "河牌圈：对手过牌，轮到你", en: "River: the big blind checks — action on you" };
+  const last: LocalizedText =
+    win >= RIVER_SHOWDOWN_VALUE_MAX
+      ? {
+          zh: `${head.zh}——你击中了牌面`,
+          en: `${head.en} — you've connected with the board`,
+        }
+      : {
+          zh: `${head.zh}——这手牌有摊牌价值`,
+          en: `${head.en} — this hand has showdown value`,
+        };
+  return [...lines.slice(0, -1), last];
+}
+
 /**
  * 胜率 + 子题型 → 标准答案（纯函数）。
  * value/bluffcatch 请传对相应范围的胜率 rangeWin；bluff 用 vs 随机精确胜率 win。
  * opponents 驱动多人池门槛（multiway.ts；bluff 题恒为单挑，不受影响）。
+ * 注：bluff 的 <25% → 诈唬分支只对纯空气成立——generateRiverQuiz 会把
+ * 「成牌但 <25%」的稀有弱成牌题重发（成牌题选诈唬=错，A1）。
  */
 export function judgeRiver(
   win: number,
@@ -515,8 +591,9 @@ export function judgeRiver(
  * - value：对跟注范围胜率 >85%（无脑价值）或 <25%（纯空气过牌毫无决策
  *   含量；河牌已无听牌可言，hasStrongDraw 恒 false）→ 重发；
  * - bluffcatch：对极化范围胜率 <20%（纯垃圾弃牌）或 >85%（坚果级无脑跟注）→ 重发；
- * - bluff：精确胜率 >85%（坚果级无脑价值下注）或 <25%（纯空气必诈，
- *   过牌=认输毫无决策含量）→ 重发（诈唬题调用时 rangeWin 缺省）。
+ * - bluff：只过滤 >85%（坚果级无脑价值下注）——**豁免 <25% 下限**（A1）：
+ *   纯空气必诈恰是本题型的教学核心（judgeRiver：<25% → 诈唬），把它当
+ *   脑残题过滤掉，这族题就永远不出真诈唬答案（实测 34 题 0 道真诈唬）。
  */
 export function isTooObvious(
   win: number,
@@ -525,13 +602,15 @@ export function isTooObvious(
 ): boolean {
   if (type === "value") return isOffenseLikeObvious(rangeWin ?? win, false);
   if (type === "bluffcatch") return isDefenseLikeObvious(rangeWin ?? win);
-  return isOffenseLikeObvious(win, false);
+  return win > OBVIOUS_NUTS_MIN;
 }
 
 /**
  * 出一道完整的河牌圈题（单挑精确枚举 + 范围蒙特卡洛；多人池全蒙特卡洛，
  * 约几十 ms，调用方负责异步化）。
  * 显而易见的情形（isTooObvious）重发，FILTER_MAX_ATTEMPTS 次上限兜底。
+ * 判定胜率落在阈值 ±3pp 边界带内时用 20000 次迭代复核（borderline.ts，A3）；
+ * 诈唬题额外做成牌校验：成牌弱牌（<25%）重发、行动线末句按真实牌力校准（A1）。
  */
 export function generateRiverQuiz(
   rng: () => number = Math.random,
@@ -552,26 +631,62 @@ export function generateRiverQuiz(
     const rangeEquity =
       scenario.type === "value"
         ? // value（进攻侧）：对 opponents 名跟注者联合采样（主动进攻要赢全场）
-          equityVsRange(
-            scenario.hero,
-            scenario.board,
-            riverValueCallerSpecFor(scenario.lineKind),
-            iterations,
-            rng,
-            scenario.opponents,
+          rejudgeIfBorderline(
+            equityVsRange(
+              scenario.hero,
+              scenario.board,
+              riverValueCallerSpecFor(scenario.lineKind),
+              iterations,
+              rng,
+              scenario.opponents,
+            ),
+            [riverValueBetLine(scenario.opponents)],
+            (iters) =>
+              equityVsRange(
+                scenario.hero,
+                scenario.board,
+                riverValueCallerSpecFor(scenario.lineKind),
+                iters,
+                rng,
+                scenario.opponents,
+              ),
           )
         : scenario.type === "bluffcatch"
           ? // bluffcatch（含多人池）：只评估对下注者极化范围的胜率（opponents=1）——
             // 身后尚未行动的跟注者视为死钱，死钱改善直接赔率
-            equityVsRange(
-              scenario.hero,
-              scenario.board,
-              RIVER_BLUFFCATCH_POLAR_SPEC,
-              iterations,
-              rng,
-              1,
+            rejudgeIfBorderline(
+              equityVsRange(
+                scenario.hero,
+                scenario.board,
+                RIVER_BLUFFCATCH_POLAR_SPEC,
+                iterations,
+                rng,
+                1,
+              ),
+              [riverBluffcatchCallLine(scenario.opponents)],
+              (iters) =>
+                equityVsRange(
+                  scenario.hero,
+                  scenario.board,
+                  RIVER_BLUFFCATCH_POLAR_SPEC,
+                  iters,
+                  rng,
+                  1,
+                ),
             )
           : null;
+    // A1b 诈唬题成牌校验：「听牌全没中」的叙事只对真·空气使用
+    const handInfo =
+      scenario.type === "bluff"
+        ? heroRiverHand(scenario.hero, scenario.board)
+        : null;
+    if (
+      handInfo?.made &&
+      equity.win < RIVER_BLUFF_MAX_EQUITY &&
+      attempt + 1 < FILTER_MAX_ATTEMPTS
+    ) {
+      continue; // 成牌弱牌（<25%）重发——成牌题选诈唬=错，真诈唬只颁给纯空气
+    }
     const answer = judgeRiver(
       equity.win,
       scenario.type,
@@ -584,7 +699,15 @@ export function generateRiverQuiz(
     ) {
       continue; // 显而易见的题重发
     }
-    return { ...scenario, equity, rangeEquity, answer };
+    const actionLine = handInfo
+      ? calibrateBluffActionLine(
+          scenario.actionLine,
+          scenario.lineKind,
+          handInfo.made,
+          equity.win,
+        )
+      : scenario.actionLine;
+    return { ...scenario, actionLine, equity, rangeEquity, answer };
   }
 }
 

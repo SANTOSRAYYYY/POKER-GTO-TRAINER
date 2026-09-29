@@ -1,0 +1,64 @@
+{
+  "consoleErrors": [],
+  "pageErrors": [],
+  "checks": {
+    "historyRows": 2,
+    "initialCounter": {
+      "cur": 18,
+      "total": 18
+    },
+    "afterInitial3Prev": {
+      "cur": 18,
+      "total": 18
+    },
+    "initialPrevWorks": false,
+    "afterPreflopTab": {
+      "cur": 1,
+      "total": 18
+    },
+    "afterPrev50": {
+      "cur": 1,
+      "total": 18
+    },
+    "prev50_ok": true,
+    "afterNext50": {
+      "cur": 18,
+      "total": 18
+    },
+    "next50_ok": true,
+    "alternate_ok": true,
+    "afterAlternate": {
+      "cur": 18,
+      "total": 18
+    },
+    "streetTabs": [
+      "翻前",
+      "翻牌",
+      "转牌",
+      "河牌",
+      "摊牌"
+    ],
+    "bodyNaN": false,
+    "afterRapid60": {
+      "cur": 18,
+      "total": 18
+    },
+    "rapid60_ok": true,
+    "potText": "600",
+    "replayEnHan": [
+      "中文",
+      "紧凶 TAG",
+      "紧弱 Nit",
+      "· 小盲",
+      "· 大盲",
+      "· 按钮位",
+      "Seat 1 · 紧凶 TAG"
+    ],
+    "historyEnHan": [
+      "中文",
+      "疯子",
+      "紧凶 TAG",
+      "紧弱 Nit"
+    ]
+  }
+}

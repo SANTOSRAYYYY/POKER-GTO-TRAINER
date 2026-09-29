@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { OpponentClass } from "@/lib/types";
 import { Nav } from "@/components/history/Nav";
 import { useI18n } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n/dict";
@@ -19,6 +18,7 @@ import { StyleTable } from "@/components/stats/StyleTable";
 import { SessionReportPanel } from "@/components/stats/SessionReportPanel";
 import { AchievementsPanel } from "./AchievementsPanel";
 import { ComparePanel } from "./ComparePanel";
+import { CLASS_LABEL } from "./classLabels";
 import {
   compareSegments,
   filterHands,
@@ -42,16 +42,6 @@ const RANGE_FILTER_KEY: Record<RangeFilter, DictKey> = {
   100: "stats.range.100",
 };
 
-/** AI 对 hero 分类推测的中文标签（与 prompt.ts CLASS_CN 同口径，供展示卡使用） */
-const CLASS_LABEL: Record<OpponentClass, string> = {
-  nit: "紧弱岩石（Nit）",
-  tag: "紧凶（TAG）",
-  lag: "松凶（LAG）",
-  maniac: "疯狂玩家（Maniac）",
-  calling_station: "跟注站",
-  unknown: "样本不足，暂无画像",
-};
-
 /**
  * 「AI 眼中的你（长期）」展示卡：读 localStorage 对手笔记本
  * （lib/store/notebook.ts，跨 session 持久化的 hero 画像），
@@ -59,7 +49,7 @@ const CLASS_LABEL: Record<OpponentClass, string> = {
  * 并提供「清空笔记本」（confirm 后调 gameStore.resetNotebook）。
  */
 function NotebookCard() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const resetNotebook = useGameStore((s) => s.resetNotebook);
   const [nb, setNb] = useState<HeroNotebook | null>(null);
 
@@ -109,7 +99,7 @@ function NotebookCard() {
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
             <span>
-              {t("nb.guess")}<span className="font-medium text-amber-400">{CLASS_LABEL[model.cls]}</span>
+              {t("nb.guess")}<span className="font-medium text-amber-400">{CLASS_LABEL[model.cls][lang]}</span>
               {model.confidence > 0 && t("nb.confidence", { pct: (model.confidence * 100).toFixed(0) })}
             </span>
             <span>
@@ -158,14 +148,14 @@ function PillGroup<T extends string | number>({
 
 export default function StatsPage() {
   const { t } = useI18n();
-  const { hands, loaded, loadAll } = useHistoryStore();
+  const { hands, loaded, loadError, loadAll } = useHistoryStore();
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
   const [rangeFilter, setRangeFilter] = useState<RangeFilter>(0);
   const [compareOn, setCompareOn] = useState(false);
   const [segmentSize, setSegmentSize] = useState<number>(50);
 
   useEffect(() => {
-    void loadAll().catch(() => {});
+    void loadAll();
   }, [loadAll]);
 
   const filtered = useMemo(
@@ -196,6 +186,16 @@ export default function StatsPage() {
 
         {!loaded ? (
           <p className="py-16 text-center text-zinc-500">{t("common.loading")}</p>
+        ) : loadError ? (
+          <div className="rounded-xl border border-dashed border-red-900 py-16 text-center">
+            <p className="text-red-400">{loadError}</p>
+            <button
+              onClick={() => void loadAll()}
+              className="mt-3 rounded-lg border border-zinc-700 px-4 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800/60"
+            >
+              {t("common.retry")}
+            </button>
+          </div>
         ) : (
           <>
             {/* 金手链成就（全局口径，不受筛选影响） */}

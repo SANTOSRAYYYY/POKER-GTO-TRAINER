@@ -185,6 +185,10 @@ export const PAGES_DICT = {
   "history.modeTournament": { zh: "锦标赛", en: "SNG" },
   "history.modeCash": { zh: "现金局", en: "Cash" },
   "history.unrevealed": { zh: "未公开", en: "unrevealed" },
+  "history.loadMore": {
+    zh: "加载更多（已显示 {shown}/{total}）",
+    en: "Load more ({shown}/{total} shown)",
+  },
   "history.win": { zh: "赢", en: "Won" },
   "history.lose": { zh: "输", en: "Lost" },
   "history.tie": { zh: "平", en: "Tied" },
@@ -464,6 +468,44 @@ export const PAGES_DICT = {
   },
   "achieve.unlockedAt": { zh: "{date} 解锁", en: "Unlocked {date}" },
   "achieve.toastTitle": { zh: "成就解锁", en: "Achievement unlocked" },
+  // 8 项成就的名称与描述（数据层 achievements.ts 只存 id + 字典键，zh 与原硬编码逐字一致）
+  "achieve.first_win.name": { zh: "首胜", en: "First win" },
+  "achieve.first_win.desc": { zh: "赢下你的第一手牌", en: "Win your first hand" },
+  "achieve.first_title.name": { zh: "初次夺冠", en: "First title" },
+  "achieve.first_title.desc": {
+    zh: "赢得任意一场锦标赛（SNG）冠军",
+    en: "Win any tournament (SNG)",
+  },
+  "achieve.nine_max_title.name": { zh: "九人桌之王", en: "King of the 9-max" },
+  "achieve.nine_max_title.desc": {
+    zh: "在 9 人桌锦标赛中夺冠",
+    en: "Win a 9-player tournament",
+  },
+  "achieve.session_500bb.name": { zh: "单场暴击", en: "Session crusher" },
+  "achieve.session_500bb.desc": {
+    zh: "单场（30 分钟间隔界定）累计盈利达到 500bb",
+    en: "Reach +500bb profit in a single session (sessions split at 30-minute gaps)",
+  },
+  "achieve.hands_1000.name": { zh: "千手磨砺", en: "1,000-hand grinder" },
+  "achieve.hands_1000.desc": {
+    zh: "累计打满 1000 手牌",
+    en: "Play 1,000 hands in total",
+  },
+  "achieve.profit_10000bb.name": { zh: "万 bb 俱乐部", en: "10K bb club" },
+  "achieve.profit_10000bb.desc": {
+    zh: "累计盈利达到 10000bb（按各手大盲归一化）",
+    en: "Reach 10,000bb cumulative profit (normalized by each hand's big blind)",
+  },
+  "achieve.cash_streak_5.name": { zh: "现金局五连盈", en: "5-hand cash streak" },
+  "achieve.cash_streak_5.desc": {
+    zh: "现金局连续 5 手盈利（平局不计入）",
+    en: "Win 5 cash hands in a row (ties don't count)",
+  },
+  "achieve.revenge.name": { zh: "复仇", en: "Revenge" },
+  "achieve.revenge.desc": {
+    zh: "输给某种风格的对手后，下次遇到该风格时赢回来",
+    en: "After losing to a style of opponent, beat that style the next time you meet",
+  },
 
   // ================= 对手笔记本卡（stats 页 NotebookCard） =================
   "nb.title": { zh: "AI 眼中的你（长期）", en: "You in the AI's eyes (long-term)" },
@@ -774,8 +816,8 @@ export const PAGES_DICT = {
     en: "Equity vs the bettor's range (top {rpct}%, tightened by the action line): {pct}%{tie}, above the {raise}% raise line — raise for value and don't give a cheap look",
   },
   "trainer.post.comment.fold": {
-    zh: "对下注者范围（前 {rpct}%，随行动线收窄）实算胜率 {pct}%{tie}，不足 {call}%——半池注需 25% 赔率也够不上，弃牌",
-    en: "Equity vs the bettor's range (top {rpct}%, tightened by the action line): {pct}%{tie}, below {call}% — can't even make the 25% price of a half-pot call: fold",
+    zh: "对下注者范围（前 {rpct}%，随行动线收窄）实算胜率 {pct}%{tie}，不足 {call}% 跟注线——跟注线已含直接赔率（按行动线尺度：1/2 池 25% / 2/3 池 28.6%）与实现率税，不够线即弃牌",
+    en: "Equity vs the bettor's range (top {rpct}%, tightened by the action line): {pct}%{tie}, below the {call}% call line — the line already prices in direct pot odds (25% for half pot / 28.6% for 2/3 pot) plus the realization tax, so below the line is a fold",
   },
   "trainer.post.comment.attackPassive": {
     zh: "实算胜率 {pct}%{tie}，不够进攻线——过牌控池、免费看转牌，别用弱牌造池",
@@ -868,8 +910,8 @@ export const PAGES_DICT = {
     en: "Equity vs the caller's range (top {rpct}%): {pct}%{tie}, with {draw} — textbook semi-bluff barrel: win it now if they fold, plenty of outs if called",
   },
   "trainer.turn.comment.barrelGiveUp": {
-    zh: "对跟注者范围（前 {rpct}%）实算胜率 {pct}%{tie}，不足 35% 或无强听牌——过牌放弃：能跟翻牌下注的范围不弱，弱牌别再造池",
-    en: "Equity vs the caller's range (top {rpct}%): {pct}%{tie}, below 35% with no strong draw — check and give up: a range that called the flop isn't weak; don't keep building the pot",
+    zh: "对跟注者范围（前 {rpct}%）实算胜率 {pct}%{tie}，不够第二枪线——过牌放弃：能跟翻牌下注的范围不弱，不够碾压别硬造池，控池看河牌",
+    en: "Equity vs the caller's range (top {rpct}%): {pct}%{tie}, short of the barrel line — check and give up: a range that called the flop isn't weak; without a crushing hand don't keep building the pot — control the pot and see the river",
   },
   "trainer.turn.comment.barrelGiveUpMulti": {
     zh: "对跟注者范围（前 {rpct}%）实算胜率 {pct}%{tie}，{draw}——但多人底池诈唬成功率大幅下降，强听牌不再放宽第二枪；过牌放弃",
@@ -884,8 +926,8 @@ export const PAGES_DICT = {
     en: "Equity vs the second-barrel range (top {rpct}%, tightened by the action line): {pct}%{tie}, above the {call}% call line but short of {raise}% — call and see the river; raising only folds out worse and keeps in better",
   },
   "trainer.turn.comment.fold": {
-    zh: "对第二枪范围（前 {rpct}%，随行动线收窄）实算胜率 {pct}%{tie}，不足 {call}%——对手转牌还下注范围更紧，半池注赔率也够不上，弃牌",
-    en: "Equity vs the second-barrel range (top {rpct}%, tightened by the action line): {pct}%{tie}, below {call}% — a turn bettor's range is tighter and the half-pot price doesn't save you: fold",
+    zh: "对第二枪范围（前 {rpct}%，随行动线收窄）实算胜率 {pct}%{tie}，不足 {call}% 跟注线——对手转牌还下注范围更紧；跟注线已含直接赔率（按行动线尺度：1/2 池 25% / 2/3 池 28.6%）与实现率税，不够线即弃牌",
+    en: "Equity vs the second-barrel range (top {rpct}%, tightened by the action line): {pct}%{tie}, below the {call}% call line — a turn bettor's range is tighter; the line already prices in direct pot odds (25% for half pot / 28.6% for 2/3 pot) plus the realization tax, so below the line is a fold",
   },
 
   // ---- 河牌圈（RiverTrainer / lib/gto/riverQuiz.ts） ----

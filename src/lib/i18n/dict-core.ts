@@ -18,6 +18,7 @@ export const DICT = {
   // ---- 通用 ----
   "common.loading": { zh: "加载中…", en: "Loading…" },
   "common.delete": { zh: "删除", en: "Delete" },
+  "common.retry": { zh: "重试", en: "Retry" },
   "common.confirm": { zh: "确认", en: "Confirm" },
   "common.cancel": { zh: "取消", en: "Cancel" },
   "common.save": { zh: "保存", en: "Save" },

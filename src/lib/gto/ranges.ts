@@ -9,10 +9,11 @@
  *
  * 两组范围：
  * - 9 人桌开局（raise-or-fold，SB 位带 limp）：UTG/UTG+1/LJ/HJ/CO/BTN/SB 七张表，
- *   从紧到松（UTG ~17%、CO ~31%、BTN ~48%、SB vs BB ~82% 可玩）。
+ *   从紧到松（UTG ~17%、CO ~31%、BTN ~48%、SB vs BB ~80% 可玩）。
  *   用标准范围记号（如 "66+,A2s+,KTs+,AQo+"）声明，由 expandRange 展开成矩阵。
- * - 单挑：BTN_OPEN（按钮位 = 小盲，翻前先行动，≈80% 可玩）与
- *   BB_DEFEND_VS_OPEN（大盲位对按钮位加注的防守范围，3-bet 用 raise 表示）。
+ * - 单挑：BTN_OPEN（按钮位 = 小盲，翻前先行动，与 9 人桌 SB 对 BB 同一构成，
+ *   82% 标签 / 76% 组合可玩）与 BB_DEFEND_VS_OPEN（大盲位对按钮位加注的
+ *   防守范围，3-bet 用 raise 表示）。
  */
 import type { Rank } from "@/lib/types";
 
@@ -61,31 +62,18 @@ function cellRanks(row: number, col: number): { hi: number; lo: number; pair: bo
 }
 
 /**
- * 按钮位开局范围（≈80% 可玩）：
- * - 所有对子加注；
- * - 同花：Axs/Kxs 全加注，Q9s+/J9s+ 加注，连张与隔一张（54s+）加注，多数同花可跟注，仅最垃圾的同花（低点数无连接性）弃牌；
- * - 杂色：ATo+/KTo+/QTo+/JTo 加注，A 任意、K8o+、Q9o+、J9o+、T8o+、98o 跟注，其余弃牌。
+ * SB 对 BB / 单挑按钮开局范围（同一构成：82% 标签 / 76% 组合可玩——9 人桌
+ * SB 位与单挑按钮位是同一种局面：翻前仅剩大盲一人）。单挑旧表曾实装
+ * ~45%（9max BTN 级松紧度）而注释称「≈80%」，2026-09-29 审计发现后统一回本表：
+ * - 加注集：全对子、A2s+/K2s+/Q2s+、J6s+/T6s+、96s+/86s+/75s+/64s+/54s、
+ *   任意杂色 A、K7o+/Q8o+/J8o+/T8o+/98o；
+ * - 跟注（limp）集：其余多数同花与 K2o-K6o/Q2o-Q7o/J2o-J7o/T2o-T7o/97o/87o；
+ * - 仅最垃圾的同花（低点无连接）与 96o 以下无连接杂色弃牌。
  */
-function btnOpenDecide(row: number, col: number): RangeAction {
-  const { hi, lo, pair, suited } = cellRanks(row, col);
-  if (pair) return "raise";
-  if (suited) {
-    if (hi >= 13) return "raise"; // Axs / Kxs
-    if (hi === 12) return lo >= 9 ? "raise" : "call"; // Q9s+ 加注
-    if (hi === 11) return lo >= 9 ? "raise" : "call"; // J9s+ 加注
-    if (hi - lo <= 2 && hi >= 6) return "raise"; // 54s+ 连张 / 隔一张
-    if (hi >= 9 && hi - lo <= 3) return "raise"; // 96s+ 类半连张
-    return lo >= 6 ? "call" : "fold"; // 其余小同花跟注，垃圾同花弃牌
-  }
-  // 杂色
-  if (hi === 14) return lo >= 10 ? "raise" : "call"; // ATo+ 加注，其余 Ax 跟注
-  if (hi === 13) return lo >= 10 ? "raise" : lo >= 8 ? "call" : "fold";
-  if (hi === 12) return lo >= 10 ? "raise" : lo >= 9 ? "call" : "fold";
-  if (hi === 11) return lo >= 10 ? "raise" : lo >= 9 ? "call" : "fold";
-  if (hi === 10) return lo >= 8 ? "call" : "fold";
-  if (hi === 9) return lo >= 8 ? "call" : "fold";
-  return "fold";
-}
+export const SB_OPEN_RAISE =
+  "22+,A2s+,K2s+,Q2s+,J6s+,T6s+,96s+,86s+,75s+,64s+,54s,A2o+,K7o+,Q8o+,J8o+,T8o+,98o";
+export const SB_OPEN_CALL =
+  "J2s,J3s,J4s,J5s,T2s,T3s,T4s,T5s,92s,93s,94s,95s,82s,83s,84s,85s,72s,73s,74s,63s,53s,K2o,K3o,K4o,K5o,K6o,Q2o,Q3o,Q4o,Q5o,Q6o,Q7o,J2o,J3o,J4o,J5o,J6o,J7o,T2o,T3o,T4o,T5o,T6o,T7o,97o,87o";
 
 /**
  * 大盲位 vs 按钮位加注的防守范围：
@@ -113,9 +101,6 @@ function bbDefendDecide(row: number, col: number): RangeAction {
   if (hi === 9) return lo >= 8 ? "call" : "fold";
   return "fold";
 }
-
-/** 按钮位（小盲）开局范围矩阵 */
-export const BTN_OPEN: RangeAction[][] = buildMatrix(btnOpenDecide);
 
 /** 大盲位对按钮位加注的防守范围矩阵 */
 export const BB_DEFEND_VS_OPEN: RangeAction[][] = buildMatrix(bbDefendDecide);
@@ -180,6 +165,9 @@ function matrixFromNotation(raise: string, call?: string): RangeAction[][] {
   });
 }
 
+/** 单挑按钮位（= 小盲，翻前先行动）开局范围矩阵：与 9 人桌 SB 对 BB 同一构成 */
+export const BTN_OPEN: RangeAction[][] = matrixFromNotation(SB_OPEN_RAISE, SB_OPEN_CALL);
+
 /** 9 人桌开局范围（前面无人入局时的 RFI；SB 位为对 BB 的开局策略，带 limp） */
 const NINE_MAX_TABLES: { id: string; name: string; description: string; raise: string; call?: string }[] = [
   {
@@ -228,11 +216,9 @@ const NINE_MAX_TABLES: { id: string; name: string; description: string; raise: s
     id: "sb",
     name: "SB 开局（对 BB）",
     description:
-      "小盲对大盲约 82% 可玩：约 55% 加注（绿色），中等牌力补全 1BB 跟注（蓝色，limp），仅最差约 18% 弃牌。",
-    raise:
-      "22+,A2s+,K2s+,Q2s+,J6s+,T6s+,96s+,86s+,75s+,64s+,54s,A2o+,K7o+,Q8o+,J8o+,T8o+,98o",
-    call:
-      "J2s,J3s,J4s,J5s,T2s,T3s,T4s,T5s,92s,93s,94s,95s,82s,83s,84s,85s,72s,73s,74s,63s,53s,K2o,K3o,K4o,K5o,K6o,Q2o,Q3o,Q4o,Q5o,Q6o,Q7o,J2o,J3o,J4o,J5o,J6o,J7o,T2o,T3o,T4o,T5o,T6o,T7o,97o,87o",
+      "小盲对大盲约 80% 起手牌可玩（82% 标签 / 76% 组合）：约一半加注（绿色），中等牌力补全 1BB 跟注（蓝色，limp），仅最差约两成弃牌。",
+    raise: SB_OPEN_RAISE,
+    call: SB_OPEN_CALL,
   },
 ];
 
@@ -258,7 +244,7 @@ export const RANGE_TABLES: PreflopRangeTable[] = [
     name: "按钮位开局",
     group: "heads_up",
     description:
-      "单挑规则下按钮位 = 小盲，翻前先行动。约 80% 起手牌可玩：强牌加注，中等牌跟注（limp），垃圾牌弃牌。",
+      "单挑规则下按钮位 = 小盲，翻前先行动。约 80% 起手牌可玩（与 9 人桌 SB 对 BB 同一构成）：约一半加注，中等牌跟注（limp），仅最差约两成弃牌。",
     matrix: BTN_OPEN,
   },
   {

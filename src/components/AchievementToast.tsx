@@ -23,10 +23,10 @@ function ToastItem({ achievement }: { achievement: Achievement }) {
       <div className="min-w-0">
         <div className="text-xs font-medium text-amber-400">{t("achieve.toastTitle")}</div>
         <div className="truncate text-sm font-bold text-amber-200">
-          {achievement.name}
+          {t(achievement.nameKey)}
         </div>
         <div className="truncate text-xs text-zinc-400">
-          {achievement.description}
+          {t(achievement.descKey)}
         </div>
       </div>
     </div>

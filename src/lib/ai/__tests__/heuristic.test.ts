@@ -6,6 +6,7 @@ import {
   heuristicDecide,
   heuristicDecideRng,
 } from "../heuristic";
+import { brainDecide, resetBrainCaches } from "../brain";
 import { assertLegal, makeDecideInput } from "./helpers";
 
 const ALL_STYLES: ConcreteAIStyle[] = [
@@ -143,10 +144,13 @@ describe("heuristicDecide 极端局面", () => {
   });
 
   it("同花听牌面对大注：跟注站比 nit 显著更愿意继续", () => {
-    // 4 张红桃的纯同花听（无成牌，vs 随机 equity≈0.47，rangeMode 混合后 ≈0.43），
-    // 面对约 0.7 池注（所需胜率 0.41）：数学上介于 nit 的 +8% 边际（阈值 0.49，弃牌）
-    // 与跟注站的 -4% 边际（阈值 0.37，跟注）之间。注额 70 是混合胜率下的稳健分隔点
-    // （两侧距混合胜率均 ≥2.5σ，避免缓存化的蒙特卡洛噪声翻转整组断言）。
+    // 4 张红桃的纯同花听（无成牌），面对约 0.7 池注（所需胜率 0.41）：数学上
+    // 介于 nit 的 +8% 边际（阈值 0.49，弃牌）与跟注站的 -4% 边际（阈值 0.37，
+    // 跟注）之间。该测试的 eqF 是「缓存化的单次 MC 抽样」（400 次循环全部命中
+    // 同一缓存值，统计效力 = 1 个样本；实测分布 mean 0.407、sd 0.024，未播种时
+    // 单样本有 ~7% 概率落进 station 阈值以下翻转整组——2026-09-29 审计 C1）。
+    // 修复：Math.random 补丁为 mulberry32(10)（精确复刻本调用链探针选定：
+    // eqF=0.4225，两侧阈值间距均 >1.8σ）+ 开头 resetBrainCaches() → 完全确定。
     const FACING_070_POT: PlayerAction[] = [
       { type: "fold", amount: 0 },
       { type: "call", amount: 70 },
@@ -165,16 +169,23 @@ describe("heuristicDecide 极端局面", () => {
         legalActions: FACING_070_POT,
         style,
       });
-    const N = 400;
-    let nitFolds = 0;
-    let stationFolds = 0;
-    for (let i = 0; i < N; i++) {
-      if (heuristicDecide(mk("nit"), "nit").action.type === "fold") nitFolds++;
-      if (heuristicDecide(mk("calling_station"), "calling_station").action.type === "fold")
-        stationFolds++;
+    const prev = Math.random;
+    Math.random = mulberry32(10);
+    try {
+      resetBrainCaches();
+      const N = 400;
+      let nitFolds = 0;
+      let stationFolds = 0;
+      for (let i = 0; i < N; i++) {
+        if (heuristicDecide(mk("nit"), "nit").action.type === "fold") nitFolds++;
+        if (heuristicDecide(mk("calling_station"), "calling_station").action.type === "fold")
+          stationFolds++;
+      }
+      expect(nitFolds / N).toBeGreaterThan(0.85);
+      expect(stationFolds / N).toBeLessThan(nitFolds / N - 0.2);
+    } finally {
+      Math.random = prev;
     }
-    expect(nitFolds / N).toBeGreaterThan(0.85);
-    expect(stationFolds / N).toBeLessThan(nitFolds / N - 0.2);
   });
 
   it("无人下注的空气牌：maniac 主动下注率显著高于 nit", () => {
@@ -237,10 +248,11 @@ describe("heuristicDecide 极端局面", () => {
 });
 
 describe("heuristicDecide 多人底池收紧", () => {
-  // 同一边缘牌（中对 A7）面对约 0.65 池下注。rangeMode 多人池联合口径下
-  // （rangeMultiwayJoint 默认开，每轮抽 N 个不共牌范围对手、hero 需压过全部）：
+  // 同一边缘牌（中对 A7）面对约 0.65 池下注。默认口径（multiwayDefenseV2Enabled
+  // 关闭，V1 联合摊薄：每轮抽 N 个不共牌范围对手、hero 需压过全部）：
   // 单挑范围胜率 ≈0.65（阈值 0.43 → 稳定继续）；4 对手 ≈0.14（阈值 0.52 →
-  // 稳定弃牌，间距 ~10σ）。注额 65 与两种场面的阈值间距都足够大，避免缓存化
+  // 稳定弃牌，间距 ~10σ）。V2 显式开启时只评估对下注者（胜率同为 ≈0.65）→
+  // 4 对手也继续（见对应用例）。注额 65 与各场面的阈值间距都足够大，避免缓存化
   // 的蒙特卡洛估计噪声翻转整组断言。
   const mk = (playerCount: number, foldedSeats: number[] = []) => {
     const opponentOverrides: Record<number, { folded: boolean }> = {};
@@ -267,7 +279,7 @@ describe("heuristicDecide 多人底池收紧", () => {
     });
   };
 
-  it("同一手牌：1 名对手稳定继续，4 名对手倾向弃牌", () => {
+  it("默认（V2 关，旧联合框架）：同一手牌 1 名对手稳定继续，4 名对手倾向弃牌", () => {
     const N = 400;
     let folds1 = 0;
     let continues1 = 0;
@@ -286,6 +298,22 @@ describe("heuristicDecide 多人底池收紧", () => {
     expect(continues1 / N).toBeGreaterThan(0.9);
     // 4 名对手时胜率被摊薄到阈值之下，弃牌率显著上升
     expect(folds4 / N).toBeGreaterThan(folds1 / N + 0.3);
+  });
+
+  it("V2 显式开启：4 名对手面注同样继续（只对下注者评估）", () => {
+    // V2（multiwayDefenseV2Enabled 显式开启，默认关——Phase 10 台架未过采纳线）：
+    // 多人池摊薄由「对下注者 + 死钱赔率」计价，不再联合压全场——中对面对
+    // 0.65 池注额对下注者仍有 ≈0.65 胜率（阈值 ≈0.46），弃牌率同样很低
+    const N = 400;
+    let folds4 = 0;
+    for (let i = 0; i < N; i++) {
+      const r4 = brainDecide(mk(5), "tag", Math.random, {
+        multiwayDefenseV2Enabled: true,
+      });
+      assertLegal(r4.action, mk(5));
+      if (r4.action.type === "fold") folds4++;
+    }
+    expect(folds4 / N).toBeLessThan(0.1);
   });
 
   it("已弃牌的对手不计入收紧（3 人弃牌后等同单挑）", () => {

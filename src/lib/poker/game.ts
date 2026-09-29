@@ -311,8 +311,12 @@ function buttonDistance(seat: Seat, buttonSeat: Seat, n: number): number {
  *    这种单人退还层不影响 winners（不算“获胜”）。
  * 2. 每层奖金在胜者间平分；除不尽的余数筹码按「距按钮左邻最近者优先」
  *    的顺序每人多发 1（确定性规则）。
+ *
+ * 导出供调局层（gameStore）处理「开局即全员全下」的强制跑马：盲注/ante
+ * 超过所有在局玩家筹码时按真实规则全员 all-in 直接摊牌，与 createGame 的
+ * actor === null 分支同一路径（不另起平行结算实现）。
  */
-function settleShowdown(state: GameState): GameState {
+export function settleShowdown(state: GameState): GameState {
   const s = cloneState(state);
   dealBoard(s, 5);
   const n = s.players.length;

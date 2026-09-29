@@ -3,18 +3,19 @@
 import { useI18n } from "@/lib/i18n";
 import type { PositionRow } from "@/lib/ai/hudStats";
 
-const POS_CN: Record<string, string> = {
-  BTN: "按钮位",
-  CO: "关煞位",
-  HJ: "劫持位",
-  LJ: "洛杰克",
-  UTG: "枪口位",
-  "UTG+1": "枪口+1",
-  "UTG+2": "枪口+2",
-  SB: "小盲",
-  BB: "大盲",
-  "CO/UTG": "关煞/枪口",
-  "BTN/SB": "按钮/小盲",
+/** 位置短名的双语标注（键与 ai/positions 的 POSITION_SHORT_NAMES 一致） */
+export const POS_LABEL: Record<string, { zh: string; en: string }> = {
+  BTN: { zh: "按钮位", en: "Button" },
+  CO: { zh: "关煞位", en: "Cutoff" },
+  HJ: { zh: "劫持位", en: "Hijack" },
+  LJ: { zh: "洛杰克", en: "Lojack" },
+  UTG: { zh: "枪口位", en: "Under the gun" },
+  "UTG+1": { zh: "枪口+1", en: "UTG+1" },
+  "UTG+2": { zh: "枪口+2", en: "UTG+2" },
+  SB: { zh: "小盲", en: "Small blind" },
+  BB: { zh: "大盲", en: "Big blind" },
+  "CO/UTG": { zh: "关煞/枪口", en: "Cutoff / UTG" },
+  "BTN/SB": { zh: "按钮/小盲", en: "Button / Small blind" },
 };
 
 function Profit({ value }: { value: number }) {
@@ -32,7 +33,7 @@ function Profit({ value }: { value: number }) {
 
 /** 按位置（BTN/CO/.../BB）的表现表：手数 / 盈亏 / 胜率 */
 export function PositionTable({ rows }: { rows: PositionRow[] }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
       <h2 className="mb-3 font-semibold">{t("stats.pos.title")}</h2>
@@ -53,8 +54,8 @@ export function PositionTable({ rows }: { rows: PositionRow[] }) {
               <tr key={r.position} className="border-b border-zinc-800/60 last:border-0">
                 <td className="py-2 pr-3">
                   <span className="font-medium text-zinc-200">{r.position}</span>
-                  {POS_CN[r.position] && (
-                    <span className="ml-2 text-xs text-zinc-500">{POS_CN[r.position]}</span>
+                  {POS_LABEL[r.position] && (
+                    <span className="ml-2 text-xs text-zinc-500">{POS_LABEL[r.position][lang]}</span>
                   )}
                 </td>
                 <td className="py-2 pr-3 text-zinc-300">{r.hands}</td>

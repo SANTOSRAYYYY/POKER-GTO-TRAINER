@@ -324,3 +324,20 @@ calling_station、座位 0 唯一变量开/关，B−A）：
 详细数据/解读/遗留清单：`results/phase9-deep-retest-report.md`；
 配置 `configs/phase9/*.json`；执行器 `configs/phase9/run-all.sh`
 （批式 2 并发，esbuild 单次打包后直跑 node，避免并发写同一 bundle）。
+
+## Phase 10（2026-09-29，多人池面注防守 V2 未过线默认关 + HU btn_open 表修正）
+
+- **多人池面注防守 V2**（`multiwayDefenseV2Enabled`，与训练器 2026-09-29
+  「只对下注者」防守框架对齐：spec 不按人数收紧、只抽下注者 1 人、跟注门槛
+  步进降为 0.01/人实现率税；审计 A1）：6max 混风格 12000 手 × seeds 42-44
+  配对合并 **-12.8 bb/100 [-19.0,-6.5]**（n=36000，三种子全负）——CI 全负
+  远离采纳线 → **默认关闭，机制保留供 A/B**。HU 6000 手配对 V2 开/关逐手
+  差值 0/6000（单挑路径逐比特回归 ✓）。
+- **HU btn_open 表**（审计 A4：实装 45% vs 注释「≈80%」）：改为与 9max SB
+  对 BB 同一构成（82% 标签 / 76% 组合可玩），brain 与范围表页共用同表同时
+  生效。HU 6000 手 × seeds 42-43 前后对比：全桌 VPIP 33.3%→57.5%（回 50%+
+  合理区间），EV 逐手同发牌配对合并 -9.5 [-28.5,+9.6]（CI 跨零，无劣化证据）
+  → **采纳为表数据修正**。
+- 详细数据/判定/解读：`results/phase10-multiway-defense-v2-report.md`；
+  配置 `configs/phase10/*.json`；跨版本同发牌配对工具 `diff-runs.ts`
+  （before/after 两组 match 结果逐手差值 + 合并 CI）。

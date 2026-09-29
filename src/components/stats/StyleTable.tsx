@@ -2,11 +2,11 @@
 
 import { useI18n } from "@/lib/i18n";
 import type { StyleRow } from "@/lib/ai/hudStats";
-import { STYLE_NAME } from "@/components/history/labels";
+import { styleName } from "@/components/history/labels";
 
 /** 按对手 AI 风格的表现表：对战手数 / 盈亏 / 胜率 */
 export function StyleTable({ rows }: { rows: StyleRow[] }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
       <h2 className="mb-3 font-semibold">{t("stats.style.title")}</h2>
@@ -27,7 +27,7 @@ export function StyleTable({ rows }: { rows: StyleRow[] }) {
               <tr key={r.style} className="border-b border-zinc-800/60 last:border-0">
                 <td className="py-2 pr-3">
                   <span className="rounded bg-emerald-900/40 px-1.5 py-0.5 text-xs text-emerald-300">
-                    {STYLE_NAME[r.style]}
+                    {styleName(r.style, lang)}
                   </span>
                 </td>
                 <td className="py-2 pr-3 text-zinc-300">{r.hands}</td>

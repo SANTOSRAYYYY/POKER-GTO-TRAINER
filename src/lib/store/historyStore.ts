@@ -50,7 +50,7 @@ function getDB(): Promise<IDBPDatabase> {
     return Promise.reject(new Error("当前环境不支持 IndexedDB"));
   }
   if (!dbPromise) {
-    dbPromise = openDB(DB_NAME, DB_VERSION, {
+    const p = openDB(DB_NAME, DB_VERSION, {
       upgrade(db) {
         if (!db.objectStoreNames.contains("hands")) {
           db.createObjectStore("hands", { keyPath: "id" });
@@ -60,8 +60,46 @@ function getDB(): Promise<IDBPDatabase> {
         }
       },
     });
+    dbPromise = p;
+    // 打开失败（配额满/隐私模式瞬态）不缓存 rejected promise：
+    // 清掉缓存让下次调用重新尝试，避免一次失败瘫痪整个会话
+    p.catch(() => {
+      if (dbPromise === p) dbPromise = null;
+    });
   }
   return dbPromise;
+}
+
+/**
+ * 读入侧校验：IDB 数据可能被 DevTools/扩展/半截事务污染，
+ * 缺 players/streets/finalBoard（或不是数组）的记录不能让整页渲染崩溃——
+ * 跳过并 console.warn（仿 normalizeSessionReport 的宽容先例）。
+ */
+export function isValidHandRecord(x: unknown): x is HandRecord {
+  if (!x || typeof x !== "object") return false;
+  const h = x as Partial<HandRecord>;
+  return (
+    typeof h.id === "string" &&
+    Array.isArray(h.players) &&
+    Array.isArray(h.streets) &&
+    Array.isArray(h.finalBoard)
+  );
+}
+
+/** 过滤损坏记录（跳过 + warn），返回合法记录；输入不合法时原样计数告警 */
+function filterValidHands(raw: unknown[]): HandRecord[] {
+  const out: HandRecord[] = [];
+  for (const r of raw) {
+    if (isValidHandRecord(r)) {
+      out.push(r);
+    } else {
+      console.warn(
+        "[historyStore] 跳过损坏的手牌记录（缺 players/streets/finalBoard）:",
+        (r as { id?: unknown })?.id ?? r,
+      );
+    }
+  }
+  return out;
 }
 
 function sortDesc(hands: HandRecord[]): HandRecord[] {
@@ -427,8 +465,10 @@ export async function analyzeWithRetry(
 export interface HistoryStore {
   /** 已加载的历史记录（时间倒序） */
   hands: HandRecord[];
-  /** 是否已从 IndexedDB 完成首次加载 */
+  /** 是否已从 IndexedDB 完成首次加载（含失败终态——失败时 loadError 非空） */
   loaded: boolean;
+  /** 首次加载失败的错误文案（IndexedDB 不可用/隐私模式等）；正常为 null */
+  loadError: string | null;
   /** 已缓存的分析结果（key = HandRecord.id） */
   analyses: Record<string, AnalysisResult>;
 
@@ -464,25 +504,47 @@ export interface HistoryStore {
 export const useHistoryStore = create<HistoryStore>((set, get) => ({
   hands: [],
   loaded: false,
+  loadError: null,
   analyses: {},
 
   loadAll: async () => {
-    const db = await getDB();
-    const [hands, analyses] = await Promise.all([
-      db.getAll("hands") as Promise<HandRecord[]>,
-      db.getAll("analyses") as Promise<AnalysisEntry[]>,
-    ]);
-    const analysisMap: Record<string, AnalysisResult> = {};
-    for (const a of analyses) analysisMap[a.handId] = a.result;
-    set({ hands: sortDesc(hands), analyses: analysisMap, loaded: true });
+    try {
+      const db = await getDB();
+      const [rawHands, analyses] = await Promise.all([
+        db.getAll("hands") as Promise<unknown[]>,
+        db.getAll("analyses") as Promise<AnalysisEntry[]>,
+      ]);
+      const analysisMap: Record<string, AnalysisResult> = {};
+      for (const a of analyses) analysisMap[a.handId] = a.result;
+      set({
+        hands: sortDesc(filterValidHands(rawHands)),
+        analyses: analysisMap,
+        loaded: true,
+        loadError: null,
+      });
+    } catch (err) {
+      // IndexedDB 不可用（隐私模式/被禁用/配额满）：给页面一个可展示的错误
+      // 终态（loaded: true + loadError），不再永久停在「加载中…」
+      console.error("[historyStore] 加载手牌历史失败:", err);
+      set({
+        loaded: true,
+        loadError: "浏览器存储不可用（可能处于隐私模式）",
+      });
+    }
   },
 
   saveHand: async (record) => {
-    const db = await getDB();
-    await db.put("hands", record);
+    // 先更新内存（乐观），再异步落库：落库失败（隐私模式/配额满）时手牌仍
+    // 保留在内存里，用户可继续查看/导出，而不是静默丢失
     set((s) => ({
       hands: sortDesc([record, ...s.hands.filter((h) => h.id !== record.id)]),
     }));
+    try {
+      const db = await getDB();
+      await db.put("hands", record);
+    } catch (err) {
+      console.error("[historyStore] 手牌落库失败（仅保留在内存）:", err);
+    }
   },
 
   addHand: async (hand) => {
@@ -491,12 +553,13 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
 
   listHands: async () => {
     const db = await getDB();
-    const hands = sortDesc((await db.getAll("hands")) as HandRecord[]).map(
+    const raw = (await db.getAll("hands")) as unknown[];
+    const hands = sortDesc(filterValidHands(raw)).map(
       // 旧记录回填：修复前存的 HandRecord 缺全下跑马后的空动作街，读出时补齐
       // （withRunoutStreets 对已齐全的记录是幂等 no-op）
       (h) => ({ ...h, streets: withRunoutStreets(h.streets, h.finalBoard) }),
     );
-    set({ hands, loaded: true });
+    set({ hands, loaded: true, loadError: null });
     return hands;
   },
 
@@ -504,8 +567,12 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     const cached = get().hands.find((h) => h.id === id);
     if (cached) return cached;
     const db = await getDB();
-    const hand = (await db.get("hands", id)) as HandRecord | undefined;
-    if (!hand) return null;
+    const hand = (await db.get("hands", id)) as unknown;
+    if (hand === undefined || hand === null) return null;
+    if (!isValidHandRecord(hand)) {
+      console.warn("[historyStore] 跳过损坏的手牌记录:", id);
+      return null;
+    }
     return { ...hand, streets: withRunoutStreets(hand.streets, hand.finalBoard) };
   },
 

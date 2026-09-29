@@ -2,16 +2,19 @@
  * actionLine.ts（行动线共享基元）测试
  *
  * - drawOpenPos：候选在 UTG+1~BTN 内、无重复值定义、多 seed 抽样覆盖全部候选
- * - drawBetSize：只出 1/2 底池或 2/3 底池两档，双语齐全
+ * - drawBetSize：只出 1/2 底池或 2/3 底池两档，双语齐全，带底池倍数 frac
+ * - directPotOdds / potOddsText：按尺度算直接赔率（半池 25% / 2/3 池 28.6%）
  * - threeBetToText：9bb 双语
  * - rng 越界/端点鲁棒：rng()=0 取首项，rng()→1 钳到末项不越界
  */
 import { describe, expect, it } from "vitest";
 import {
   BET_SIZE_OPTS,
+  directPotOdds,
   drawBetSize,
   drawOpenPos,
   OPEN_POS_OPTS,
+  potOddsText,
   threeBetToText,
 } from "../actionLine";
 
@@ -68,6 +71,25 @@ describe("drawBetSize 下注尺度", () => {
   it("端点鲁棒：rng()=0 → 1/2 底池；rng()→1 → 2/3 底池", () => {
     expect(drawBetSize(() => 0).zh).toBe("1/2 底池");
     expect(drawBetSize(() => 0.999999).zh).toBe("2/3 底池");
+  });
+
+  it("带底池倍数 frac：1/2 池 = 0.5，2/3 池 = 2/3", () => {
+    expect(drawBetSize(() => 0).frac).toBe(0.5);
+    expect(drawBetSize(() => 0.999999).frac).toBeCloseTo(2 / 3, 12);
+  });
+});
+
+describe("directPotOdds / potOddsText 直接赔率（A2）", () => {
+  it("1/2 池 = 25%，2/3 池 ≈ 28.6%（跟 frac 池赢 1+2×frac 池）", () => {
+    expect(directPotOdds(0.5)).toBe(0.25);
+    expect(directPotOdds(2 / 3)).toBeCloseTo(2 / 7, 12);
+    expect(directPotOdds(1)).toBeCloseTo(1 / 3, 12); // 满池 33%
+  });
+
+  it("百分比文案：25 →「25」，2/7 →「28.6」", () => {
+    expect(potOddsText(0.5)).toBe("25");
+    expect(potOddsText(2 / 3)).toBe("28.6");
+    expect(potOddsText(1)).toBe("33.3");
   });
 });
 

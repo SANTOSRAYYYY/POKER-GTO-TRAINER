@@ -24,7 +24,7 @@ import {
   handStyles,
   isTournamentHand,
   seatPositionCn,
-  STYLE_NAME,
+  styleName,
 } from "@/components/history/labels";
 import type {
   AnalysisResult,
@@ -85,7 +85,7 @@ export default function HandReplayPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, loaded]);
 
-  const steps = useMemo(() => (hand ? buildSteps(hand, t) : []), [hand, t]);
+  const steps = useMemo(() => (hand ? buildSteps(hand, t, lang) : []), [hand, t, lang]);
   const cur = Math.min(stepIdx, Math.max(0, steps.length - 1));
   const step = steps[cur];
   /** 摊牌终局步骤（streetIdx = streets.length 哨兵） */
@@ -198,7 +198,7 @@ export default function HandReplayPage() {
               key={st}
               className="rounded bg-emerald-900/40 px-2 py-0.5 text-xs text-emerald-300"
             >
-              {STYLE_NAME[st]}
+              {styleName(st, lang)}
             </span>
           ))}
           <span
@@ -274,7 +274,7 @@ export default function HandReplayPage() {
               {hand.players.map((p) => {
                 const isActor = actorSeat === p.seat;
                 const isFolded = folded.has(p.seat);
-                const posCn = seatPositionCn(p.seat, hand.buttonSeat, hand.players.length);
+                const posCn = seatPositionCn(p.seat, hand.buttonSeat, hand.players.length, lang);
                 return (
                   <div
                     key={p.seat}
@@ -299,7 +299,7 @@ export default function HandReplayPage() {
                       ) : (
                         p.aiStyle && (
                           <span className="rounded bg-zinc-800 px-1.5 text-zinc-400">
-                            {STYLE_NAME[p.aiStyle]}
+                            {styleName(p.aiStyle, lang)}
                           </span>
                         )
                       )}
@@ -369,7 +369,7 @@ export default function HandReplayPage() {
                       <span className="text-zinc-300">
                         {p.isHero
                           ? t("common.you")
-                          : `${t("history.seat", { n: p.seat })}${p.aiStyle ? ` · ${STYLE_NAME[p.aiStyle]}` : ""}`}
+                          : `${t("history.seat", { n: p.seat })}${p.aiStyle ? ` · ${styleName(p.aiStyle, lang)}` : ""}`}
                       </span>
                       <span className="flex items-center gap-1">
                         {p.cards!.map((c) => (
@@ -417,7 +417,7 @@ export default function HandReplayPage() {
                                 : "text-zinc-600"
                           }`}
                         >
-                          {ai + 1}. {actionText(sa, hand, t)}
+                          {ai + 1}. {actionText(sa, hand, t, lang)}
                           {refInput && (
                             <ReferenceBadge
                               input={refInput}

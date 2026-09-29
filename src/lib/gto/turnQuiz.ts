@@ -30,6 +30,11 @@
  *     ≥ 跟注线（单挑 30%，+3pp/人实现率税；比翻牌圈 28% 略紧——转牌底池更大、
  *       河牌实现权益更差）→ passive；
  *     否则 → fold。
+ *   场景携带行动线实际第二枪尺度（betSize）：fold 点评按尺度算直接赔率
+ *   动态填入（A2，不再写死「半池赔率」）；判定胜率落在阈值 ±3pp 边界带内
+ *   时自动用 20000 次迭代复核一次再定答案（A3，见 borderline.ts）；多人
+ *   barrel 未过线的被动点评用不预设牌力强度的中性话术（A4：多人池 AA
+ *   未过线控池不是「弱牌」）。
  *
  * 多路底池（multiway，见 multiway.ts）：opponents 按 55/30/15% 抽 1|2|3。
  * 多人行动线 kind 恒 open：barrel 多人线 = 你开局被多家跟注、翻牌持续下注
@@ -57,7 +62,10 @@ import { equityVsRange, type RangeSpec } from "@/lib/ai/range";
 import {
   drawBetSize,
   drawOpenPos,
+  directPotOdds,
+  potOddsText,
   threeBetToText,
+  type BetSize,
   type LocalizedText,
   type OpenPos,
 } from "@/lib/gto/actionLine";
@@ -71,6 +79,7 @@ import {
   isDefenseLikeObvious,
   isOffenseLikeObvious,
 } from "@/lib/gto/trainerDifficulty";
+import { rejudgeIfBorderline } from "@/lib/gto/borderline";
 import {
   drawMultiwayOpenerPos,
   drawOpponentCount,
@@ -112,6 +121,8 @@ export interface TurnScenario {
   openPos: OpenPos;
   /** 对手数：1 = 单挑，2 = 三人池，3 = 四人池（胜率联合采样与门槛函数共用） */
   opponents: OpponentCount;
+  /** 防守题面对的第二枪尺度（来自行动线，含底池倍数 frac；fold 点评按它算直接赔率。barrel 题是 hero 自己要不要下注，恒为 null） */
+  betSize: BetSize | null;
 }
 
 export interface TurnQuiz extends TurnScenario {
@@ -156,12 +167,12 @@ export function turnRangeSpecFor(
     : TURN_BETTOR_RANGE_SPEC;
 }
 
-/** 随机抽一条转牌圈行动线（rng 注入可复现）：单挑两个子题型各 2 种真实常见路线；多人池（opponents>1）走多人线（kind 恒 open）；返回开局位供底牌范围对齐 */
+/** 随机抽一条转牌圈行动线（rng 注入可复现）：单挑两个子题型各 2 种真实常见路线；多人池（opponents>1）走多人线（kind 恒 open）；返回开局位供底牌范围对齐，defense 附带面对的第二枪尺度（fold 点评算直接赔率用，barrel 恒 null） */
 export function drawTurnLine(
   type: TurnScenarioType,
   rng: () => number = Math.random,
   opponents: OpponentCount = 1,
-): { kind: TurnLineKind; lines: LocalizedText[]; pos: OpenPos } {
+): { kind: TurnLineKind; lines: LocalizedText[]; pos: OpenPos; betSize: BetSize | null } {
   const size = drawBetSize(rng);
   if (opponents > 1) {
     const threeWay = opponents === 2;
@@ -171,6 +182,7 @@ export function drawTurnLine(
       return {
         kind: "open",
         pos,
+        betSize: null,
         lines: [
           threeWay
             ? {
@@ -202,6 +214,7 @@ export function drawTurnLine(
     return {
       kind: "open",
       pos,
+      betSize: size,
       lines: [
         threeWay
           ? {
@@ -240,6 +253,7 @@ export function drawTurnLine(
       return {
         kind,
         pos,
+        betSize: null,
         lines: [
           {
             zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲跟注`,
@@ -259,6 +273,7 @@ export function drawTurnLine(
     return {
       kind,
       pos,
+      betSize: null,
       lines: [
         {
           zh: `翻前：对手（${pos}）开局加注到 2.5bb，你（大盲）3bet 到 ${threeBetToText().zh}，对手跟注`,
@@ -279,6 +294,7 @@ export function drawTurnLine(
     return {
       kind,
       pos,
+      betSize: size,
       lines: [
         {
           zh: `翻前：对手（${pos}）开局加注到 2.5bb，你（大盲）跟注`,
@@ -298,6 +314,7 @@ export function drawTurnLine(
   return {
     kind,
     pos,
+    betSize: size,
     lines: [
       {
         zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲 3bet 到 ${threeBetToText().zh}，你跟注`,
@@ -357,6 +374,7 @@ export function dealTurnScenario(
     lineKind: line.kind,
     openPos: line.pos,
     opponents,
+    betSize: line.betSize,
   };
 }
 
@@ -404,6 +422,8 @@ export function isTooObvious(
 /**
  * 出一道完整的转牌圈题（同步，约几十 ms，调用方负责异步化）。
  * 显而易见的情形（isTooObvious）重发，FILTER_MAX_ATTEMPTS 次上限兜底。
+ * 判定胜率落在阈值 ±3pp 边界带内时用 20000 次迭代复核一次再定答案
+ * （borderline.ts，A3）。
  */
 export function generateTurnQuiz(
   rng: () => number = Math.random,
@@ -420,13 +440,17 @@ export function generateTurnQuiz(
     const spec = turnRangeSpecFor(scenario.type, scenario.lineKind);
     // defense（含多人池）：只评估对第二枪者的胜率（opponents=1，身后跟注者视为
     // 死钱）；barrel（进攻侧）：对 opponents 名跟注者联合采样（主动进攻要赢全场）
-    const rangeEquity = equityVsRange(
-      scenario.hero,
-      scenario.board,
-      spec,
-      iterations,
-      rng,
-      scenario.type === "defense" ? 1 : scenario.opponents,
+    const judgeOpponents = scenario.type === "defense" ? 1 : scenario.opponents;
+    const rangeEquity = rejudgeIfBorderline(
+      equityVsRange(scenario.hero, scenario.board, spec, iterations, rng, judgeOpponents),
+      scenario.type === "defense"
+        ? [
+            turnDefenseRaiseLine(scenario.opponents),
+            turnDefenseCallLine(scenario.opponents),
+          ]
+        : [turnBarrelLine(scenario.opponents), TURN_BARREL_SEMIBLUFF_MIN],
+      (iters) =>
+        equityVsRange(scenario.hero, scenario.board, spec, iters, rng, judgeOpponents),
     );
     const draws = analyzeDraws(scenario.hero, scenario.board);
     const answer = judgeTurn(
@@ -483,8 +507,19 @@ export function turnQuizComment(quiz: TurnQuiz): string {
         return `${note}对跟注者范围（前 ${rPct}%）实算胜率 ${pct}%${tie}，越过 ${barrel}% 第二枪线——继续进攻拿价值、别给免费河牌`;
       }
       return `${noteDefense}对第二枪范围（前 ${rPct}%，随行动线收窄）实算胜率 ${pct}%${tie}，超过 ${raise}% 加注线——价值加注榨取，别给便宜看河牌`;
-    case "fold":
-      return `${noteDefense}对第二枪范围（前 ${rPct}%，随行动线收窄）实算胜率 ${pct}%${tie}，不足 ${call}%——对手转牌还下注范围更紧，半池注赔率也够不上，弃牌`;
+    case "fold": {
+      // A2：直接赔率按行动线实际第二枪尺度（1/2 池 = 25% / 2/3 池 ≈ 28.6%），
+      // 不再写死「半池」。胜率 ∈ [直接赔率, 跟注线) 时如实说「接近赔率但不足」。
+      const size = quiz.betSize;
+      if (size) {
+        const oddsPct = potOddsText(size.frac);
+        if (quiz.rangeEquity >= directPotOdds(size.frac)) {
+          return `${noteDefense}对第二枪范围（前 ${rPct}%，随行动线收窄）实算胜率 ${pct}%${tie}，够 ${size.zh}注 ${oddsPct}% 直接赔率但不足 ${call}% 跟注线（对手转牌还下注范围更紧，跟注线含实现率税）——接近赔率但不足，弃牌`;
+        }
+        return `${noteDefense}对第二枪范围（前 ${rPct}%，随行动线收窄）实算胜率 ${pct}%${tie}，不足 ${call}% 跟注线——${size.zh}注需 ${oddsPct}% 赔率也够不上，弃牌`;
+      }
+      return `${noteDefense}对第二枪范围（前 ${rPct}%，随行动线收窄）实算胜率 ${pct}%${tie}，不足 ${call}% 跟注线——对手转牌还下注范围更紧，弃牌`;
+    }
     case "passive":
       if (quiz.type === "barrel") {
         if (quiz.opponents > 1 && isStrongDraw(quiz.draws)) {
@@ -495,7 +530,8 @@ export function turnQuizComment(quiz: TurnQuiz): string {
           return `${note}对跟注者范围（前 ${rPct}%）实算胜率 ${pct}%${tie}，${parts.join(" + ")}——但多人底池诈唬成功率大幅下降，强听牌不再放宽第二枪；过牌放弃`;
         }
         if (quiz.opponents > 1) {
-          return `${note}对跟注者范围（前 ${rPct}%）实算胜率 ${pct}%${tie}，不够 ${barrel}% 第二枪线——多人池弱牌别再造池，过牌放弃`;
+          // A4：中性话术，不预设牌力强度（多人池 AA 未过线也走这条——控池不是「弱牌」）
+          return `${note}对跟注者范围（前 ${rPct}%）实算胜率 ${pct}%${tie}，不够 ${barrel}% 第二枪线——过牌控池看河牌：多人池进攻要压过全场，不够碾压别硬造池`;
         }
         return `对跟注者范围（前 ${rPct}%）实算胜率 ${pct}%${tie}，不足 35% 或无强听牌——过牌放弃：能跟翻牌下注的范围不弱，弱牌别再造池`;
       }

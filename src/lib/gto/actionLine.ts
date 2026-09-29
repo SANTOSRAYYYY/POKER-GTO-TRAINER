@@ -8,8 +8,11 @@
  *
  * 本模块只提供共享原料：
  * - LocalizedText：行动线双语文本（zh/en），题目对象携带它，页面按当前语言渲染；
- * - OPEN_POS_OPTS / BET_SIZE_OPTS：开局位置（UTG+1~BTN）与下注尺度（1/2 或 2/3 池）；
- * - drawOpenPos / drawBetSize / threeBetToText：随机抽取与通用文案。
+ * - OPEN_POS_OPTS / BET_SIZE_OPTS：开局位置（UTG+1~BTN）与下注尺度（1/2 或 2/3 池，
+ *   BetSize 带底池倍数 frac）；
+ * - drawOpenPos / drawBetSize / threeBetToText：随机抽取与通用文案；
+ * - directPotOdds / potOddsText：按尺度算跟注的直接赔率（半池 25% / 2/3 池 28.6%），
+ *   防守题 fold 点评动态填入（A2：不再写死「半池 25%」）。
  *
  * 各族自己的路线清单（kind 枚举 + 模板函数）定义在各出题器模块内，与范围
  * spec 的联动紧挨着放，避免跨文件对照。
@@ -29,10 +32,16 @@ export interface LocalizedText {
 export const OPEN_POS_OPTS = ["UTG+1", "HJ", "CO", "BTN", "LJ"] as const;
 export type OpenPos = (typeof OPEN_POS_OPTS)[number];
 
+/** 下注尺度：双语文本 + 底池倍数（点评按实际尺度算直接赔率用，A2） */
+export interface BetSize extends LocalizedText {
+  /** 底池倍数：0.5 = 半池，2/3 ≈ 0.667 */
+  frac: number;
+}
+
 /** 下注尺度候选：1/2 底池 / 2/3 底池（训练器最常见的两档） */
-export const BET_SIZE_OPTS: readonly LocalizedText[] = [
-  { zh: "1/2 底池", en: "half pot" },
-  { zh: "2/3 底池", en: "2/3 pot" },
+export const BET_SIZE_OPTS: readonly BetSize[] = [
+  { zh: "1/2 底池", en: "half pot", frac: 0.5 },
+  { zh: "2/3 底池", en: "2/3 pot", frac: 2 / 3 },
 ];
 
 /** 从候选中抽一个（rng 注入；越界钳到末位，防 rng()===1 的极端实现） */
@@ -46,8 +55,21 @@ export function drawOpenPos(rng: () => number = Math.random): OpenPos {
 }
 
 /** 随机下注尺度（1/2 或 2/3 底池） */
-export function drawBetSize(rng: () => number = Math.random): LocalizedText {
+export function drawBetSize(rng: () => number = Math.random): BetSize {
   return pick(BET_SIZE_OPTS, rng);
+}
+
+/**
+ * 跟注某尺度下注所需的直接胜率（保本底池赔率）：frac / (1 + 2 × frac)——
+ * 跟 frac 池赢 1+2×frac 池。1/2 池 = 25%，2/3 池 ≈ 28.6%。
+ */
+export function directPotOdds(frac: number): number {
+  return frac / (1 + 2 * frac);
+}
+
+/** 直接赔率的百分比文案：25 → "25"，2/7 → "28.6"（点评动态填入用） */
+export function potOddsText(frac: number): string {
+  return String(Math.round(directPotOdds(frac) * 1000) / 10);
 }
 
 /** 3bet 尺度文案（翻前 3bet 统一 9bb，约 3.6 倍开局） */

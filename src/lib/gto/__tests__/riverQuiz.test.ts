@@ -9,13 +9,18 @@
  *   （弃牌/诈唬的正确区分）；弱牌有摊牌价值（25-45%）不诈唬
  * - 混合场景：50 题内三种子题型都出现、答案分布合理
  * - 点评文案含胜率数字且解释摊牌价值
+ * - A1：诈唬题豁免 <25% 下限（真诈唬答案批量回归 >0）；heroRiverHand 成牌
+ *   检测（底牌参与口径）；calibrateBluffActionLine 文本校准——「听牌全没中」
+ *   只对真·空气使用，成牌题如实描述且 <25% 弱成牌重发（成牌选诈唬=错）
  */
 import { describe, expect, it } from "vitest";
 import type { Card } from "@/lib/types";
 import {
+  calibrateBluffActionLine,
   dealRiverScenario,
   drawRiverLine,
   generateRiverQuiz,
+  heroRiverHand,
   heroRoleForRiver,
   isTooObvious,
   judgeRiver,
@@ -224,14 +229,14 @@ describe("多人池抓诈只对下注者（2026-09-29 框架修正）", () => {
 });
 
 describe("generateRiverQuiz 混合场景与整题", () => {
-  // 50 题循环逐题精确枚举 + 范围蒙特卡洛，全仓并行跑时 CPU 争抢会超默认 5s——显式放宽
+  // 题量由 50 减到 30：A3 边界带复核（每次 20000 迭代 ≈2-3s）拉高单题耗时，分布性断言无需原题量
   it(
-    "50 题内三种子题型都出现，答案分布合理（三种答案都有）",
+    "30 题内三种子题型都出现，答案分布合理（三种答案都有）",
     () => {
       const rng = lcg(2026);
       const types = new Set<string>();
       const answers = new Set<string>();
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 30; i++) {
         const q: RiverQuiz = generateRiverQuiz(rng, 400);
         types.add(q.type);
         answers.add(q.answer);
@@ -245,7 +250,7 @@ describe("generateRiverQuiz 混合场景与整题", () => {
       expect(types.size).toBe(3);
       expect(answers.size).toBe(3);
     },
-    30000,
+    120000,
   );
 
   it(
@@ -371,18 +376,21 @@ describe("难度过滤（反脑残）", () => {
     expect(isTooObvious(0.3, "value", 0.25)).toBe(false); // 边界保留
   });
 
-  it("诈唬题：精确胜率 <25%（纯空气必诈）或 >85%（坚果级）重发，摊牌价值带保留", () => {
-    expect(isTooObvious(0.1, "bluff")).toBe(true);
+  it("诈唬题：豁免 <25% 下限（纯空气必诈是教学核心，A1），>85% 坚果级仍重发", () => {
+    expect(isTooObvious(0.1, "bluff")).toBe(false); // 下限豁免：必诈题不是脑残题
+    expect(isTooObvious(0.24, "bluff")).toBe(false);
     expect(isTooObvious(0.9, "bluff")).toBe(true);
     expect(isTooObvious(0.35, "bluff")).toBe(false);
     expect(isTooObvious(0.5, "bluff")).toBe(false);
   });
 
   it(
-    "生成的 40 道题全部不在显而易见区",
+    "生成的题全部不在显而易见区，且诈唬题文本与底牌一致（A1）",
     () => {
+      // 题量由 40 减到 28：A3 边界带复核（每次 20000 迭代 ≈2-3s）拉高单题耗时
       const rng = lcg(2028);
-      for (let i = 0; i < 40; i++) {
+      let bluffChecked = 0;
+      for (let i = 0; i < 28; i++) {
         const q = generateRiverQuiz(rng, 400);
         expect(
           isTooObvious(q.equity.win, q.type, q.rangeEquity ?? undefined),
@@ -396,12 +404,29 @@ describe("难度过滤（反脑残）", () => {
           expect(q.rangeEquity!).toBeLessThanOrEqual(0.85);
         }
         if (q.type === "bluff") {
-          expect(q.equity.win).toBeGreaterThanOrEqual(0.25);
+          bluffChecked++;
+          // 下限豁免后只受 >85% 上限约束
           expect(q.equity.win).toBeLessThanOrEqual(0.85);
+          const info = heroRiverHand(q.hero, q.board);
+          const lastLine = q.actionLine[q.actionLine.length - 1];
+          if (info.made) {
+            // 成牌：不许再用「听牌全没中」叙事；成牌弱牌（<25%）已重发
+            expect(lastLine.zh).not.toContain("听牌全没中");
+            expect(lastLine.en).not.toContain("draws have missed");
+            expect(q.equity.win).toBeGreaterThanOrEqual(RIVER_BLUFF_MAX_EQUITY);
+          } else {
+            // 真·空气：才用「听牌全没中」
+            expect(lastLine.zh).toContain("听牌全没中");
+            if (q.equity.win < RIVER_BLUFF_MAX_EQUITY) {
+              // 纯空气 <25% → 真诈唬答案（下限豁免后不再被误杀）
+              expect(q.answer).toBe("aggressive");
+            }
+          }
         }
       }
+      expect(bluffChecked).toBeGreaterThan(0);
     },
-    30000,
+    120000,
   );
 
   it("恒定 rng 极端情形：10 次上限兜底返回合法题，不死循环", () => {
@@ -409,6 +434,106 @@ describe("难度过滤（反脑残）", () => {
     expect(["aggressive", "passive", "fold"]).toContain(q.answer);
     expect(new Set([...q.hero, ...q.board]).size).toBe(7);
   });
+});
+
+describe("heroRiverHand 河牌成牌检测（A1）", () => {
+  it("口袋对/中对/同花/顺子（底牌参与）→ 成牌", () => {
+    // 口袋对 K（审计题例 K♠K♥ on 5♥A♠T♣Q♦8♥）
+    expect(
+      heroRiverHand(c("Ks Kh") as [Card, Card], c("5h As Tc Qd 8h")).made,
+    ).toBe(true);
+    // 中对 8（审计题例 K♦8♦ on 8♠9♥J♥2♦7♠）
+    expect(
+      heroRiverHand(c("Kd 8d") as [Card, Card], c("8s 9h Jh 2d 7s")).made,
+    ).toBe(true);
+    // 口袋对 2 + 板面对 9 = 两对（审计题例 2♠2♦ on J♥8♦6♥9♥9♣）
+    expect(
+      heroRiverHand(c("2s 2d") as [Card, Card], c("Jh 8d 6h 9h 9c")).made,
+    ).toBe(true);
+    // 同花（hero 两张红心参与）
+    expect(
+      heroRiverHand(c("2h 5h") as [Card, Card], c("Kh 9h 7c 6h Qd")).made,
+    ).toBe(true);
+    // 顺子（J♦T♠ on 9♣8♥7♦2♠3♣）
+    expect(
+      heroRiverHand(c("Jd Ts") as [Card, Card], c("9c 8h 7d 2s 3c")).made,
+    ).toBe(true);
+  });
+
+  it("A 高仅改进踢脚 / 纯空气 / board plays → 非成牌（纯空气）", () => {
+    // A 高（踢脚改进但无对子）
+    const aHigh = heroRiverHand(c("Ah 5d") as [Card, Card], c("Kh 9d 7c 6s 2h"));
+    expect(aHigh.category).toBe(0);
+    expect(aHigh.made).toBe(false);
+    // 纯空气 7♠2♦
+    expect(
+      heroRiverHand(c("7s 2d") as [Card, Card], c("Ac Kd Qh 9c 4s")).made,
+    ).toBe(false);
+    // board 天成顺，hero 无贡献（board plays）
+    expect(
+      heroRiverHand(c("7s 2d") as [Card, Card], c("Ac Kd Qh Jc Ts")).made,
+    ).toBe(false);
+  });
+});
+
+describe("calibrateBluffActionLine 诈唬题文本校准（A1）", () => {
+  const baseLine = [
+    { zh: "翻前：测试线", en: "Preflop: test line" },
+    { zh: "河牌圈：对手过牌，你的听牌全没中", en: "River: the big blind checks and all your draws have missed" },
+  ];
+
+  it("纯空气：原样保留「听牌全没中」", () => {
+    const out = calibrateBluffActionLine(baseLine, "open", false, 0.1);
+    expect(out).toBe(baseLine);
+  });
+
+  it("成牌 + 摊牌价值带（25-45%）→「这手牌有摊牌价值」", () => {
+    const out = calibrateBluffActionLine(baseLine, "open", true, 0.35);
+    expect(out[out.length - 1].zh).toContain("摊牌价值");
+    expect(out[out.length - 1].zh).not.toContain("听牌全没中");
+    expect(out[out.length - 1].en).toContain("showdown value");
+    expect(out.length).toBe(baseLine.length);
+  });
+
+  it("成牌 + 价值带（≥45%）→「你击中了牌面」；flat 线句式不同", () => {
+    const open = calibrateBluffActionLine(baseLine, "open", true, 0.8);
+    expect(open[open.length - 1].zh).toContain("你击中了牌面");
+    expect(open[open.length - 1].zh).toContain("对手过牌");
+    const flat = calibrateBluffActionLine(baseLine, "flat", true, 0.8);
+    expect(flat[flat.length - 1].zh).toContain("轮到你行动");
+  });
+});
+
+describe("诈唬题真诈唬答案回归（A1 数据修复）", () => {
+  it(
+    "批量 80 题：真诈唬答案（纯空气 <25% 下注）不再为 0，且诈唬答案者必为纯空气",
+    () => {
+      // 题量 130 → 80：A3 边界带复核拉高单题耗时；80 题期望 ~13 道单挑诈唬型，足够统计
+      const rng = lcg(105);
+      let bluffType = 0;
+      let trueBluff = 0;
+      for (let i = 0; i < 80; i++) {
+        const q = generateRiverQuiz(rng, 400);
+        if (q.type !== "bluff") continue;
+        bluffType++;
+        if (
+          q.answer === "aggressive" &&
+          q.equity.win < RIVER_BLUFF_MAX_EQUITY
+        ) {
+          trueBluff++;
+          // 语义校验：真诈唬答案只颁给纯空气（成牌题选诈唬=错）
+          expect(heroRiverHand(q.hero, q.board).made).toBe(false);
+          expect(q.actionLine[q.actionLine.length - 1].zh).toContain(
+            "听牌全没中",
+          );
+        }
+      }
+      expect(bluffType).toBeGreaterThan(0);
+      // 审计原数据：34 道 bluff 题真诈唬答案 0 道；修复后必须 > 0
+      expect(trueBluff).toBeGreaterThan(0);
+    },
+    120000,
+  );
 });
 
 describe("底牌与行动线一致性（hero 范围抽样接线）", () => {

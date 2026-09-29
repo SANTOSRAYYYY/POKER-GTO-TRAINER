@@ -36,9 +36,17 @@
  *   无人下注的主动决策与 SPR 推进保持随机范围胜率（对手没给信息）。
  *   rangeModeEnabled=false 逐比特恢复旧行为。范围 MC 迭代数 = 随机 MC ×
  *   rangeItersScale（默认 0.5），单次 decide 预算 ≤120ms。
- *   多人池口径（rangeMultiwayJoint，默认 true）：每轮抽 N 个互不共牌的
- *   范围对手联合摊薄（hero 需压过全部，与 equityMulti 多人口径一致）；
- *   false 退回「对收紧范围抽单个对手」的旧近似（高估多人池胜率，A/B 用）。
+ *   多人池面注口径（multiwayDefenseV2Enabled，默认 false，与训练器
+ *   2026-09-29 防守新框架对齐的实验机制）：facingBet 且 opponents>1 时只评估
+ *   「对下注者」胜率（spec 不按人数收紧、只抽下注者 1 人），身后跟注者视为
+ *   死钱（死钱改善直接赔率），跟注门槛步进降为 multiwayDefenseV2MarginPerOpp
+ *   （0.01/人实现率税）——旧框架「联合压全场 + 全员 bettor 强 spec + 0.03/人
+ *   步进」对多人摊薄重复计费（实测 3 人池 KsQh4h 中对 88：本口径 0.46 vs 旧
+ *   口径 0.17）。但 Phase 10 台架（6max 混风格 12000 手 × seeds 42-44 配对）
+ *   合并 -12.8 bb/100 [-19.0,-6.5]（n=36000）未过采纳线：对下注者口径在本
+ *   台架环境下防守过宽、净效应显著为负 → 默认关闭，机制保留供 A/B。
+ *   true 时 rangeMultiwayJoint 在多人池面注路径被取代；单挑（opponents=1）
+ *   两侧逐比特一致。默认 false = 旧框架（rangeMultiwayJoint 联合摊薄生效）。
  * - 面对下注：所需胜率 = call/(pot+call) + 风格安全边际 → 跟注；
  *   胜率远超（单挑 ≥65%，每多一对手 +3%）→ 价值加注 ~0.7 池；
  *   极低胜率 + 风格诈唬掷签 + 弃牌率空间 → 诈唬加注；否则弃牌。
@@ -49,7 +57,7 @@
  *   （eq ≥ 0.97 坚果级豁免）；翻前被 4bet+ 时 premium 互加链封顶
  *   （pct ≥ 0.985 才继续，99-JJ 深筹码改跟注），面对 3bet+ 的非 premium
  *   跟注上限 25bb（L2'：premium 豁免收窄到 pct ≥ callVs3betPremiumExemptPct
- *   的 KK+/AA 档，99-JJ 档超额跟注额同样弃牌）。warGuardEnabled=false 整体
+ *   的约 QQ+ 档，99-JJ 档超额跟注额同样弃牌）。warGuardEnabled=false 整体
  *   恢复旧行为。护栏的 equity
  *   输入在 rangeMode 下为混合胜率——护栏与范围推断叠加生效。
  * - 无人下注：胜率 > 下注阈值（单挑 52%，每多一对手 +6%）→ 价值/保护下注
@@ -565,8 +573,9 @@ export interface BrainTuning {
   premium5betPct: number;
   /** 面对 3bet+ 的跟注数额上限（bb）：跟注额超过且 pct < premiumPct 时弃牌 */
   callVs3betMaxBB: number;
-  /** premium 档对 callVs3betMaxBB 的豁免下限（L2'）：pct ≥ 此值（KK+/AA 档）才
-   *  豁免 25bb 跟注上限；premiumPct–此值档（99-JJ）面对超额 3bet+ 跟注额同样弃牌。
+  /** premium 档对 callVs3betMaxBB 的豁免下限（L2'）：pct ≥ 此值（约 QQ+ 档，
+   *  QQ 百分位 0.9881 ≥ 0.985 同在豁免档）才豁免 25bb 跟注上限；
+   *  premiumPct–此值档（99-JJ）面对超额 3bet+ 跟注额同样弃牌。
    *  0 = 全部 premium 豁免（恢复 L2 原行为，用于 A/B） */
   callVs3betPremiumExemptPct: number;
 
@@ -578,7 +587,9 @@ export interface BrainTuning {
   sprCommitEqDefault: number;
 
   // ---- 翻后：面对下注 ----
-  /** 跟注安全边际随对手数递增：+ callMarginPerOpp × (opponents-1) */
+  /** 跟注安全边际随对手数递增：+ callMarginPerOpp × (opponents-1)。
+   *  仅旧框架（multiwayDefenseV2Enabled=false）生效；V2 框架改用
+   *  multiwayDefenseV2MarginPerOpp（实现率税，步进已降低） */
   callMarginPerOpp: number;
   /** 绝对下限（不犯蠢）：eq < foldFloorEq 且注额 > foldFloorBetFrac × 池 → 必弃 */
   foldFloorEq: number;
@@ -639,8 +650,24 @@ export interface BrainTuning {
   /** 范围蒙特卡洛迭代数 = 随机蒙特卡洛迭代数 × 此系数（范围 MC 有枚举建池开销） */
   rangeItersScale: number;
   /** 多人池口径：true = 每轮抽 N 个不共牌的范围对手联合摊薄（hero 需压过全部）；
-   *  false = 旧近似（多人池 = 对收紧范围抽单个对手，会高估多人池胜率，A/B 用） */
+   *  false = 旧近似（多人池 = 对收紧范围抽单个对手，会高估多人池胜率，A/B 用）。
+   *  注意：multiwayDefenseV2Enabled 开启时多人池面注改走「只对下注者」口径，
+   *  本旋钮在该路径被取代（不再联合采样）；单挑路径本旋钮无作用 */
   rangeMultiwayJoint: boolean;
+  /** 多人池面注防守 V2 框架（与训练器 2026-09-29 新框架对齐，gto/multiway.ts
+   *  防守侧）：facingBet 且 opponents>1 时，胜率评估改为「只对下注者」口径——
+   *  inferFacingSpec 的 aggressionLevel 按 1 传（spec 不做多人池 ×0.8 收紧）
+   *  且 equityVsRange 只抽下注者 1 人，不再「联合压全场 + 全员 bettor 强 spec」
+   *  双重收紧；身后尚未行动的跟注者视为死钱（死钱改善直接赔率），多人摊薄由
+   *  「对下注者 + 死钱赔率」框架计价，跟注门槛步进相应降为
+   *  multiwayDefenseV2MarginPerOpp（实现率税）。false = 旧框架（联合摊薄 +
+   *  全员强 spec + callMarginPerOpp 0.03/人步进）。单挑（opponents=1）两侧
+   *  逐比特一致。
+   *  默认关闭：Phase 10 台架（6max 混风格 12000 手 × seeds 42-44 配对）
+   *  合并 -12.8 bb/100 [-19.0,-6.5]（n=36000）未过采纳线，机制保留供 A/B。 */
+  multiwayDefenseV2Enabled: boolean;
+  /** V2 框架的跟注安全边际每多一对手步进（实现率税；旧框架为 callMarginPerOpp） */
+  multiwayDefenseV2MarginPerOpp: number;
 
   // ---- 通用 ----
   /** 目标额 ≥ allinTriggerFrac × 全下额时直接 all-in（而非小注） */
@@ -750,8 +777,9 @@ export const DEFAULT_BRAIN_TUNING: BrainTuning = {
   preflopPosAdjustEnabled: false,
   preflopPosAdjustUTG: 0.04,
   preflopPosAdjustBTN: -0.04,
-  // Phase 8 验收未过采纳线：+5.3 bb/100 [-6.2,+16.9]（n=36000，seeds 42-44），
-  // 机制保留供 A/B（见 results/phase8-preflop-report.md）
+  // 默认开启：Phase 9 深筹复测（6max 200bb，12000 手 × seeds 42-44 合并 n=36000）
+  // +29.7 bb/100 [+9.7,+49.7] CI 全正且中值 >+15 过采纳线
+  // （见 results/phase9-deep-retest-report.md；Phase 8 100bb 档 +5.3 [-6.2,+16.9] 未过线保留）
   preflopRangeModeEnabled: true,
   premiumPct: 0.965,
   premiumAllinBB: 30,
@@ -812,6 +840,13 @@ export const DEFAULT_BRAIN_TUNING: BrainTuning = {
   rangeBlendRandom: 0,
   rangeItersScale: 0.5,
   rangeMultiwayJoint: true,
+  // Phase 10 验收未过采纳线：6max 混风格 12000 手 × seeds 42-44 配对（座位 0
+  // V2 开 vs 关），合并 -12.8 bb/100 [-19.0, -6.5]（s42 -19.3 [-29.3,-9.2] /
+  // s43 -12.4 [-23.2,-1.7] / s44 -6.6 [-18.2,+4.9]，n=36000）——CI 全负，
+  // 远离「CI 全正且中值 >+15」采纳线：对下注者口径在本台架环境下防守过宽。
+  // 机制保留供 A/B（见 results/phase10-multiway-defense-v2-report.md）
+  multiwayDefenseV2Enabled: false,
+  multiwayDefenseV2MarginPerOpp: 0.01,
   allinTriggerFrac: 0.65,
   equityIterationsScale: 1,
   callMarginDelta: 0,
@@ -1018,10 +1053,12 @@ export function brainStats(input: DecideInput): BrainStats | null {
   let eqVsRange: number | null = null;
   if (!preflop && input.callAmount > 0) {
     const faceModel = facingOpponentModel(input);
+    // 多人池面注 V2（与 postflopDecide 同一判定，走全局默认旋钮）
+    const v2 = DEFAULT_BRAIN_TUNING.multiwayDefenseV2Enabled && opp > 1;
     const spec = inferFacingSpec(
       input.state.street,
       streetRaisesSeen(input),
-      opp,
+      v2 ? 1 : opp,
       faceModel,
       // 摊牌学习宽度修正（brainStats 走全局默认旋钮，与决策路径同口径展示）
       showdownWidth(input, faceModel?.seat ?? null, DEFAULT_BRAIN_TUNING),
@@ -1037,7 +1074,7 @@ export function brainStats(input: DecideInput): BrainStats | null {
       spec,
       rangeIters,
       Math.random,
-      DEFAULT_BRAIN_TUNING.rangeMultiwayJoint ? opp : 1,
+      v2 ? 1 : DEFAULT_BRAIN_TUNING.rangeMultiwayJoint ? opp : 1,
       DEFAULT_BRAIN_TUNING.blockerEnabled,
     );
     eqVsRange = eqRange * (1 - DEFAULT_BRAIN_TUNING.rangeBlendRandom) +
@@ -1325,7 +1362,7 @@ function preflopDecide(ctx: Ctx, label: string): PlayerAction | null {
       if (legal.has("allin")) return { type: "allin", amount: allinTo(ctx) };
     }
     // 加注战护栏（L2'）：premium 的 callVs3betMaxBB 跟注上限豁免收窄到
-    // pct ≥ callVs3betPremiumExemptPct（KK+/AA 档）；99-JJ 档面对超额 3bet+
+    // pct ≥ callVs3betPremiumExemptPct（约 QQ+ 档）；99-JJ 档面对超额 3bet+
     // 跟注额不再无限跟注（深筹码跟注链实测单手 -26100bb），直接弃牌。
     const premiumCallBlocked = T.warGuardEnabled &&
       pct < T.callVs3betPremiumExemptPct &&
@@ -1372,10 +1409,14 @@ function postflopDecide(ctx: Ctx): PlayerAction | null {
   let eqF = eq;
   if (facingBet && T.rangeModeEnabled) {
     const faceModel = facingOpponentModel(input);
+    // 多人池面注防守 V2（默认开）：只评估对下注者的胜率——spec 不按在局人数
+    // 收紧（aggressionLevel=1）、equityVsRange 只抽下注者 1 人；身后跟注者视为
+    // 死钱。旧框架（V2 关）：全员按下注者强 spec（×0.8^(N-1) 收紧）联合摊薄。
+    const v2 = T.multiwayDefenseV2Enabled && opponents > 1;
     const spec = inferFacingSpec(
       input.state.street,
       streetRaisesSeen(input),
-      opponents,
+      v2 ? 1 : opponents,
       faceModel,
       // 摊牌学习（Phase 8）：面注对手位置桶的亮牌宽度乘数作用于 topPct
       // （旋钮关/无画像/无调整时 = 1，inferFacingSpec 内精确跳过）
@@ -1389,9 +1430,9 @@ function postflopDecide(ctx: Ctx): PlayerAction | null {
     );
     const eqRange = equityVsRange(
       hero, board, spec, rangeIters, Math.random,
-      // 多人池联合口径：每轮抽 N 个不共牌的范围对手，hero 需压过全部；
-      // rangeMultiwayJoint=false 退回旧的「对收紧范围抽单对手」近似（A/B 用）
-      T.rangeMultiwayJoint ? opponents : 1,
+      // V2：只对下注者（opponents=1）。旧框架：rangeMultiwayJoint=true 时每轮
+      // 抽 N 个不共牌的范围对手联合摊薄；false 退回「对收紧范围抽单对手」近似
+      v2 ? 1 : T.rangeMultiwayJoint ? opponents : 1,
       // blocker 效应（Phase 8）：hero 底牌对范围组合降权；false = 旧均匀采样
       T.blockerEnabled,
     );
@@ -1413,9 +1454,15 @@ function postflopDecide(ctx: Ctx): PlayerAction | null {
   if (facingBet) {
     const required = input.callAmount / (pot + input.callAmount);
     // 剥削修正：对 maniac/lag 放宽跟注边际抓诈唬（下限 -6%，见 adapt.ts 钳制）；
-    // icm.callTighten：锦标赛 bubble/final 短码收紧跟注（+0 时不生效）
+    // icm.callTighten：锦标赛 bubble/final 短码收紧跟注（+0 时不生效）。
+    // 多人池步进：V2 框架（默认开，面注多人池）用实现率税
+    // multiwayDefenseV2MarginPerOpp（摊薄已由「对下注者+死钱赔率」计价，步进
+    // 相应降低）；旧框架用 callMarginPerOpp（叠加在联合摊薄之上）
+    const marginPerOpp = T.multiwayDefenseV2Enabled && opponents > 1
+      ? T.multiwayDefenseV2MarginPerOpp
+      : T.callMarginPerOpp;
     const margin = tune.callMargin + adj.callMarginDelta + icm.callTighten +
-      T.callMarginPerOpp * Math.max(0, opponents - 1);
+      marginPerOpp * Math.max(0, opponents - 1);
     const threshold = required + margin;
 
     // 绝对下限：胜率过低且面对大注额，任何风格都弃牌

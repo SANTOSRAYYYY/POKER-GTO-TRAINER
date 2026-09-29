@@ -1,0 +1,19 @@
+{
+  "seats": 6,
+  "hands": 12000,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "startStack": 1000,
+  "masterSeed": 43,
+  "resetStacksEachHand": true,
+  "progressEvery": 3000,
+  "seatBrains": [
+    { "style": "gto", "tuning": { "equityIterationsScale": 0.25, "multiwayDefenseV2Enabled": false } },
+    { "style": "nit", "tuning": { "equityIterationsScale": 0.25 } },
+    { "style": "tag", "tuning": { "equityIterationsScale": 0.25 } },
+    { "style": "lag", "tuning": { "equityIterationsScale": 0.25 } },
+    { "style": "maniac", "tuning": { "equityIterationsScale": 0.25 } },
+    { "style": "calling_station", "tuning": { "equityIterationsScale": 0.25 } }
+  ],
+  "seat0Alt": { "style": "gto", "tuning": { "equityIterationsScale": 0.25, "multiwayDefenseV2Enabled": true } }
+}

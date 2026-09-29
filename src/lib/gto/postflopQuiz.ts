@@ -21,9 +21,13 @@
  * - defense：对手已下注，其范围不是随机——用 equityVsRange（下注者隐含范围，
  *   按行动线取 spec + 15% 诈唬混入）实算胜率：
  *     ≥ 加注线（单挑 68%，+6pp/人）→ aggressive（价值加注）；
- *     ≥ 跟注线（单挑 28%，+3pp/人实现率税）→ passive（call：半池注赔率 25% + 实现折扣余量）；
+ *     ≥ 跟注线（单挑 28%，+3pp/人实现率税）→ passive（call：直接赔率按行动线
+ *       尺度两档 25%/28.6% + 实现折扣余量）；
  *     否则 → fold。
  *   中间档一律跟注——中对/弱对加注只会打走差的留下强的。
+ *   场景携带行动线实际下注尺度（betSize）：fold 点评按尺度算直接赔率动态
+ *   填入（A2，不再写死「半池 25%」）；判定胜率落在阈值 ±3pp 边界带内时
+ *   自动用 20000 次迭代复核一次再定答案（A3，见 borderline.ts）。
  *
  * 多路底池（multiway，见 multiway.ts）：opponents 按 55/30/15% 抽 1|2|3。
  * 多人行动线里 hero 更可能是跟注者：attack 多人线 = 你（BTN）跟注
@@ -50,7 +54,10 @@ import { equityVsRange, type RangeSpec } from "@/lib/ai/range";
 import {
   drawBetSize,
   drawOpenPos,
+  directPotOdds,
+  potOddsText,
   threeBetToText,
+  type BetSize,
   type LocalizedText,
   type OpenPos,
 } from "@/lib/gto/actionLine";
@@ -64,6 +71,7 @@ import {
   isDefenseLikeObvious,
   isOffenseLikeObvious,
 } from "@/lib/gto/trainerDifficulty";
+import { rejudgeIfBorderline } from "@/lib/gto/borderline";
 import {
   drawMultiwayOpenerPos,
   drawOpponentCount,
@@ -100,6 +108,8 @@ export interface PostflopScenario {
   openPos: OpenPos;
   /** 对手数：1 = 单挑，2 = 三人池，3 = 四人池（胜率联合采样与门槛函数共用） */
   opponents: OpponentCount;
+  /** 防守题面对的下注尺度（来自行动线，含底池倍数 frac；fold 点评按它算直接赔率。进攻题无人下注恒为 null） */
+  betSize: BetSize | null;
 }
 
 export interface PostflopQuiz extends PostflopScenario {
@@ -117,8 +127,10 @@ export interface PostflopQuiz extends PostflopScenario {
 export const ATTACK_EQUITY_THRESHOLD = flopAttackLine(1);
 /** 防守加注线（单挑基准）：对下注者范围胜率 ≥ 68%（价值加注）；多人用 flopDefenseRaiseLine */
 export const DEFENSE_RAISE_THRESHOLD = flopDefenseRaiseLine(1);
-/** 防守跟注线（单挑基准）：对下注者范围胜率 ≥ 28%（半池赔率 25% + 实现折扣）；多人用 flopDefenseCallLine */
+/** 防守跟注线（单挑基准）：对下注者范围胜率 ≥ 28%（直接赔率 25%/28.6% 两档 + 实现折扣）；多人用 flopDefenseCallLine */
 export const DEFENSE_CALL_THRESHOLD = flopDefenseCallLine(1);
+/** 半诈唬下限：45%-进攻线 且强听牌 → 半诈唬进攻（仅单挑放宽，semibluffAllowed） */
+export const ATTACK_SEMIBLUFF_MIN = 0.45;
 /** 防守题的下注者隐含范围（常规开局池）：强度前 60% + 15% 诈唬混入（标准 c-bet 近似） */
 export const DEFENSE_RANGE_SPEC = { topPct: 0.6, bluffPct: 0.15 } as const;
 /** 防守题的下注者隐含范围（3bet 池持续下注）：收紧到前 35% + 15% 诈唬混入 */
@@ -136,12 +148,12 @@ export function defenseRangeSpecFor(lineKind: PostflopLineKind): RangeSpec {
   return lineKind === "threeBet" ? FLOP_DEFENSE_3BET_RANGE_SPEC : DEFENSE_RANGE_SPEC;
 }
 
-/** 随机抽一条翻牌圈行动线（rng 注入可复现）：attack 固定 open 线，defense 二选一；返回开局位供底牌范围对齐。多人池（opponents>1）走多人线（kind 恒 open） */
+/** 随机抽一条翻牌圈行动线（rng 注入可复现）：attack 固定 open 线，defense 二选一；返回开局位供底牌范围对齐，defense 附带面对的下注尺度（fold 点评算直接赔率用，attack 恒 null）。多人池（opponents>1）走多人线（kind 恒 open） */
 export function drawPostflopLine(
   type: ScenarioType,
   rng: () => number = Math.random,
   opponents: OpponentCount = 1,
-): { kind: PostflopLineKind; lines: LocalizedText[]; pos: OpenPos } {
+): { kind: PostflopLineKind; lines: LocalizedText[]; pos: OpenPos; betSize: BetSize | null } {
   if (opponents > 1) {
     // 多人池：开局位剔除 BTN（hero 多人线常居 BTN），hero 为跟注者
     const pos = drawMultiwayOpenerPos(rng);
@@ -150,6 +162,7 @@ export function drawPostflopLine(
       return {
         kind: "open",
         pos,
+        betSize: null,
         lines: threeWay
           ? [
               {
@@ -177,6 +190,7 @@ export function drawPostflopLine(
     return {
       kind: "open",
       pos,
+      betSize: size,
       lines: threeWay
         ? [
             {
@@ -205,6 +219,7 @@ export function drawPostflopLine(
     return {
       kind: "open",
       pos,
+      betSize: null,
       lines: [
         {
           zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲跟注`,
@@ -222,6 +237,7 @@ export function drawPostflopLine(
     return {
       kind: "open",
       pos,
+      betSize: size,
       lines: [
         {
           zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲跟注`,
@@ -237,6 +253,7 @@ export function drawPostflopLine(
   return {
     kind: "threeBet",
     pos,
+    betSize: size,
     lines: [
       {
         zh: `翻前：你（${pos}）开局加注到 2.5bb，大盲 3bet 到 ${threeBetToText().zh}，你跟注`,
@@ -292,6 +309,7 @@ export function dealPostflopScenario(
     lineKind: line.kind,
     openPos: line.pos,
     opponents,
+    betSize: line.betSize,
   };
 }
 
@@ -362,7 +380,7 @@ export function judgePostflop(
   // 仅单挑生效：多人底池诈唬成功率大幅下降，强听牌不再放宽进攻线。
   if (
     semibluffAllowed(opponents) &&
-    win >= 0.45 &&
+    win >= ATTACK_SEMIBLUFF_MIN &&
     draws &&
     isStrongDraw(draws)
   ) {
@@ -403,6 +421,9 @@ export function isTooObvious(
  * （同步，约几十 ms，调用方负责异步化）。
  * 显而易见的情形（isTooObvious）重发，FILTER_MAX_ATTEMPTS 次上限兜底——
  * 连续抽到极端牌时按最后一次结果出题，保证不死循环。
+ * 判定胜率落在阈值 ±3pp 边界带内时用 20000 次迭代复核一次再定答案
+ * （borderline.ts，A3：防守复核对下注者范围胜率，进攻复核对随机胜率并
+ * 同步替换展示胜率，保证点评数字与答案一致）。
  */
 export function generatePostflopQuiz(
   rng: () => number = Math.random,
@@ -410,20 +431,40 @@ export function generatePostflopQuiz(
 ): PostflopQuiz {
   for (let attempt = 0; ; attempt++) {
     const scenario = dealPostflopScenario(rng);
-    const equity = evaluateScenario(scenario, iterations);
-    const defenseEquity =
-      scenario.type === "defense"
-        ? // 防守判定（含多人池）：只评估对下注者的胜率（opponents=1）——
-          // 身后尚未行动的跟注者视为死钱，死钱改善直接赔率（见 multiway.ts 两套口径）
-          equityVsRange(
-            scenario.hero,
-            scenario.board,
-            defenseRangeSpecFor(scenario.lineKind),
-            iterations,
-            rng,
-            1,
-          )
-        : null;
+    let equity = evaluateScenario(scenario, iterations);
+    let defenseEquity: number | null = null;
+    if (scenario.type === "defense") {
+      // 防守判定（含多人池）：只评估对下注者的胜率（opponents=1）——
+      // 身后尚未行动的跟注者视为死钱，死钱改善直接赔率（见 multiway.ts 两套口径）
+      const spec = defenseRangeSpecFor(scenario.lineKind);
+      defenseEquity = rejudgeIfBorderline(
+        equityVsRange(scenario.hero, scenario.board, spec, iterations, rng, 1),
+        [
+          flopDefenseRaiseLine(scenario.opponents),
+          flopDefenseCallLine(scenario.opponents),
+        ],
+        (iters) =>
+          equityVsRange(scenario.hero, scenario.board, spec, iters, rng, 1),
+      );
+    } else {
+      // 进攻判定：对随机胜率（equityMulti 引擎签名不接受 rng，内部 Math.random——
+      // 引擎层既有约束，复核同样走该引擎）
+      let refined: EquityResult | undefined;
+      rejudgeIfBorderline(
+        equity.win,
+        [flopAttackLine(scenario.opponents), ATTACK_SEMIBLUFF_MIN],
+        (iters) => {
+          refined = equityMulti(
+            [...scenario.hero],
+            [...scenario.board],
+            scenario.opponents,
+            iters,
+          );
+          return refined.win;
+        },
+      );
+      if (refined) equity = refined;
+    }
     const draws = analyzeDraws(scenario.hero, scenario.board);
     const answer = judgePostflop(
       equity.win,
@@ -489,8 +530,21 @@ export function quizComment(quiz: PostflopQuiz): string {
       }
       return `${noteDefense}对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，超过 ${raise}% 加注线——价值加注榨取，别给便宜看牌`;
     }
-    case "fold":
-      return `${noteDefense}对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，不足 ${call}%——半池注需 25% 赔率也够不上，弃牌`;
+    case "fold": {
+      // A2：直接赔率按行动线实际下注尺度（1/2 池 = 25% / 2/3 池 ≈ 28.6%），
+      // 不再写死「半池 25%」。胜率 ∈ [直接赔率, 跟注线) 时如实说「接近赔率
+      // 但不足」——真正的弃牌理由是跟注线含实现率税、对手范围更紧，而非
+      // 「赔率也够不上」。
+      const size = quiz.betSize;
+      if (size && quiz.defenseEquity !== null) {
+        const oddsPct = potOddsText(size.frac);
+        if (quiz.defenseEquity >= directPotOdds(size.frac)) {
+          return `${noteDefense}对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，够 ${size.zh}注 ${oddsPct}% 直接赔率但不足 ${call}% 跟注线（跟注线含实现率税，对手范围也更紧）——接近赔率但不足，弃牌`;
+        }
+        return `${noteDefense}对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，不足 ${call}% 跟注线——${size.zh}注需 ${oddsPct}% 赔率也够不上，弃牌`;
+      }
+      return `${noteDefense}对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，不足 ${call}% 跟注线——弃牌`;
+    }
     case "passive":
       if (quiz.type === "attack") {
         if (quiz.opponents > 1 && isStrongDraw(quiz.draws)) {

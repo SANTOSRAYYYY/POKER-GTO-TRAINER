@@ -18,7 +18,7 @@ let seq = 0;
 
 function mkHand(
   timestamp: number,
-  opts: { tournament?: boolean; profit?: number } = {},
+  opts: { tournament?: boolean; profit?: number; mode?: "cash" | "tournament" } = {},
 ): HandRecord {
   seq += 1;
   const players: HandPlayerRecord[] = [
@@ -42,6 +42,7 @@ function mkHand(
   return {
     id: `h${seq}`,
     timestamp,
+    ...(opts.mode !== undefined ? { mode: opts.mode } : {}),
     players,
     heroSeat: 0,
     buttonSeat: 0,
@@ -79,6 +80,23 @@ describe("filterHands", () => {
     expect(filterHands(many, "all", 50)[0].timestamp).toBe(119_000);
     expect(filterHands(many, "all", 100)).toHaveLength(100);
     expect(filterHands(many, "all", 0)).toHaveLength(120);
+  });
+
+  it("混合模式数据集：mode='tournament' 的前期手（无 finishPlace）归入锦标赛筛选", () => {
+    // 审计 A1：锦标赛前期手不带 finishPlace，旧口径被「仅现金局」筛入、
+    // 被「仅锦标赛」漏掉；mode 字段修复后应正确归类
+    const mixed = [
+      mkHand(1000, { mode: "cash" }), // 现金手
+      mkHand(2000, { mode: "tournament" }), // 锦标赛前期手（无 finishPlace）
+      mkHand(3000, { mode: "tournament" }),
+      mkHand(4000, { tournament: true }), // 旧记录：finishPlace 启发式
+      mkHand(5000, { mode: "cash" }),
+    ];
+    expect(filterHands(mixed, "cash", 0).map((h) => h.timestamp)).toEqual([5000, 1000]);
+    expect(filterHands(mixed, "tournament", 0).map((h) => h.timestamp)).toEqual([
+      4000, 3000, 2000,
+    ]);
+    expect(filterHands(mixed, "all", 0)).toHaveLength(5);
   });
 });
 

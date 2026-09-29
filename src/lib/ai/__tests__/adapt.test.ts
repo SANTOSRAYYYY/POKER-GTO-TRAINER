@@ -915,15 +915,19 @@ describe("brain 剥削接入：位置敏感 facingRaiseDelta", () => {
   };
 
   it("对偷盲狂：BB 防守放宽（边缘牌从弃牌转跟注）；旋钮关闭恢复弃牌", () => {
+    // 决策 rng 用固定种子 mulberry32（2026-09-29 审计 C2：未播种时弃牌率真值
+    // 0.91 距断言阈 0.85 仅 ~2.1σ，实测 ~6.7%/轮 恰好 85/100 翻转；播种后零成本
+    // 彻底确定——同种子下 base/off 两臂落点固定且过阈，见下方断言）
+    const rng = mulberry32(20260929);
     const N = 100;
     let baseFolds = 0;
     let adjFolds = 0;
     let offFolds = 0;
     for (let i = 0; i < N; i++) {
-      if (brainDecide(mkBB(), "gto", Math.random, LEGACY).action.type === "fold") baseFolds++;
-      if (brainDecide(mkBB([stealModel()]), "gto", Math.random, LEGACY).action.type === "fold") adjFolds++;
+      if (brainDecide(mkBB(), "gto", rng, LEGACY).action.type === "fold") baseFolds++;
+      if (brainDecide(mkBB([stealModel()]), "gto", rng, LEGACY).action.type === "fold") adjFolds++;
       if (
-        brainDecide(mkBB([stealModel()]), "gto", Math.random, {
+        brainDecide(mkBB([stealModel()]), "gto", rng, {
           ...LEGACY,
           adaptPositionalEnabled: false,
         }).action.type === "fold"

@@ -1,0 +1,78 @@
+[
+  {
+    "tag": "desktop-play-zh",
+    "consoleErrors": [],
+    "pageErrors": [],
+    "checks": {
+      "asideExpandedDefault": true,
+      "stripAfterCollapse": true,
+      "reExpanded": true,
+      "heroActed": true,
+      "overflowX": false
+    }
+  },
+  {
+    "tag": "mobile-play-zh",
+    "consoleErrors": [],
+    "pageErrors": [],
+    "checks": {
+      "overflowX": false,
+      "stripVisible": true,
+      "stripOverlapsHeroCards": {
+        "found": true,
+        "overlap": false
+      },
+      "drawerOpened": true,
+      "drawerRect": {
+        "right": 375,
+        "left": 87,
+        "innerW": 375,
+        "fitsRight": true
+      },
+      "foldVisible": true,
+      "actionBarFits": {
+        "found": true,
+        "bottom": 667,
+        "innerH": 667,
+        "fits": true
+      },
+      "nextHandBtnInViewport": {
+        "found": true,
+        "top": 135.5,
+        "bottom": 179.5,
+        "innerH": 667,
+        "fits": true
+      }
+    }
+  },
+  {
+    "tag": "mobile-play-en",
+    "consoleErrors": [],
+    "pageErrors": [],
+    "checks": {
+      "overflowX": false,
+      "actionBarFits": {
+        "found": true,
+        "bottom": 667,
+        "innerH": 667,
+        "fits": true
+      },
+      "hanLeaks": []
+    }
+  },
+  {
+    "tag": "mobile-tour-zh",
+    "consoleErrors": [],
+    "pageErrors": [],
+    "checks": {
+      "overflowX": false,
+      "rebuyBadgeVisible": true,
+      "actionBarFits": {
+        "found": true,
+        "bottom": 667,
+        "innerH": 667,
+        "fits": true
+      }
+    }
+  }
+]

@@ -15,6 +15,7 @@
  */
 import { create } from "zustand";
 import type { ConcreteAIStyle, HandRecord } from "@/lib/types";
+import type { DictKey } from "@/lib/i18n/dict";
 import { isTournamentHand } from "@/components/history/labels";
 
 /** 已解锁记录的 localStorage 键 */
@@ -35,19 +36,20 @@ export type AchievementId =
 
 export interface Achievement {
   id: AchievementId;
-  name: string;
-  description: string;
+  /** 名称/描述的字典键（achieve.<id>.name / achieve.<id>.desc，登记于 dict-pages.ts；渲染层用 t() 按语言翻译） */
+  nameKey: DictKey;
+  descKey: DictKey;
 }
 
 export const ACHIEVEMENTS: readonly Achievement[] = [
-  { id: "first_win", name: "首胜", description: "赢下你的第一手牌" },
-  { id: "first_title", name: "初次夺冠", description: "赢得任意一场锦标赛（SNG）冠军" },
-  { id: "nine_max_title", name: "九人桌之王", description: "在 9 人桌锦标赛中夺冠" },
-  { id: "session_500bb", name: "单场暴击", description: "单场（30 分钟间隔界定）累计盈利达到 500bb" },
-  { id: "hands_1000", name: "千手磨砺", description: "累计打满 1000 手牌" },
-  { id: "profit_10000bb", name: "万 bb 俱乐部", description: "累计盈利达到 10000bb（按各手大盲归一化）" },
-  { id: "cash_streak_5", name: "现金局五连盈", description: "现金局连续 5 手盈利（平局不计入）" },
-  { id: "revenge", name: "复仇", description: "输给某种风格的对手后，下次遇到该风格时赢回来" },
+  { id: "first_win", nameKey: "achieve.first_win.name", descKey: "achieve.first_win.desc" },
+  { id: "first_title", nameKey: "achieve.first_title.name", descKey: "achieve.first_title.desc" },
+  { id: "nine_max_title", nameKey: "achieve.nine_max_title.name", descKey: "achieve.nine_max_title.desc" },
+  { id: "session_500bb", nameKey: "achieve.session_500bb.name", descKey: "achieve.session_500bb.desc" },
+  { id: "hands_1000", nameKey: "achieve.hands_1000.name", descKey: "achieve.hands_1000.desc" },
+  { id: "profit_10000bb", nameKey: "achieve.profit_10000bb.name", descKey: "achieve.profit_10000bb.desc" },
+  { id: "cash_streak_5", nameKey: "achieve.cash_streak_5.name", descKey: "achieve.cash_streak_5.desc" },
+  { id: "revenge", nameKey: "achieve.revenge.name", descKey: "achieve.revenge.desc" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -137,13 +139,18 @@ const CHECKS: Record<AchievementId, (sorted: HandRecord[]) => boolean> = {
   first_win: (hs) => hs.some((h) => h.result === "win"),
   first_title: (hs) =>
     hs.some((h) => isTournamentHand(h) && heroFinishPlace(h) === 1),
+  // 九人桌夺冠：淘汰者在两手之间即被移出引擎桌，夺冠手恒为单挑
+  // （players.length===2），不能按 players.length===9 判定——须用归档时
+  // 记录的开赛人数 tournamentSeats。缺 mode/tournamentSeats 的旧记录放宽为
+  // 夺冠即算（不更严于旧口径，旧数据无法区分 9-max 决赛手与 6-max 夺冠）。
   nine_max_title: (hs) =>
-    hs.some(
-      (h) =>
-        h.players.length === 9 &&
-        isTournamentHand(h) &&
-        heroFinishPlace(h) === 1,
-    ),
+    hs.some((h) => {
+      if (heroFinishPlace(h) !== 1) return false;
+      if (h.mode !== undefined) {
+        return h.mode === "tournament" && h.tournamentSeats === 9;
+      }
+      return true;
+    }),
   session_500bb: (hs) => sessionProfitsBb(hs).some((bb) => bb >= 500),
   hands_1000: (hs) => hs.length >= 1000,
   profit_10000bb: (hs) => hs.reduce((sum, h) => sum + profitInBb(h), 0) >= 10000,

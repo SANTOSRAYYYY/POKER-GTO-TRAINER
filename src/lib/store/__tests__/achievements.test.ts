@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { ConcreteAIStyle, HandRecord, HandPlayerRecord } from "@/lib/types";
+import { DICT } from "@/lib/i18n/dict";
 import {
   ACHIEVEMENTS,
   checkAchievements,
@@ -29,6 +30,10 @@ interface MkOptions {
   opponents?: (ConcreteAIStyle | null)[];
   /** hero 锦标赛名次；设置后该手即锦标赛手 */
   heroFinishPlace?: number;
+  /** 对局模式（新记录归档时写入；缺省 = 旧记录，回退启发式） */
+  mode?: "cash" | "tournament";
+  /** 锦标赛开赛总人数（仅锦标赛记录） */
+  tournamentSeats?: number;
 }
 
 /** 构造最小合法 HandRecord */
@@ -59,6 +64,10 @@ function mkHand(o: MkOptions = {}): HandRecord {
   return {
     id: `h${seq}`,
     timestamp: o.timestamp ?? seq * 60_000,
+    ...(o.mode !== undefined ? { mode: o.mode } : {}),
+    ...(o.tournamentSeats !== undefined
+      ? { tournamentSeats: o.tournamentSeats }
+      : {}),
     players,
     heroSeat: 0,
     buttonSeat: 0,
@@ -90,20 +99,49 @@ describe("checkAchievements 单项判定", () => {
     expect(ids([mkHand({ heroFinishPlace: 1 })])).toContain("first_title");
   });
 
-  it("9 人桌夺冠：需要 9 名玩家 + 夺冠；6 人桌夺冠只算 first_title", () => {
-    const sixMax = mkHand({
+  it("9 人桌夺冠：新记录按开赛人数 tournamentSeats 判定（夺冠手恒为单挑）", () => {
+    // 真实归档形态：9-max SNG 的夺冠手只剩单挑（players.length=2），
+    // 但 mode='tournament' + tournamentSeats=9 可正确解锁
+    const nineMaxFinal = mkHand({
+      mode: "tournament",
+      tournamentSeats: 9,
       heroFinishPlace: 1,
-      opponents: ["tag", "lag", "nit", "gto", "maniac"],
     });
-    expect(ids([sixMax])).toContain("first_title");
-    expect(ids([sixMax])).not.toContain("nine_max_title");
+    expect(nineMaxFinal.players).toHaveLength(2); // 单挑夺冠手
+    expect(ids([nineMaxFinal])).toContain("first_title");
+    expect(ids([nineMaxFinal])).toContain("nine_max_title");
 
-    const nineMax = mkHand({
+    // 6-max 夺冠（新记录）：first_title 有，nine_max_title 没有
+    const sixMaxFinal = mkHand({
+      mode: "tournament",
+      tournamentSeats: 6,
+      heroFinishPlace: 1,
+    });
+    expect(ids([sixMaxFinal])).toContain("first_title");
+    expect(ids([sixMaxFinal])).not.toContain("nine_max_title");
+
+    // 锦标赛亚军不解锁
+    expect(
+      ids([mkHand({ mode: "tournament", tournamentSeats: 9, heroFinishPlace: 2 })]),
+    ).not.toContain("nine_max_title");
+  });
+
+  it("9 人桌夺冠：缺 mode 的旧记录回退为「夺冠即算」（不更严于旧口径）", () => {
+    // 旧启发式要求 players.length===9 才可解锁（真实夺冠手永远达不到）；
+    // 回退口径放宽：旧记录无法区分 9-max 决赛手与 6-max 夺冠，finishPlace=1 即解锁
+    const legacyNineMax = mkHand({
       heroFinishPlace: 1,
       opponents: ["tag", "lag", "nit", "gto", "maniac", "calling_station", "tag", "lag"],
     });
-    expect(nineMax.players).toHaveLength(9);
-    expect(ids([nineMax])).toContain("nine_max_title");
+    expect(legacyNineMax.players).toHaveLength(9);
+    expect(ids([legacyNineMax])).toContain("nine_max_title");
+
+    const legacySixMax = mkHand({
+      heroFinishPlace: 1,
+      opponents: ["tag", "lag", "nit", "gto", "maniac"],
+    });
+    expect(ids([legacySixMax])).toContain("first_title");
+    expect(ids([legacySixMax])).toContain("nine_max_title");
   });
 
   it("累计 1000 手：999 不解锁，1000 解锁", () => {
@@ -168,6 +206,40 @@ describe("maxCashWinStreak 现金局连赢", () => {
     expect(maxCashWinStreak(hands)).toBe(5);
     expect(ids(hands)).toContain("cash_streak_5");
   });
+
+  it("mode='tournament' 的前期手（无 finishPlace）明确排除，不再误判为现金局", () => {
+    // 审计 A1：修复前 5 手 9-max 锦标赛前期手连盈会解锁 cash_streak_5
+    const earlyTourneyWin = () =>
+      mkHand({ mode: "tournament", tournamentSeats: 9, result: "win", profit: 50 });
+    const hands = [
+      earlyTourneyWin(),
+      earlyTourneyWin(),
+      earlyTourneyWin(),
+      earlyTourneyWin(),
+      earlyTourneyWin(),
+    ];
+    expect(maxCashWinStreak(hands)).toBe(0);
+    expect(ids(hands)).not.toContain("cash_streak_5");
+  });
+
+  it("混合模式数据集：锦标赛手（mode 判定）不计入也不断连", () => {
+    const cashWin = () => mkHand({ mode: "cash", result: "win", profit: 50 });
+    const tourneyWin = () =>
+      mkHand({ mode: "tournament", tournamentSeats: 9, result: "win", profit: 50 });
+    // 现金 2 连 → 锦标赛 3 连（跳过）→ 现金 3 连 = 现金口径 5 连
+    const hands = [
+      cashWin(),
+      cashWin(),
+      tourneyWin(),
+      tourneyWin(),
+      tourneyWin(),
+      cashWin(),
+      cashWin(),
+      cashWin(),
+    ];
+    expect(maxCashWinStreak(hands)).toBe(5);
+    expect(ids(hands)).toContain("cash_streak_5");
+  });
 });
 
 describe("revenge 复仇", () => {
@@ -197,16 +269,46 @@ describe("revenge 复仇", () => {
 });
 
 describe("checkAchievements 聚合", () => {
-  it("返回 Achievement 定义对象（含名称与描述），顺序与 ACHIEVEMENTS 一致", () => {
+  it("返回 Achievement 定义对象（含名称/描述字典键），顺序与 ACHIEVEMENTS 一致", () => {
     const unlocked = checkAchievements([mkHand({ result: "win", profit: 100 })]);
     expect(unlocked.length).toBeGreaterThan(0);
     for (const a of unlocked) {
-      expect(a.name.length).toBeGreaterThan(0);
-      expect(a.description.length).toBeGreaterThan(0);
+      expect(a.nameKey.startsWith("achieve.")).toBe(true);
+      expect(a.descKey.startsWith("achieve.")).toBe(true);
     }
     const defOrder = ACHIEVEMENTS.map((a) => a.id);
     const idx = unlocked.map((a) => defOrder.indexOf(a.id));
     expect([...idx].sort((x, y) => x - y)).toEqual(idx);
+  });
+});
+
+describe("成就双语登记齐全性（dict-pages.ts achieve.* 前缀）", () => {
+  it("8 项成就的名称与描述在字典中双语非空，且 zh 与原硬编码逐字一致", () => {
+    expect(ACHIEVEMENTS).toHaveLength(8);
+    const ZH: Record<string, { name: string; desc: string }> = {
+      first_win: { name: "首胜", desc: "赢下你的第一手牌" },
+      first_title: { name: "初次夺冠", desc: "赢得任意一场锦标赛（SNG）冠军" },
+      nine_max_title: { name: "九人桌之王", desc: "在 9 人桌锦标赛中夺冠" },
+      session_500bb: { name: "单场暴击", desc: "单场（30 分钟间隔界定）累计盈利达到 500bb" },
+      hands_1000: { name: "千手磨砺", desc: "累计打满 1000 手牌" },
+      profit_10000bb: { name: "万 bb 俱乐部", desc: "累计盈利达到 10000bb（按各手大盲归一化）" },
+      cash_streak_5: { name: "现金局五连盈", desc: "现金局连续 5 手盈利（平局不计入）" },
+      revenge: { name: "复仇", desc: "输给某种风格的对手后，下次遇到该风格时赢回来" },
+    };
+    for (const a of ACHIEVEMENTS) {
+      const name = DICT[a.nameKey];
+      const desc = DICT[a.descKey];
+      expect(name, a.nameKey).toBeDefined();
+      expect(desc, a.descKey).toBeDefined();
+      // 双语非空
+      expect(name.zh.length, `${a.nameKey}.zh`).toBeGreaterThan(0);
+      expect(name.en.length, `${a.nameKey}.en`).toBeGreaterThan(0);
+      expect(desc.zh.length, `${a.descKey}.zh`).toBeGreaterThan(0);
+      expect(desc.en.length, `${a.descKey}.en`).toBeGreaterThan(0);
+      // zh 回归锁定（与原硬编码一致，ZH 模式零变化）
+      expect(name.zh).toBe(ZH[a.id].name);
+      expect(desc.zh).toBe(ZH[a.id].desc);
+    }
   });
 });
 

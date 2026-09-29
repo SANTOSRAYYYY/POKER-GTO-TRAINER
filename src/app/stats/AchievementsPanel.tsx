@@ -59,7 +59,7 @@ export function AchievementsPanel() {
                     isUnlocked ? "text-amber-200" : "text-zinc-500"
                   }`}
                 >
-                  {a.name}
+                  {t(a.nameKey)}
                 </span>
               </div>
               <p
@@ -67,7 +67,7 @@ export function AchievementsPanel() {
                   isUnlocked ? "text-zinc-400" : "text-zinc-600"
                 }`}
               >
-                {a.description}
+                {t(a.descKey)}
               </p>
               {isUnlocked && (
                 <p className="mt-1 text-[11px] text-amber-500/80">

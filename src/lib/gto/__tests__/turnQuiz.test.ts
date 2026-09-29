@@ -26,6 +26,7 @@ import {
   TURN_DEFENSE_RAISE_THRESHOLD,
   turnQuizComment,
   turnRangeSpecFor,
+  type TurnQuiz,
 } from "../turnQuiz";
 import { analyzeDraws, isStrongDraw } from "../postflopQuiz";
 import { turnDefenseCallLine, turnDefenseRaiseLine } from "../multiway";
@@ -205,14 +206,15 @@ describe("用户实报回归：多人池防守只对下注者（2026-09-29 框�
 });
 
 describe("generateTurnQuiz 混合场景与整题", () => {
-  // 50 题循环逐题构建范围池 + 蒙特卡洛，全仓并行跑时 CPU 争抢会超默认 5s——显式放宽
+  // 题量由 50 减到 26：A3 边界带复核（每次 20000 迭代 ≈2-3s）在小迭代基数下
+  // 命中率高，分布性断言无需原题量；超时相应放宽
   it(
-    "50 题内两种子题型都出现，答案分布不止一种",
+    "26 题内两种子题型都出现，答案分布不止一种",
     () => {
       const rng = lcg(2026);
       const types = new Set<string>();
       const answers = new Set<string>();
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 26; i++) {
         const q = generateTurnQuiz(rng, 400);
         types.add(q.type);
         answers.add(q.answer);
@@ -226,7 +228,7 @@ describe("generateTurnQuiz 混合场景与整题", () => {
       expect(types.size).toBe(2);
       expect(answers.size).toBeGreaterThan(1);
     },
-    30000,
+    120000,
   );
 
   it(
@@ -254,6 +256,7 @@ describe("generateTurnQuiz 混合场景与整题", () => {
       lineKind: "open" as const,
       openPos: "CO" as const,
       opponents: 1 as const,
+      betSize: null,
       equity: { win: 0.4399, tie: 0, lose: 0.5601 },
       rangeEquity: 0.4399,
       draws,
@@ -304,6 +307,108 @@ describe("行动线生成", () => {
   });
 });
 
+describe("fold 点评按行动线实际尺度算直接赔率（A2）", () => {
+  const foldQuiz = (over: Partial<TurnQuiz>): TurnQuiz => ({
+    hero: c("7c 2d") as [Card, Card],
+    board: c("As Kh Qd 9c") as [Card, Card, Card, Card],
+    type: "defense",
+    actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
+    lineKind: "open",
+    openPos: "CO",
+    opponents: 1,
+    betSize: null,
+    equity: { win: 0.04, tie: 0, lose: 0.96 },
+    rangeEquity: 0.04,
+    draws: { flushDraw: false, straightOuts: 0 },
+    answer: "fold",
+    ...over,
+  });
+
+  it("半池注 + 胜率 < 25%：「1/2 底池注需 25% 赔率也够不上」", () => {
+    const text = turnQuizComment(
+      foldQuiz({
+        betSize: { zh: "1/2 底池", en: "half pot", frac: 0.5 },
+        rangeEquity: 0.04,
+      }),
+    );
+    expect(text).toContain("1/2 底池");
+    expect(text).toContain("25%");
+    expect(text).toContain("够不上");
+  });
+
+  it("2/3 池注：动态算 28.6%，不再写死「半池注赔率也够不上」", () => {
+    const text = turnQuizComment(
+      foldQuiz({
+        betSize: { zh: "2/3 底池", en: "2/3 pot", frac: 2 / 3 },
+        rangeEquity: 0.04,
+      }),
+    );
+    expect(text).toContain("2/3 底池");
+    expect(text).toContain("28.6%");
+    expect(text).not.toContain("半池");
+  });
+
+  it("胜率 ∈ [直接赔率, 跟注线)：「接近赔率但不足」而非「赔率也够不上」", () => {
+    // 半池注：0.26 ∈ [0.25, 0.30)——审计实报 K♦Q♦ 32.8% 类情形的字面修正
+    const text = turnQuizComment(
+      foldQuiz({
+        betSize: { zh: "1/2 底池", en: "half pot", frac: 0.5 },
+        rangeEquity: 0.26,
+      }),
+    );
+    expect(text).toContain("接近赔率但不足");
+    expect(text).not.toContain("够不上");
+  });
+
+  it("dealt 场景：defense 题必带 betSize（第二枪尺度），barrel 题恒 null", () => {
+    const rng = lcg(44);
+    let defenseChecked = 0;
+    let barrelChecked = 0;
+    for (let i = 0; i < 200 && (defenseChecked < 30 || barrelChecked < 30); i++) {
+      const s = dealTurnScenario(rng);
+      if (s.type === "defense") {
+        defenseChecked++;
+        expect(s.betSize).not.toBeNull();
+        expect([0.5, 2 / 3]).toContain(s.betSize!.frac);
+        expect(
+          s.actionLine.some((l) => l.zh.includes(s.betSize!.zh)),
+        ).toBe(true);
+      } else {
+        barrelChecked++;
+        expect(s.betSize).toBeNull();
+      }
+    }
+    expect(defenseChecked).toBeGreaterThan(0);
+    expect(barrelChecked).toBeGreaterThan(0);
+  });
+});
+
+describe("多人池 barrel 被动点评中性话术（A4）", () => {
+  it("多人池 AA 未过线：不再叫「弱牌」，改为控池话术", () => {
+    // 审计题例：A♣A♠ on 2♥8♠J♠8♣（三人池）对两跟注者范围 60.5% < 61% → passive
+    const q: TurnQuiz = {
+      hero: c("Ac As") as [Card, Card],
+      board: c("2h 8s Js 8c") as [Card, Card, Card, Card],
+      type: "barrel",
+      actionLine: [{ zh: "翻前：测试线", en: "Preflop: test line" }],
+      lineKind: "open",
+      openPos: "LJ",
+      opponents: 2,
+      betSize: null,
+      equity: { win: 0.605, tie: 0, lose: 0.395 },
+      rangeEquity: 0.605,
+      draws: { flushDraw: false, straightOuts: 0 },
+      answer: "passive",
+    };
+    expect(judgeTurn(q.rangeEquity, "barrel", q.draws, q.opponents)).toBe(
+      "passive",
+    );
+    const text = turnQuizComment(q);
+    expect(text).not.toContain("弱牌");
+    expect(text).toContain("控池");
+  });
+});
+
 describe("难度过滤（反脑残）", () => {
   it("防守题：判定胜率 0.1（纯垃圾面对第二枪弃牌）必被重发，0.5 保留", () => {
     expect(isTooObvious(0.1, "defense")).toBe(true);
@@ -323,10 +428,11 @@ describe("难度过滤（反脑残）", () => {
   });
 
   it(
-    "生成的 40 道题全部不在显而易见区",
+    "生成的题全部不在显而易见区",
     () => {
+      // 题量由 40 减到 24：A3 边界带复核（每次 20000 迭代 ≈2-3s）拉高单题耗时
       const rng = lcg(2027);
-      for (let i = 0; i < 40; i++) {
+      for (let i = 0; i < 24; i++) {
         const q = generateTurnQuiz(rng, 400);
         expect(isTooObvious(q.rangeEquity, q.type, q.draws)).toBe(false);
         if (q.type === "defense") {
@@ -335,7 +441,7 @@ describe("难度过滤（反脑残）", () => {
         }
       }
     },
-    30000,
+    120000,
   );
 
   it("恒定 rng 极端情形：10 次上限兜底返回合法题，不死循环", () => {

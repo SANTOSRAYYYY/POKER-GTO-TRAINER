@@ -53,6 +53,7 @@ import {
   createGame,
   legalActions,
   nextActiveSeat,
+  settleShowdown,
 } from "@/lib/poker/game";
 import { computeTournamentPhase } from "@/lib/types";
 import {
@@ -434,14 +435,17 @@ function normalizeConfig(config: TableConfig): {
 }
 
 /**
- * createGame 只收对称 stack：以 max(stacks) 开局后，把每个座位修正回真实筹码。
+ * createGame 只收对称 stack：以足够大的对称筹码开局后，把每个座位修正回真实筹码。
  * 引擎先从对称筹码收 ante 再收盲注，修正按同一顺序折算实付额；
  * 各座所欠 ante 从对称局的死钱部分（handBet − streetBet）推出——全体模式每人
  * 相同，BBA 模式仅大盲位非零，修正逻辑因此对两种模式一致。
  * 实付不足者按全下处理（allIn），并同步 pot/currentBet。
  * 若翻前起点（UTG）因 ante/盲注全下，顺推到下一个可行动座位。
+ * 修正后全员全下（盲注/ante 已吃光所有在局筹码）时按真实规则强制 all-in 跑马：
+ * 直接走引擎 settleShowdown 摊牌结算（同 createGame 的 actor === null 分支），
+ * 返回结算后的新状态；其余情形原地修正并返回入参 game。
  */
-function correctStacks(game: GameState, stacks: number[]): void {
+function correctStacks(game: GameState, stacks: number[]): GameState {
   for (let i = 0; i < game.players.length; i++) {
     const p = game.players[i];
     const real = stacks[i];
@@ -466,13 +470,15 @@ function correctStacks(game: GameState, stacks: number[]): void {
         }
       }
       if (found === null) {
-        // DEFAULT_TOURNAMENT 下不可达（总筹码守恒保证最大筹码者必然可行动）；
-        // 仅可能由盲注/ante 比例极端的自定义锦标赛配置触发。
-        throw new Error("[gameStore] 盲注/ante 已让全员全下，无法开出这一手");
+        // 修正后全员全下（真实规则情形：盲注/ante 已吃光所有在局筹码）：
+        // 无人可行动，全员强制 all-in 直接摊牌跑完公共牌——复用引擎
+        // settleShowdown（createGame 对全员全下同走此路径），不抛错卡死。
+        return settleShowdown(game);
       }
       game.currentSeat = found;
     }
   }
+  return game;
 }
 
 /**
@@ -860,7 +866,9 @@ export const useGameStore = create<GameStore>()((set, get) => {
 
   /**
    * 开下一手：为未淘汰座位压缩开局（引擎座位 ↔ 桌面座位经 seatMap 映射），
-   * 按钮按桌面座位 nextActiveSeat 轮转，createGame(max) + correctStacks 结转筹码。
+   * 按钮按桌面座位 nextActiveSeat 轮转，createGame + correctStacks 结转筹码。
+   * 升盲后期所有在局筹码可能小于大盲/ante：按真实规则这不是禁开理由——
+   * 短码投盲即全下，全员全下则由 correctStacks 直接摊牌跑马。
    */
   const dealNextHand = (): void => {
     clearAutoAdvanceTimer(); // 新手开出后旧预约一律作废（防跨手误触发）
@@ -906,16 +914,24 @@ export const useGameStore = create<GameStore>()((set, get) => {
           ante: 0,
         };
 
-    const game = createGame({
-      players: aliveSeats.length,
-      smallBlind: blinds.smallBlind,
-      bigBlind: blinds.bigBlind,
-      ante: blinds.ante,
-      anteMode: tournamentConfig?.anteMode ?? "all",
-      stack: Math.max(...stacks),
-      buttonSeat: buttonEngine,
-    });
-    correctStacks(game, stacks);
+    // 对称筹码取「真实最大筹码」与「ante + 大盲 + 1」的较大者：
+    // 1) 引擎校验 stack ≥ bigBlind——升盲后期 max(stacks) 可能已小于大盲；
+    // 2) 对称局若开局即全员全下会被引擎直接摊牌（筹码分布基于对称筹码，
+    //    correctStacks 无法再修正），抬升到 ante+bb+1 保证对称局必有
+    //    可行动者（至少一座在付完 ante/盲注后仍有余码），修正得以进行；
+    // 3) 真实筹码下的全员全下由 correctStacks 走引擎摊牌跑马处理。
+    const game = correctStacks(
+      createGame({
+        players: aliveSeats.length,
+        smallBlind: blinds.smallBlind,
+        bigBlind: blinds.bigBlind,
+        ante: blinds.ante,
+        anteMode: tournamentConfig?.anteMode ?? "all",
+        stack: Math.max(...stacks, blinds.ante + blinds.bigBlind + 1),
+        buttonSeat: buttonEngine,
+      }),
+      stacks,
+    );
     game.handNumber = (st.game?.handNumber ?? 0) + 1;
 
     set({
@@ -1269,6 +1285,21 @@ export const useGameStore = create<GameStore>()((set, get) => {
         eliminated[HERO_SEAT] = true;
         finishPlaces[HERO_SEAT] = pending.place;
         tableStacks[HERO_SEAT] = 0;
+        // hero 名次按「与同手出局者同一规则」插入他们之间：同手出局且开手筹码
+        // 不劣于 hero 的玩家，结算时是按「hero 幸存」假定记的名次（整体好了
+        // 一位），随 hero 淘汰记账一并顺移一位（更差）。并列时 hero 恒为引擎
+        // 座位 0、在升序出局队列最前，故取 ≥ 即精确覆盖顺移集合。
+        // bustEvents 仍保存出局手信息（推进被 pendingHeroBust 阻塞，未被清），
+        // stacks/seatMap 亦是该手开手快照（含存档恢复情形）。
+        const heroStartStack = st.stacks[st.seatMap.indexOf(HERO_SEAT)] ?? 0;
+        for (const evt of st.bustEvents) {
+          const engineIdx = st.seatMap.indexOf(evt.seat);
+          if (engineIdx < 0) continue;
+          if ((st.stacks[engineIdx] ?? 0) >= heroStartStack) {
+            const cur = finishPlaces[evt.seat];
+            if (cur !== null) finishPlaces[evt.seat] = cur - 1;
+          }
+        }
         let championSeat = st.championSeat;
         let tournamentOver = st.tournamentOver;
         if (pending.championSeat !== null) {
@@ -1438,7 +1469,6 @@ export const useGameStore = create<GameStore>()((set, get) => {
           (b) => b.tableSeat === HERO_SEAT && canRebuy(HERO_SEAT),
         );
         const heroPending = heroBustIdx >= 0;
-        const heroEntry = heroPending ? busted[heroBustIdx] : null;
         if (heroPending) busted.splice(heroBustIdx, 1);
 
         const aliveAfter = game.players.length - busted.length;
@@ -1449,19 +1479,23 @@ export const useGameStore = create<GameStore>()((set, get) => {
           tableStacks[b.tableSeat] = 0;
           busts.push({ seat: b.tableSeat, place });
         });
-        if (heroPending && heroEntry) {
-          // hero 若拒绝重购，其淘汰在决策时刻才正式记账（晚于同手其他出局者），
-          // 故名次取「其余出局者记完名次的下一个」= aliveAfter（含 hero 的幸存数），
-          // 与同手出局者不重名次。特例：同手全员出局（aliveAfter === 1）时按
-          // 开手筹码定名次——筹码最多者即冠军（含 hero 自己）。
+        if (heroPending) {
+          // hero 与同手其他出局者按同一规则排序：开手筹码少者名次靠后
+          // （并列按座位序，与 zeroed/busted 的稳定排序一致；hero 恒为
+          // 引擎座位 0，故并列时 hero 排在最前、名次最靠后）。
+          // heroBustIdx 即 hero 在升序出局队列中的位置：hero 若拒绝重购，
+          // 幸存者为 aliveAfter − 1 人，出局队列共 busted.length + 1 人，
+          // 故 hero 名次 = aliveAfter + (busted.length − heroBustIdx)。
+          // 同手出局且开手筹码不劣于 hero 的玩家，上面按「hero 幸存」假定
+          // 记的名次整体好了一位——在 resolveTournamentRebuy 认输分支随
+          // hero 记账一并顺移修正；hero 重购则他们的名次恰为正确，不动。
           // 若 hero 出局后只剩 1 人，该幸存座位成为冠军。
           // 结果暂存，待 resolveTournamentRebuy 决策。
-          let place = aliveAfter;
+          const place = aliveAfter + (busted.length - heroBustIdx);
           let pendingChampion: Seat | null = null;
           if (aliveAfter === 1) {
-            place =
-              1 +
-              busted.filter((b) => b.startStack > heroEntry.startStack).length;
+            // 防御（正常对局不可达：底池必有归属，不会全员归零）：
+            // 全员同手出局时按同一规则排序，开手筹码最多者为冠军
             if (place === 1) pendingChampion = HERO_SEAT;
           } else if (aliveAfter === 2) {
             const winner = game.players.find(
@@ -1525,6 +1559,8 @@ export const useGameStore = create<GameStore>()((set, get) => {
         record = {
           id: crypto.randomUUID(),
           timestamp: Date.now(),
+          mode: st.mode,
+          ...(st.mode === "tournament" ? { tournamentSeats: st.seats } : {}),
           players,
           heroSeat: HERO_SEAT,
           buttonSeat: game.buttonSeat,

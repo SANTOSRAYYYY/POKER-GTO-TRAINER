@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/history/Nav";
-import { handStyles, isTournamentHand, STYLE_NAME } from "@/components/history/labels";
+import { handStyles, isTournamentHand, styleName } from "@/components/history/labels";
 import { useI18n } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n/dict";
 import { useHistoryStore } from "@/lib/store/historyStore";
 import type { HandRecord } from "@/lib/types";
+import { HISTORY_PAGE_SIZE, nextVisibleCount, paginateHands } from "./pagination";
 
 type TFunc = (key: DictKey, vars?: Record<string, string | number>) => string;
 
@@ -30,15 +31,17 @@ function handSummary(h: HandRecord, t: TFunc): string {
 }
 
 export default function HistoryPage() {
-  const { t } = useI18n();
-  const { hands, loaded, loadAll, deleteHand, clearAll, stats } = useHistoryStore();
+  const { t, lang } = useI18n();
+  const { hands, loaded, loadError, loadAll, deleteHand, clearAll, stats } = useHistoryStore();
   const [busy, setBusy] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(HISTORY_PAGE_SIZE);
 
   useEffect(() => {
-    void loadAll().catch(() => {});
+    void loadAll();
   }, [loadAll]);
 
   const s = stats();
+  const page = paginateHands(hands, visibleCount);
 
   const onDelete = async (id: string) => {
     if (!window.confirm(t("history.confirmDelete"))) return;
@@ -85,20 +88,32 @@ export default function HistoryPage() {
           </div>
         </div>
 
-        {/* 统计卡片 */}
-        <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard label={t("history.totalHands")} value={String(s.totalHands)} />
-          <StatCard
-            label={t("history.totalProfit")}
-            value={`${s.totalProfit >= 0 ? "+" : ""}${s.totalProfit}`}
-            valueClass={s.totalProfit >= 0 ? "text-emerald-400" : "text-red-400"}
-          />
-          <StatCard label={t("history.winRate")} value={`${(s.winRate * 100).toFixed(1)}%`} />
-          <StatCard label={t("history.showdownRate")} value={`${(s.showdownRate * 100).toFixed(1)}%`} />
-        </section>
+        {/* 统计卡片（加载失败时数值不可信，不展示） */}
+        {!loadError && (
+          <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatCard label={t("history.totalHands")} value={String(s.totalHands)} />
+            <StatCard
+              label={t("history.totalProfit")}
+              value={`${s.totalProfit >= 0 ? "+" : ""}${s.totalProfit}`}
+              valueClass={s.totalProfit >= 0 ? "text-emerald-400" : "text-red-400"}
+            />
+            <StatCard label={t("history.winRate")} value={`${(s.winRate * 100).toFixed(1)}%`} />
+            <StatCard label={t("history.showdownRate")} value={`${(s.showdownRate * 100).toFixed(1)}%`} />
+          </section>
+        )}
 
         {!loaded ? (
           <p className="py-16 text-center text-zinc-500">{t("common.loading")}</p>
+        ) : loadError ? (
+          <div className="rounded-xl border border-dashed border-red-900 py-16 text-center">
+            <p className="text-red-400">{loadError}</p>
+            <button
+              onClick={() => void loadAll()}
+              className="mt-3 rounded-lg border border-zinc-700 px-4 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800/60"
+            >
+              {t("common.retry")}
+            </button>
+          </div>
         ) : hands.length === 0 ? (
           <div className="rounded-xl border border-dashed border-zinc-800 py-16 text-center">
             <p className="text-zinc-500">{t("history.empty")}</p>
@@ -107,8 +122,9 @@ export default function HistoryPage() {
             </Link>
           </div>
         ) : (
-          <ul className="space-y-2">
-            {hands.map((h) => (
+          <>
+            <ul className="space-y-2">
+              {page.visible.map((h) => (
               <li key={h.id}>
                 <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3">
                   <Link href={`/history/${h.id}`} className="flex flex-1 flex-wrap items-center gap-x-3 gap-y-1">
@@ -124,7 +140,7 @@ export default function HistoryPage() {
                         key={st}
                         className="rounded bg-emerald-900/40 px-1.5 py-0.5 text-[11px] text-emerald-300"
                       >
-                        {STYLE_NAME[st]}
+                        {styleName(st, lang)}
                       </span>
                     ))}
                     <span className="font-mono text-sm text-zinc-200">{handSummary(h, t)}</span>
@@ -157,7 +173,18 @@ export default function HistoryPage() {
                 </div>
               </li>
             ))}
-          </ul>
+            </ul>
+            {page.hasMore && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setVisibleCount(nextVisibleCount)}
+                  className="rounded-lg border border-zinc-700 px-4 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800/60"
+                >
+                  {t("history.loadMore", { shown: page.shown, total: page.total })}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </main>

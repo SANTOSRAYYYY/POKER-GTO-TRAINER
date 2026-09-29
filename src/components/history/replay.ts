@@ -15,23 +15,23 @@ import type { Lang } from "@/lib/i18n";
 import { DICT, type DictKey } from "@/lib/i18n/dict";
 import type { HandRecord, Seat, SeatAction } from "@/lib/types";
 import { seatPositionName } from "@/lib/ai/positions";
-import { STYLE_NAME } from "@/components/history/labels";
+import { styleName } from "@/components/history/labels";
 
 export type TFunc = (key: DictKey, vars?: Record<string, string | number>) => string;
 
-/** 行动者称呼：hero 显示“你”，AI 显示座位号与风格 */
-export function actorLabel(hand: HandRecord, seat: Seat, t: TFunc): string {
+/** 行动者称呼：hero 显示“你”，AI 显示座位号与风格（风格名按 lang 双语） */
+export function actorLabel(hand: HandRecord, seat: Seat, t: TFunc, lang: Lang = "zh"): string {
   const p = hand.players.find((pl) => pl.seat === seat);
   if (!p) return t("history.seat", { n: seat });
   if (p.isHero) return t("common.you");
   return p.aiStyle
-    ? t("history.aiActor", { style: STYLE_NAME[p.aiStyle] })
+    ? t("history.aiActor", { style: styleName(p.aiStyle, lang) })
     : t("history.seat", { n: seat });
 }
 
-export function actionText(sa: SeatAction, hand: HandRecord, t: TFunc): string {
+export function actionText(sa: SeatAction, hand: HandRecord, t: TFunc, lang: Lang = "zh"): string {
   const who = t("history.actorWithSeat", {
-    who: actorLabel(hand, sa.seat, t),
+    who: actorLabel(hand, sa.seat, t, lang),
     seat: sa.seat,
   });
   const { type, amount } = sa.action;
@@ -77,7 +77,7 @@ export function isShowdownStep(hand: HandRecord, step: Step): boolean {
  * 每条街（含空动作的跑马街）至少产生一个「进入该街」步骤，保证街道 tab 可点。
  * 摊牌手在末尾追加终局步骤（streetIdx 哨兵），作为「摊牌」tab 的落点。
  */
-export function buildSteps(hand: HandRecord, t: TFunc): Step[] {
+export function buildSteps(hand: HandRecord, t: TFunc, lang: Lang = "zh"): Step[] {
   // BBA 模式只有大盲位投一份 ante；缺省/全体模式按人头计
   const anteTotal =
     hand.anteMode === "bb" ? hand.ante : hand.ante * hand.players.length;
@@ -109,7 +109,7 @@ export function buildSteps(hand: HandRecord, t: TFunc): Step[] {
         actionIdx: ai,
         pot,
         actor: sa.seat,
-        text: actionText(sa, hand, t),
+        text: actionText(sa, hand, t, lang),
       });
     });
   });
