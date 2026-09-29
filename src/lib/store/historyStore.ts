@@ -33,9 +33,32 @@ import { isTournamentHand, seatPosition, seatPositionCn, STYLE_NAME } from "@/co
 import { summarizeHand } from "@/lib/ai/recentHands";
 import { computeHeroHud } from "@/lib/ai/hudStats";
 import { getStoredLang, type Lang } from "@/lib/i18n/lang";
+import { getItemSync, setItem } from "@/lib/storage/settings";
+import { ACHIEVEMENTS_KEY, loadUnlocked } from "@/lib/store/achievements";
 
 const DB_NAME = "pokergto";
 const DB_VERSION = 1;
+
+/** 备份文件 app 标记与格式版本（导入校验用；结构变更时递增） */
+export const BACKUP_APP = "pokergto-trainer";
+export const BACKUP_VERSION = 1;
+/** 对手笔记本存储键（与 notebook.ts 的 NOTEBOOK_STORAGE_KEY 一致；此处重声明避免 historyStore ↔ notebook 循环引用） */
+const NOTEBOOK_BACKUP_KEY = "pokergto_hero_notebook";
+
+/** 备份文件结构（version 1） */
+export interface BackupPayload {
+  app: typeof BACKUP_APP;
+  version: number;
+  /** 导出时刻（Unix ms） */
+  exportedAt: number;
+  hands: HandRecord[];
+  analyses: AnalysisEntry[];
+  /** 对手笔记本原始 JSON（跨版本原样携带；恢复时由 notebook 读入侧再校验） */
+  notebook: unknown;
+  /** 成就解锁表原始 JSON（{ 成就id: 解锁时间戳ms }） */
+  achievements: unknown;
+  sessionReports: SessionReport[];
+}
 
 interface AnalysisEntry {
   handId: string;
@@ -499,6 +522,19 @@ export interface HistoryStore {
   analyzeHand: (id: string, config: LLMConfig) => Promise<AnalysisResult>;
   /** 基于内存中已加载的 hands 计算统计（需先 loadAll） */
   stats: () => HistoryStats;
+  /**
+   * 全量备份：hands + analyses + 对手笔记本 + 成就 + 整场复盘报告打成一个
+   * JSON（带 app/version 标记）。返回建议文件名与 JSON 文本；
+   * IndexedDB 不可用时退化为内存态导出（不丢用户可见数据）。
+   */
+  exportBackup: () => Promise<{ filename: string; json: string }>;
+  /**
+   * 从备份 JSON 合并导入：手牌按 id 去重（已有/文件内重复/损坏记录计入
+   * skipped），分析缓存按 handId 去重，成就并入缺失项，笔记本仅在本地
+   * 为空时恢复，整场报告按 createdAt 去重合并（最多保留 5 份）。
+   * @throws Error 备份不是合法 JSON、缺 app 标记或版本过新时抛出。
+   */
+  importBackup: (json: string) => Promise<{ imported: number; skipped: number }>;
 }
 
 export const useHistoryStore = create<HistoryStore>((set, get) => ({
@@ -632,7 +668,227 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
   },
 
   stats: () => computeStats(get().hands),
+
+  exportBackup: async () => {
+    let rawHands: unknown[];
+    let rawAnalyses: unknown[];
+    try {
+      const db = await getDB();
+      [rawHands, rawAnalyses] = await Promise.all([
+        db.getAll("hands") as Promise<unknown[]>,
+        db.getAll("analyses") as Promise<unknown[]>,
+      ]);
+    } catch (err) {
+      // IndexedDB 不可用（隐私模式等）：退化为内存态导出
+      console.error("[historyStore] 备份读取 IndexedDB 失败，导出内存态数据:", err);
+      const s = get();
+      rawHands = s.hands;
+      rawAnalyses = Object.entries(s.analyses).map(([handId, result]) => ({
+        handId,
+        result,
+        createdAt: 0,
+      }));
+    }
+    const payload: BackupPayload = {
+      app: BACKUP_APP,
+      version: BACKUP_VERSION,
+      exportedAt: Date.now(),
+      hands: sortDesc(filterValidHands(rawHands)),
+      analyses: filterValidAnalyses(rawAnalyses),
+      notebook: readLocalJson(NOTEBOOK_BACKUP_KEY),
+      achievements: readLocalJson(ACHIEVEMENTS_KEY),
+      sessionReports: listSessionReports(),
+    };
+    return { filename: backupFilename(new Date()), json: JSON.stringify(payload) };
+  },
+
+  importBackup: async (json) => {
+    const payload = parseBackupPayload(json);
+    // ---- 手牌：按 id 去重合并（已有 id / 文件内重复 / 损坏记录都计入 skipped） ----
+    const rawHands = Array.isArray(payload.hands) ? payload.hands : [];
+    const validHands: HandRecord[] = [];
+    let skipped = 0;
+    const seenInFile = new Set<string>();
+    for (const r of rawHands) {
+      if (!isValidHandRecord(r) || seenInFile.has(r.id)) {
+        skipped += 1;
+        continue;
+      }
+      seenInFile.add(r.id);
+      validHands.push(r);
+    }
+    let db: IDBPDatabase | null = null;
+    let existingIds: Set<string>;
+    try {
+      db = await getDB();
+      existingIds = await existingHandIds(db);
+    } catch (err) {
+      console.error("[historyStore] 导入时打开 IndexedDB 失败，仅合并到内存:", err);
+      db = null;
+      existingIds = new Set(get().hands.map((h) => h.id));
+    }
+    const toAdd = validHands.filter((h) => !existingIds.has(h.id));
+    skipped += validHands.length - toAdd.length;
+    let imported = 0;
+    if (db) {
+      for (const h of toAdd) {
+        try {
+          await db.put("hands", h);
+          imported += 1;
+        } catch (err) {
+          console.error("[historyStore] 导入手牌落库失败:", h.id, err);
+          skipped += 1;
+        }
+      }
+    } else {
+      imported = toAdd.length;
+      set((s) => ({ hands: sortDesc([...toAdd, ...s.hands]) }));
+    }
+
+    // ---- 分析缓存：按 handId 去重合并 ----
+    if (db) {
+      try {
+        const existingAnalyses = new Set(
+          (await db.getAllKeys("analyses")) as string[],
+        );
+        for (const a of filterValidAnalyses(payload.analyses ?? [])) {
+          if (existingAnalyses.has(a.handId)) continue;
+          await db.put("analyses", a);
+        }
+      } catch (err) {
+        console.error("[historyStore] 导入分析缓存失败（手牌已导入）:", err);
+      }
+      await get().loadAll();
+    }
+
+    // ---- 成就：并入本地缺失的解锁项（已有记录不动） ----
+    mergeImportedAchievements(payload.achievements);
+
+    // ---- 对手笔记本：仅本地为空时恢复（不覆盖更新的画像） ----
+    restoreNotebookIfEmpty(payload.notebook);
+
+    // ---- 整场复盘报告：按 createdAt 去重合并（最多 5 份） ----
+    mergeImportedSessionReports(payload.sessionReports);
+
+    return { imported, skipped };
+  },
 }));
+
+// ---------------------------------------------------------------------------
+// 备份导出/导入辅助
+// ---------------------------------------------------------------------------
+
+/** 手动备份文件名：pokergto-backup-<本地日期>.json */
+export function backupFilename(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `pokergto-backup-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.json`;
+}
+
+/** 读本地设置存储中的 JSON 值（损坏/缺失返回 null） */
+function readLocalJson(key: string): unknown {
+  try {
+    const raw = getItemSync(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+/** 分析缓存条目的宽容校验（脏数据直接丢弃） */
+function filterValidAnalyses(raw: unknown[]): AnalysisEntry[] {
+  const out: AnalysisEntry[] = [];
+  for (const a of raw) {
+    if (!a || typeof a !== "object") continue;
+    const e = a as Partial<AnalysisEntry>;
+    if (typeof e.handId !== "string" || !e.handId) continue;
+    if (!e.result || typeof e.result !== "object") continue;
+    out.push({
+      handId: e.handId,
+      result: e.result as AnalysisResult,
+      createdAt:
+        typeof e.createdAt === "number" && Number.isFinite(e.createdAt)
+          ? e.createdAt
+          : 0,
+    });
+  }
+  return out;
+}
+
+/** 解析并校验备份 JSON；非法/版本不兼容抛错 */
+function parseBackupPayload(json: string): BackupPayload {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    throw new Error("备份文件不是合法 JSON");
+  }
+  const obj = parsed as Partial<BackupPayload> | null;
+  if (!obj || typeof obj !== "object" || obj.app !== BACKUP_APP) {
+    throw new Error("不是本应用的备份文件");
+  }
+  if (typeof obj.version !== "number" || obj.version > BACKUP_VERSION) {
+    throw new Error("备份版本过新，请升级应用后再导入");
+  }
+  return obj as BackupPayload;
+}
+
+/** 现有手牌 id 集合（getAllKeys 不可用时退化 getAll 映射） */
+async function existingHandIds(db: IDBPDatabase): Promise<Set<string>> {
+  try {
+    return new Set((await db.getAllKeys("hands")) as string[]);
+  } catch {
+    const all = (await db.getAll("hands")) as unknown[];
+    return new Set(
+      all
+        .map((r) => (r as { id?: unknown })?.id)
+        .filter((id): id is string => typeof id === "string"),
+    );
+  }
+}
+
+/** 成就合并：只补本地没有的解锁记录，返回值表示是否有写入 */
+function mergeImportedAchievements(raw: unknown): void {
+  if (!raw || typeof raw !== "object") return;
+  const current = loadUnlocked();
+  const next = { ...current };
+  let changed = false;
+  for (const [id, ts] of Object.entries(raw as Record<string, unknown>)) {
+    if (next[id as keyof typeof next] !== undefined) continue;
+    if (typeof ts !== "number" || !Number.isFinite(ts)) continue;
+    (next as Record<string, number>)[id] = ts;
+    changed = true;
+  }
+  if (changed) void setItem(ACHIEVEMENTS_KEY, JSON.stringify(next));
+}
+
+/** 笔记本恢复：仅本地完全没有笔记本时写入（导入值做最轻形状校验） */
+function restoreNotebookIfEmpty(raw: unknown): void {
+  if (!raw || typeof raw !== "object") return;
+  const nb = raw as { version?: unknown; stats?: unknown };
+  if (typeof nb.version !== "number" || !nb.stats || typeof nb.stats !== "object") {
+    return;
+  }
+  if (getItemSync(NOTEBOOK_BACKUP_KEY) !== null) return;
+  void setItem(NOTEBOOK_BACKUP_KEY, JSON.stringify(raw));
+}
+
+/** 整场报告合并：本地 + 导入按 createdAt 去重，新的在前，最多 5 份 */
+function mergeImportedSessionReports(raw: unknown): void {
+  if (!Array.isArray(raw)) return;
+  const incoming = raw
+    .map(normalizeSessionReport)
+    .filter((r): r is SessionReport => r !== null);
+  if (incoming.length === 0) return;
+  const byCreatedAt = new Map<number, SessionReport>();
+  for (const r of [...listSessionReports(), ...incoming]) {
+    if (!byCreatedAt.has(r.createdAt)) byCreatedAt.set(r.createdAt, r);
+  }
+  const merged = [...byCreatedAt.values()]
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, MAX_SESSION_REPORTS);
+  void setItem(SESSION_REPORTS_KEY, JSON.stringify(merged));
+}
 
 // ---------------------------------------------------------------------------
 // 整场复盘（Session 级 AI 教练）

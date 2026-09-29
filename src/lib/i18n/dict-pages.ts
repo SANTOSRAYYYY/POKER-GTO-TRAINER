@@ -164,6 +164,8 @@ export const PAGES_DICT = {
   "history.title": { zh: "手牌历史", en: "Hand history" },
   "history.statsCenter": { zh: "数据中心", en: "Stats" },
   "history.clearAll": { zh: "清空全部", en: "Clear all" },
+  "history.backup.export": { zh: "导出", en: "Export" },
+  "history.backup.import": { zh: "导入", en: "Import" },
   "history.confirmDelete": {
     zh: "删除这手牌记录？",
     en: "Delete this hand record?",
@@ -698,6 +700,42 @@ export const PAGES_DICT = {
   },
   "settings.save": { zh: "保存设置", en: "Save settings" },
   "settings.saved": { zh: "已保存到本地浏览器", en: "Saved to your browser" },
+  "settings.backup.title": { zh: "数据备份", en: "Data backup" },
+  "settings.backup.desc": {
+    zh: "把全部手牌历史、AI 分析缓存、对手笔记本、成就与整场复盘报告导出为一个 JSON 文件；导入时按 id 去重合并，不会覆盖现有数据。App 内导出会保存到 Documents 目录。",
+    en: "Export all hand history, cached AI analysis, the opponent notebook, achievements and session reports as a single JSON file; importing merges by id and never overwrites existing data. In the app, exports are saved to the Documents directory.",
+  },
+  "settings.backup.export": { zh: "导出备份", en: "Export backup" },
+  "settings.backup.import": { zh: "导入备份", en: "Import backup" },
+  "settings.backup.busy": { zh: "处理中…", en: "Working…" },
+  "settings.backup.exportDone": {
+    zh: "已导出 {filename}",
+    en: "Exported {filename}",
+  },
+  "settings.backup.exportSavedApp": {
+    zh: "已保存到：{path}",
+    en: "Saved to: {path}",
+  },
+  "settings.backup.exportFail": {
+    zh: "导出失败，请重试",
+    en: "Export failed, please try again",
+  },
+  "settings.backup.importDone": {
+    zh: "导入完成：新增 {imported} 条手牌，跳过重复/无效 {skipped} 条",
+    en: "Import done: {imported} hands added, {skipped} duplicates/invalid skipped",
+  },
+  "settings.backup.importFail": {
+    zh: "导入失败：备份文件无效、已损坏或版本过新",
+    en: "Import failed: the backup file is invalid, corrupted, or from a newer version",
+  },
+  "settings.backup.auto": {
+    zh: "进入后台时自动备份",
+    en: "Auto-backup when going to background",
+  },
+  "settings.backup.autoHint": {
+    zh: "备份写入 Documents 目录，文件名按周轮换，自动保留最近 2 份。",
+    en: "Backups are written to the Documents directory; filenames rotate weekly and the latest 2 are kept.",
+  },
 
   // ================= 训练器（src/app/trainer/**） =================
   "trainer.title": { zh: "训练器", en: "Trainer" },

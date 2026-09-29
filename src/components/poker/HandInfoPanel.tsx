@@ -5,26 +5,23 @@ import { equityMulti, type EquityResult } from "@/lib/poker/equity";
 import { HERO_SEAT, useGameStore } from "@/lib/store/gameStore";
 import { useI18n } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n/dict";
+import { getItemSync, setItem } from "@/lib/storage/settings";
 
-/** 折叠状态持久化键（localStorage，跨刷新记住） */
+/** 折叠状态持久化键（统一设置存储，跨刷新记住） */
 const PANEL_COLLAPSED_KEY = "pokergto_panel_collapsed";
 /** 小屏（<1024px，即 Tailwind lg 断点以下）默认折叠 */
 const SMALL_SCREEN_QUERY = "(max-width: 1023px)";
 
 function readCollapsedDefault(): boolean {
   if (typeof window === "undefined") return false;
-  try {
-    const saved = window.localStorage.getItem(PANEL_COLLAPSED_KEY);
-    if (saved !== null) return saved === "1";
-  } catch {
-    // localStorage 不可用时按默认处理
-  }
+  const saved = getItemSync(PANEL_COLLAPSED_KEY);
+  if (saved !== null) return saved === "1";
   return window.matchMedia(SMALL_SCREEN_QUERY).matches;
 }
 
 /**
  * 面板折叠状态：挂载前为 undefined（按展开渲染，避免 hydration 不一致），
- * 挂载后从 localStorage / 屏幕宽度读取默认值；切换时持久化。
+ * 挂载后从统一设置存储 / 屏幕宽度读取默认值；切换时持久化。
  */
 export function usePanelCollapsed(): [
   boolean | undefined,
@@ -36,11 +33,8 @@ export function usePanelCollapsed(): [
   }, []);
   const toggle = (next: boolean) => {
     setCollapsed(next);
-    try {
-      window.localStorage.setItem(PANEL_COLLAPSED_KEY, next ? "1" : "0");
-    } catch {
-      // localStorage 不可用时仅内存态
-    }
+    // 同步更新镜像 + 内存缓存，原生异步落 Preferences
+    void setItem(PANEL_COLLAPSED_KEY, next ? "1" : "0");
   };
   return [collapsed, toggle];
 }

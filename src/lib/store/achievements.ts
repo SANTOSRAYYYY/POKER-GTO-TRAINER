@@ -3,9 +3,10 @@
  *
  * - checkAchievements(hands)：纯函数，输入 HandRecord 流（顺序不限，内部按
  *   时间升序重排），返回当前已满足条件的成就列表；判定口径见各条目注释。
- * - useAchievements：zustand 包装，负责 localStorage 持久化（键
- *   pokergto_achievements，值 = { 成就id: 解锁时间戳ms }）、与已解锁集合
- *   diff 出「新解锁」成就并推入 pending 队列供 AchievementToast 展示。
+ * - useAchievements：zustand 包装，负责持久化（键 pokergto_achievements，
+ *   值 = { 成就id: 解锁时间戳ms }，经统一设置存储：原生 Preferences +
+ *   localStorage 镜像）、与已解锁集合 diff 出「新解锁」成就并推入 pending
+ *   队列供 AchievementToast 展示。
  * - 触发时机：页面侧在加载手牌后调用 checkNow（当前挂在 Nav 上，限定
  *   /stats 与 /history 路径，等价于“addHand 后由页面侧触发”的落地形态）。
  *
@@ -17,8 +18,9 @@ import { create } from "zustand";
 import type { ConcreteAIStyle, HandRecord } from "@/lib/types";
 import type { DictKey } from "@/lib/i18n/dict";
 import { isTournamentHand } from "@/components/history/labels";
+import { getItemSync, setItem } from "@/lib/storage/settings";
 
-/** 已解锁记录的 localStorage 键 */
+/** 已解锁记录的存储键 */
 export const ACHIEVEMENTS_KEY = "pokergto_achievements";
 
 /** 场次切分间隔：相邻两手间隔超过 30 分钟视为新的一场 */
@@ -178,7 +180,7 @@ export type UnlockedMap = Partial<Record<AchievementId, number>>;
 export function loadUnlocked(): UnlockedMap {
   if (typeof window === "undefined") return {};
   try {
-    const raw = window.localStorage.getItem(ACHIEVEMENTS_KEY);
+    const raw = getItemSync(ACHIEVEMENTS_KEY);
     if (!raw) return {};
     const obj: unknown = JSON.parse(raw);
     if (!obj || typeof obj !== "object") return {};
@@ -195,11 +197,8 @@ export function loadUnlocked(): UnlockedMap {
 
 function saveUnlocked(map: UnlockedMap): void {
   if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(map));
-  } catch {
-    /* 隐私模式/配额满：本次解锁只留在内存 */
-  }
+  // 同步更新镜像 + 内存缓存，原生异步落 Preferences
+  void setItem(ACHIEVEMENTS_KEY, JSON.stringify(map));
 }
 
 export interface AchievementsStore {
@@ -207,12 +206,12 @@ export interface AchievementsStore {
   unlocked: UnlockedMap;
   /** 新解锁待 toast 展示的队列 */
   pending: Achievement[];
-  /** 是否已从 localStorage 完成首次加载 */
+  /** 是否已从本地存储完成首次加载 */
   loaded: boolean;
-  /** 从 localStorage 加载已解锁集合 */
+  /** 从本地存储加载已解锁集合 */
   load: () => void;
   /**
-   * 用全部历史手牌做检查：与已解锁集合 diff，新解锁的写入 localStorage
+   * 用全部历史手牌做检查：与已解锁集合 diff，新解锁的写入本地存储
    * 并推入 pending 队列；返回本次新解锁的成就（无则空数组）。
    */
   checkNow: (hands: HandRecord[]) => Achievement[];

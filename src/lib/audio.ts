@@ -2,10 +2,13 @@
  * 牌桌音效（零素材 WebAudio 合成）：
  * - AudioContext 懒初始化：首次 playSound 时创建；浏览器自动播放策略下
  *   suspended 的 context 每次播放前尝试 resume（首次用户手势后生效）；
- * - 开关存 localStorage pokergto_sound（"1" 开 / "0" 关，缺省开）；
+ * - 开关存 pokergto_sound（"1" 开 / "0" 关，缺省开），经统一设置存储
+ *   （原生 Preferences + localStorage 镜像，见 lib/storage/settings.ts）；
  * - SSR / node 测试环境（无 window / AudioContext）全部静默 no-op，
  *   import 与调用均安全。
  */
+
+import { getItemSync, setItem } from "@/lib/storage/settings";
 
 export type SoundName =
   | "deal"
@@ -44,7 +47,7 @@ function getContext(): AudioContext | null {
 export function isSoundEnabled(): boolean {
   if (typeof window === "undefined") return true;
   try {
-    return window.localStorage.getItem(STORAGE_KEY) !== "0";
+    return getItemSync(STORAGE_KEY) !== "0";
   } catch {
     return true;
   }
@@ -52,11 +55,8 @@ export function isSoundEnabled(): boolean {
 
 export function setSoundEnabled(on: boolean): void {
   if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, on ? "1" : "0");
-  } catch {
-    // 隐私模式等写入失败：静默，开关退回内存态
-  }
+  // 同步更新镜像 + 内存缓存，原生异步落 Preferences
+  void setItem(STORAGE_KEY, on ? "1" : "0");
 }
 
 interface ToneOpts {

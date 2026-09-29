@@ -18,6 +18,7 @@ import {
   INFINITE_TOTAL_LEVELS,
 } from "@/lib/poker/tournament";
 import type { AIStyle, AnteMode, GameMode } from "@/lib/types";
+import { getItemSync } from "@/lib/storage/settings";
 
 const STYLE_OPTIONS: AIStyle[] = [
   "random",
@@ -90,7 +91,7 @@ export default function LobbyPage() {
 
   useEffect(() => {
     void loadAll().catch(() => {});
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem(DEFAULT_STYLE_KEY) : null;
+    const saved = typeof window !== "undefined" ? getItemSync(DEFAULT_STYLE_KEY) : null;
     if (saved && (STYLE_OPTIONS as string[]).includes(saved)) {
       setStyle(saved as AIStyle);
     }

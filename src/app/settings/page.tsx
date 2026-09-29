@@ -6,6 +6,8 @@ import { useI18n } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n/dict";
 import { chatCompletion } from "@/lib/llm/client";
 import type { AIStyle, LLMConfig, ReasoningEffort } from "@/lib/types";
+import { getItem, setItem } from "@/lib/storage/settings";
+import { BackupCard } from "@/components/settings/BackupCard";
 
 const LLM_CONFIG_KEY = "pokergto_llm_config";
 const DEFAULT_STYLE_KEY = "pokergto_default_style";
@@ -66,64 +68,75 @@ export default function SettingsPage() {
   const [formatTest, setFormatTest] = useState<TestStatus>({ kind: "idle" });
 
   // 首屏以 DEFAULT_CONFIG 渲染（SSR 与客户端一致，无 hydration 偏差），
-  // 挂载后再用 localStorage 覆盖，避免读取差异导致 hydration mismatch。
+  // 挂载后再用本地存储覆盖（原生读 Preferences 真值，Web 读 localStorage），
+  // 避免读取差异导致 hydration mismatch。
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(LLM_CONFIG_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<LLMConfig>;
-        setConfig({
-          apiKey: parsed.apiKey ?? "",
-          baseUrl: parsed.baseUrl || DEFAULT_CONFIG.baseUrl,
-          model: parsed.model || DEFAULT_CONFIG.model,
-          temperature: parsed.temperature,
-          // 旧配置没有这两个字段 → undefined（不发送）；非法值同样按未设置处理
-          reasoningEffort: REASONING_EFFORTS.includes(parsed.reasoningEffort as ReasoningEffort)
-            ? (parsed.reasoningEffort as ReasoningEffort)
-            : undefined,
-          maxTokens:
-            typeof parsed.maxTokens === "number" &&
-            Number.isFinite(parsed.maxTokens) &&
-            parsed.maxTokens > 0
-              ? Math.floor(parsed.maxTokens)
+    let cancelled = false;
+    void (async () => {
+      try {
+        const [raw, style, engine] = await Promise.all([
+          getItem(LLM_CONFIG_KEY),
+          getItem(DEFAULT_STYLE_KEY),
+          getItem(AI_ENGINE_KEY),
+        ]);
+        if (cancelled) return;
+        if (raw) {
+          const parsed = JSON.parse(raw) as Partial<LLMConfig>;
+          setConfig({
+            apiKey: parsed.apiKey ?? "",
+            baseUrl: parsed.baseUrl || DEFAULT_CONFIG.baseUrl,
+            model: parsed.model || DEFAULT_CONFIG.model,
+            temperature: parsed.temperature,
+            // 旧配置没有这两个字段 → undefined（不发送）；非法值同样按未设置处理
+            reasoningEffort: REASONING_EFFORTS.includes(parsed.reasoningEffort as ReasoningEffort)
+              ? (parsed.reasoningEffort as ReasoningEffort)
               : undefined,
-          thinkingEnabled:
-            typeof parsed.thinkingEnabled === "boolean"
-              ? parsed.thinkingEnabled
-              : undefined,
-          jsonOutput:
-            typeof parsed.jsonOutput === "boolean"
-              ? parsed.jsonOutput
-              : undefined,
-          contextHands:
-            typeof parsed.contextHands === "number" &&
-            Number.isFinite(parsed.contextHands) &&
-            parsed.contextHands > 0
-              ? Math.min(20, Math.floor(parsed.contextHands))
-              : undefined,
-          promptStyle:
-            parsed.promptStyle === "full" || parsed.promptStyle === "slim"
-              ? parsed.promptStyle
-              : undefined,
-        });
+            maxTokens:
+              typeof parsed.maxTokens === "number" &&
+              Number.isFinite(parsed.maxTokens) &&
+              parsed.maxTokens > 0
+                ? Math.floor(parsed.maxTokens)
+                : undefined,
+            thinkingEnabled:
+              typeof parsed.thinkingEnabled === "boolean"
+                ? parsed.thinkingEnabled
+                : undefined,
+            jsonOutput:
+              typeof parsed.jsonOutput === "boolean"
+                ? parsed.jsonOutput
+                : undefined,
+            contextHands:
+              typeof parsed.contextHands === "number" &&
+              Number.isFinite(parsed.contextHands) &&
+              parsed.contextHands > 0
+                ? Math.min(20, Math.floor(parsed.contextHands))
+                : undefined,
+            promptStyle:
+              parsed.promptStyle === "full" || parsed.promptStyle === "slim"
+                ? parsed.promptStyle
+                : undefined,
+          });
+        }
+        if (style && STYLE_OPTIONS.some((o) => o.id === style)) {
+          setDefaultStyle(style as AIStyle);
+        }
+        if (engine === "heuristic" || engine === "llm") {
+          setAiEngine(engine);
+        }
+      } catch {
+        // 忽略损坏的本地配置
       }
-      const style = window.localStorage.getItem(DEFAULT_STYLE_KEY);
-      if (style && STYLE_OPTIONS.some((o) => o.id === style)) {
-        setDefaultStyle(style as AIStyle);
-      }
-      const engine = window.localStorage.getItem(AI_ENGINE_KEY);
-      if (engine === "heuristic" || engine === "llm") {
-        setAiEngine(engine);
-      }
-    } catch {
-      // 忽略损坏的本地配置
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const save = () => {
-    window.localStorage.setItem(LLM_CONFIG_KEY, JSON.stringify(config));
-    window.localStorage.setItem(DEFAULT_STYLE_KEY, defaultStyle);
-    window.localStorage.setItem(AI_ENGINE_KEY, aiEngine);
+    // 同步更新镜像 + 内存缓存（游戏内同步读者立即可见），原生异步落 Preferences
+    void setItem(LLM_CONFIG_KEY, JSON.stringify(config));
+    void setItem(DEFAULT_STYLE_KEY, defaultStyle);
+    void setItem(AI_ENGINE_KEY, aiEngine);
     setSaved(true);
     window.setTimeout(() => setSaved(false), 2500);
   };
@@ -521,6 +534,8 @@ export default function SettingsPage() {
             {t("settings.engineHint")}
           </p>
         </section>
+
+        <BackupCard />
 
         <div className="flex items-center gap-3">
           <button

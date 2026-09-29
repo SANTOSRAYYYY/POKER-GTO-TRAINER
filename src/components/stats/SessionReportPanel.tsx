@@ -10,6 +10,7 @@ import {
   SESSION_ANALYSIS_DEFAULT_LIMIT,
 } from "@/lib/store/historyStore";
 import type { LLMConfig, SessionReport } from "@/lib/types";
+import { getItemSync } from "@/lib/storage/settings";
 
 const LLM_CONFIG_KEY = "pokergto_llm_config";
 
@@ -57,7 +58,7 @@ function ScoreRing({ score }: { score: number }) {
 
 function readLLMConfig(): LLMConfig | null {
   try {
-    const raw = window.localStorage.getItem(LLM_CONFIG_KEY);
+    const raw = getItemSync(LLM_CONFIG_KEY);
     return raw ? (JSON.parse(raw) as LLMConfig) : null;
   } catch {
     return null;

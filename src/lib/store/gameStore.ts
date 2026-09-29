@@ -71,6 +71,7 @@ import { useHistoryStore } from "@/lib/store/historyStore";
 import { loadSession, saveSession } from "@/lib/store/sessionPersistence";
 import { withRunoutStreets } from "@/lib/store/runout";
 import { getStoredLang } from "@/lib/i18n/lang";
+import { getItemSync } from "@/lib/storage/settings";
 import {
   clearNotebook,
   loadDecayedHeroStats,
@@ -83,9 +84,9 @@ export { summarizeHand } from "@/lib/ai/recentHands";
 
 export const HERO_SEAT: Seat = 0;
 
-/** 与设置页共用的 localStorage 键（JSON: {apiKey, baseUrl, model}） */
+/** 与设置页共用的存储键（JSON: {apiKey, baseUrl, model}；原生走 Preferences 预载缓存） */
 const LLM_CONFIG_KEY = "pokergto_llm_config";
-/** 与设置页共用的 localStorage 键（"heuristic" | "llm"） */
+/** 与设置页共用的存储键（"heuristic" | "llm"） */
 const AI_ENGINE_KEY = "pokergto_ai_engine";
 
 /** AI 决策引擎：heuristic = 本地启发式直连（不碰网络）；llm = 走 decide（LLM 优先、启发式兜底） */
@@ -333,7 +334,7 @@ const spectateDelay = () => (IS_TEST ? Promise.resolve() : delay(SPECTATE_STEP_M
 export function readLLMConfig(): LLMConfig | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(LLM_CONFIG_KEY);
+    const raw = getItemSync(LLM_CONFIG_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<LLMConfig> | null;
     if (!parsed || typeof parsed.apiKey !== "string" || parsed.apiKey === "") {
@@ -380,7 +381,7 @@ export function readLLMConfig(): LLMConfig | null {
 function readAIEngine(): AIEngine {
   if (typeof window === "undefined") return "heuristic";
   try {
-    const raw = window.localStorage.getItem(AI_ENGINE_KEY);
+    const raw = getItemSync(AI_ENGINE_KEY);
     return raw === "llm" ? "llm" : "heuristic";
   } catch {
     return "heuristic";

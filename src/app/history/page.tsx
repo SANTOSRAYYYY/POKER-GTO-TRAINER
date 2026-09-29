@@ -8,6 +8,7 @@ import { handStyles, isTournamentHand, styleName } from "@/components/history/la
 import { useI18n } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n/dict";
 import { isNativeApp, nativeHandReplayHref } from "@/lib/nativeApp";
+import { pickBackupJson, saveBackupFile } from "@/lib/storage/backup";
 import { useHistoryStore } from "@/lib/store/historyStore";
 import type { HandRecord } from "@/lib/types";
 import { HISTORY_PAGE_SIZE, nextVisibleCount, paginateHands } from "./pagination";
@@ -37,6 +38,7 @@ export default function HistoryPage() {
   const router = useRouter();
   const { hands, loaded, loadError, loadAll, deleteHand, clearAll, stats } = useHistoryStore();
   const [busy, setBusy] = useState(false);
+  const [backupBusy, setBackupBusy] = useState(false);
   const [visibleCount, setVisibleCount] = useState(HISTORY_PAGE_SIZE);
 
   useEffect(() => {
@@ -45,6 +47,39 @@ export default function HistoryPage() {
 
   const s = stats();
   const page = paginateHands(hands, visibleCount);
+
+  const onExport = async () => {
+    setBackupBusy(true);
+    try {
+      const { filename, json } = await useHistoryStore.getState().exportBackup();
+      const saved = await saveBackupFile(filename, json);
+      window.alert(
+        saved.kind === "filesystem"
+          ? t("settings.backup.exportSavedApp", { path: saved.uri })
+          : t("settings.backup.exportDone", { filename }),
+      );
+    } catch {
+      window.alert(t("settings.backup.exportFail"));
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
+  const onImport = async () => {
+    setBackupBusy(true);
+    try {
+      const json = await pickBackupJson();
+      if (json === null) return;
+      const { imported, skipped } = await useHistoryStore
+        .getState()
+        .importBackup(json);
+      window.alert(t("settings.backup.importDone", { imported, skipped }));
+    } catch {
+      window.alert(t("settings.backup.importFail"));
+    } finally {
+      setBackupBusy(false);
+    }
+  };
 
   const onDelete = async (id: string) => {
     if (!window.confirm(t("history.confirmDelete"))) return;
@@ -73,6 +108,22 @@ export default function HistoryPage() {
         <div className="mb-5 flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t("history.title")}</h1>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => void onExport()}
+              disabled={backupBusy}
+              title={t("settings.backup.title")}
+              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800/60 disabled:opacity-50 max-md:py-2.5"
+            >
+              {t("history.backup.export")}
+            </button>
+            <button
+              onClick={() => void onImport()}
+              disabled={backupBusy}
+              title={t("settings.backup.title")}
+              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800/60 disabled:opacity-50 max-md:py-2.5"
+            >
+              {t("history.backup.import")}
+            </button>
             <Link
               href="/stats"
               className="rounded-lg border border-emerald-900 px-3 py-1.5 text-sm text-emerald-400 transition-colors hover:bg-emerald-950/50 max-md:inline-flex max-md:min-h-10 max-md:items-center"

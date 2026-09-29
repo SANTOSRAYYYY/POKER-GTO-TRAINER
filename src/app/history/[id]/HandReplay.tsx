@@ -20,6 +20,7 @@ import {
 import { useI18n } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n/dict";
 import { useHistoryStore } from "@/lib/store/historyStore";
+import { getItemSync } from "@/lib/storage/settings";
 import {
   handStyles,
   isTournamentHand,
@@ -137,7 +138,7 @@ export default function HandReplay() {
     setAnalyzeError(null);
     let config: LLMConfig | null = null;
     try {
-      const raw = window.localStorage.getItem(LLM_CONFIG_KEY);
+      const raw = getItemSync(LLM_CONFIG_KEY);
       config = raw ? (JSON.parse(raw) as LLMConfig) : null;
     } catch {
       config = null;

@@ -3,7 +3,8 @@
  *
  * 背景：gameStore.tableStats 累积各座位（含 hero）的 OpponentStats 对手建模，
  * 但 startTable 换桌即清零——AI 对 hero 的了解不跨桌。本模块把 hero 的画像
- * 持久化到 localStorage（键 pokergto_hero_notebook），让 AI 越打越懂 hero：
+ * 持久化到统一设置存储（键 pokergto_hero_notebook，原生 Preferences +
+ * localStorage 镜像，见 lib/storage/settings.ts），让 AI 越打越懂 hero：
  *
  * 数据流：
  *   finalizeHand（hero 每手）→ scheduleNotebookSave（防抖 1s 合批）→ 写笔记本
@@ -33,8 +34,9 @@ import {
   normalizeStats,
 } from "@/lib/ai/adapt";
 import { useHistoryStore } from "@/lib/store/historyStore";
+import { getItemSync, removeItem, setItem } from "@/lib/storage/settings";
 
-/** 笔记本 localStorage 键 */
+/** 笔记本存储键 */
 export const NOTEBOOK_STORAGE_KEY = "pokergto_hero_notebook";
 /** 笔记本结构版本（结构变更时递增并在校验处拒绝旧本） */
 export const NOTEBOOK_VERSION = 1;
@@ -55,12 +57,13 @@ export interface HeroNotebook {
 /** vitest 环境下写笔记本改为同步落盘（测试断言无需推进防抖计时器） */
 const IS_TEST = typeof process !== "undefined" && !!process.env?.VITEST;
 
-function storageOrNull(): Storage | null {
-  if (typeof window === "undefined") return null;
+/** 浏览器存储可用性（SSR/单测无 window 时读写全跳过） */
+function storageAvailable(): boolean {
+  if (typeof window === "undefined") return false;
   try {
-    return window.localStorage ?? null;
+    return !!window.localStorage;
   } catch {
-    return null;
+    return false;
   }
 }
 
@@ -127,7 +130,7 @@ export function decayStats(
 }
 
 // ---------------------------------------------------------------------------
-// 读写 localStorage
+// 读写统一设置存储（原生 Preferences + localStorage 镜像）
 // ---------------------------------------------------------------------------
 
 /** 笔记本结构校验（版本 + 关键字段形状；缺分桶字段由 normalizeStats 补齐） */
@@ -153,11 +156,10 @@ function isHeroNotebook(x: unknown): x is HeroNotebook {
 
 /** 读取笔记本；无存档或损坏/版本不符时清除坏档并返回 null（分桶字段归一化） */
 export function loadNotebook(): HeroNotebook | null {
-  const ls = storageOrNull();
-  if (!ls) return null;
+  if (!storageAvailable()) return null;
   let raw: string | null;
   try {
-    raw = ls.getItem(NOTEBOOK_STORAGE_KEY);
+    raw = getItemSync(NOTEBOOK_STORAGE_KEY);
   } catch {
     return null;
   }
@@ -170,35 +172,22 @@ export function loadNotebook(): HeroNotebook | null {
     return { ...parsed, stats: normalizeStats(parsed.stats) };
   } catch (err) {
     console.error("[notebook] 笔记本不可用，已清除:", err);
-    try {
-      ls.removeItem(NOTEBOOK_STORAGE_KEY);
-    } catch {
-      // 忽略清除失败
-    }
+    void removeItem(NOTEBOOK_STORAGE_KEY);
     return null;
   }
 }
 
 /** 写入笔记本（无浏览器存储/配额超限时静默跳过，不阻断牌局） */
 export function saveNotebook(notebook: HeroNotebook): void {
-  const ls = storageOrNull();
-  if (!ls) return;
-  try {
-    ls.setItem(NOTEBOOK_STORAGE_KEY, JSON.stringify(notebook));
-  } catch {
-    // 隐私模式/配额超限：放弃本次写入
-  }
+  if (!storageAvailable()) return;
+  // 同步更新镜像 + 内存缓存，原生异步落 Preferences
+  void setItem(NOTEBOOK_STORAGE_KEY, JSON.stringify(notebook));
 }
 
 /** 删除笔记本（resetNotebook / /stats 清空按钮） */
 export function clearNotebook(): void {
-  const ls = storageOrNull();
-  if (!ls) return;
-  try {
-    ls.removeItem(NOTEBOOK_STORAGE_KEY);
-  } catch {
-    // 忽略
-  }
+  if (!storageAvailable()) return;
+  void removeItem(NOTEBOOK_STORAGE_KEY);
 }
 
 /**

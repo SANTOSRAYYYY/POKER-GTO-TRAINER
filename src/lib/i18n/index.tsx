@@ -24,6 +24,7 @@ import {
 } from "react";
 import { DICT, type DictKey } from "./dict";
 import { getStoredLang, LANG_KEY, type Lang } from "./lang";
+import { setItem } from "@/lib/storage/settings";
 
 export type { Lang } from "./lang";
 export { getStoredLang } from "./lang";
@@ -45,11 +46,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
-    try {
-      window.localStorage.setItem(LANG_KEY, l);
-    } catch {
-      // 写入失败仅影响记忆
-    }
+    // 同步更新镜像 + 内存缓存（getStoredLang 立即可见），原生异步落 Preferences
+    void setItem(LANG_KEY, l);
   }, []);
 
   const t = useCallback(
