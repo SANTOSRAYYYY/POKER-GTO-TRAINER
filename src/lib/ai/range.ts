@@ -30,6 +30,16 @@
  * 4 个 top28% 范围：旧口径 ≈0.51，联合口径 ≈0.14），导致多人池面对小注
  * 系统性过度跟注。brain 侧由 rangeMultiwayJoint 旋钮切换（默认 true）。
  *
+ * 逐角色多人池口径（2026-09-29 引入，公共资产）：equityVsRanges 允许为
+ * 每个对手传不同的 RangeSpec（1-3 个），逐轮为对手 i 从 specs[i] 的池独立
+ * 加权采样（互不共牌，冲突重抽与 equityVsRange 同逻辑）。两函数共用同一
+ * 联合采样内核（jointEquityTrials）：specs 全相同时与 equityVsRange 同
+ * spec+同 opponents 逐比特一致。训练器多人池防守判定曾用它做「下注者强
+ * spec + 跟注者封顶 spec」混合采样，后发现「联合胜率 + 阈值步进」对多人
+ * 摊薄重复计费，防守侧已改为只对下注者评估（见 gto/multiway.ts 两套口径）；
+ * 本函数保留为逐角色联合胜率的公共资产。brain 的 AI 决策口径不变（仍走
+ * equityVsRange 单 spec）。
+ *
  * blocker 效应（Phase 8，旋钮 brain 侧 blockerEnabled）：hero 底牌对范围组合
  * 的组合权重修正——hero 持某花色 A 时，对手该花色的同花听组合（hole+board
  * 恰 4 张该花色且 hole 至少 1 张）权重 ×0.55（同花听缺了关键 A，非坚果听）；
@@ -345,6 +355,147 @@ function getPool(
 }
 
 /**
+ * 按权重抽一对底牌闭包的工厂（强牌权重 1 / 诈唬权重 bluffW）。
+ * 均匀池走旧公式路径（与旧版逐比特一致）；blocker 逐组合权重时线性扫描
+ * 累计权重选牌（每次抽牌仍恰好 1 次 rng()，权重只改变 t 到组合的映射）。
+ */
+function makePickPair(
+  pool: RangePool,
+  bluffPct: number,
+  rng: () => number,
+): () => number {
+  const { strong, bluff } = pool;
+  const bluffW = bluff.length > 0 ? clamp(bluffPct, 0, 1) : 0;
+  if (pool.strongW === null || pool.bluffW === null) {
+    // 均匀权重（blocker 关闭或无规则命中）：旧公式路径，与旧版逐比特一致
+    const totalW = strong.length + bluff.length * bluffW;
+    return (): number => {
+      const t = rng() * totalW;
+      if (t < strong.length) return strong[Math.floor(t)];
+      const k = Math.floor((t - strong.length) / bluffW);
+      return bluff[Math.min(k, bluff.length - 1)];
+    };
+  }
+  // blocker 逐组合权重：线性扫描累计权重选牌
+  const strongW = pool.strongW;
+  const bluffArrW = pool.bluffW;
+  let strongTotal = 0;
+  for (let i = 0; i < strongW.length; i++) strongTotal += strongW[i];
+  let bluffBase = 0;
+  for (let i = 0; i < bluffArrW.length; i++) bluffBase += bluffArrW[i];
+  const totalW = strongTotal + bluffBase * bluffW;
+  return (): number => {
+    const t = rng() * totalW;
+    if (t < strongTotal) {
+      let acc = 0;
+      for (let i = 0; i < strong.length; i++) {
+        acc += strongW[i];
+        if (t < acc) return strong[i];
+      }
+      return strong[strong.length - 1];
+    }
+    const u = t - strongTotal;
+    let acc = 0;
+    for (let i = 0; i < bluff.length; i++) {
+      acc += bluffArrW[i] * bluffW;
+      if (u < acc) return bluff[i];
+    }
+    return bluff[bluff.length - 1];
+  };
+}
+
+/**
+ * 联合采样内核：pools[i]/specs[i] 为对手 i 的池与 spec（同长度，1-3 个；
+ * pools 元素可重复——equityVsRange 单 spec 多人 = 同一池传 N 份）。
+ * 每轮为每个对手从各自池独立加权抽一对底牌（互不共牌；冲突重抽 60 次后
+ * 顺序扫描该池强牌/诈唬集兜底），再从剩余牌补公共牌比大小。hero 必须压过
+ * 全部对手才计 win、与最强对手并列计 tie。返回 win + tie/2。
+ */
+function jointEquityTrials(
+  hero: [Card, Card],
+  board: Card[],
+  pools: RangePool[],
+  specs: RangeSpec[],
+  iterations: number,
+  rng: () => number,
+): number {
+  const pickers = pools.map((p, i) => makePickPair(p, specs[i].bluffPct, rng));
+  // 同一 hero+board 下各池的剩余牌数组内容一致（确定性 newDeck 减同一死牌集），
+  // 冲突判断/补公共牌统一用 pools[0].cards；比大小时按对手各自池取牌（语义更稳）
+  const cards = pools[0].cards;
+  const need = 5 - board.length;
+
+  let win = 0;
+  let tie = 0;
+  // 分配提升到迭代外（perf：热点路径避免每轮新建 Set/数组）
+  const villPairs: number[] = [];
+  const usedCards = new Set<string>();
+  for (let it = 0; it < iterations; it++) {
+    // 为每个对手抽互不共牌的底牌（物理不重复；冲突重抽 + 扫描兜底）
+    villPairs.length = 0;
+    usedCards.clear();
+    for (let v = 0; v < pools.length; v++) {
+      const poolV = pools[v];
+      let pairIdx = -1;
+      for (let attempt = 0; attempt < 60; attempt++) {
+        const cand = pickers[v]();
+        if (!usedCards.has(cards[cand >> 6]) && !usedCards.has(cards[cand & 63])) {
+          pairIdx = cand;
+          break;
+        }
+      }
+      if (pairIdx === -1) {
+        // 极小范围池兜底：顺序扫描找无冲突组合（防死循环；正常不会走到）
+        for (const cand of [...poolV.strong, ...poolV.bluff]) {
+          if (!usedCards.has(cards[cand >> 6]) && !usedCards.has(cards[cand & 63])) {
+            pairIdx = cand;
+            break;
+          }
+        }
+        if (pairIdx === -1) pairIdx = poolV.strong[0]; // 极端兜底：接受冲突（有偏但不停机）
+      }
+      usedCards.add(cards[pairIdx >> 6]);
+      usedCards.add(cards[pairIdx & 63]);
+      villPairs.push(pairIdx);
+    }
+
+    // 从剩余牌中抽 runout（无放回；排除全部对手底牌）
+    let heroScore: number;
+    let bestVillain = -1;
+    if (need === 0) {
+      heroScore = evaluate7([...hero, ...board]);
+      for (let v = 0; v < villPairs.length; v++) {
+        const cv = pools[v].cards;
+        const p = villPairs[v];
+        const s = evaluate7([cv[p >> 6], cv[p & 63], ...board]);
+        if (s > bestVillain) bestVillain = s;
+      }
+    } else {
+      const runPool: Card[] = [];
+      for (const c of cards) if (!usedCards.has(c)) runPool.push(c);
+      for (let k = 0; k < need; k++) {
+        const j = k + Math.floor(rng() * (runPool.length - k));
+        const tmp = runPool[k];
+        runPool[k] = runPool[j];
+        runPool[j] = tmp;
+      }
+      const fullBoard = [...board, ...runPool.slice(0, need)];
+      heroScore = evaluate7([...hero, ...fullBoard]);
+      for (let v = 0; v < villPairs.length; v++) {
+        const cv = pools[v].cards;
+        const p = villPairs[v];
+        const s = evaluate7([cv[p >> 6], cv[p & 63], ...fullBoard]);
+        if (s > bestVillain) bestVillain = s;
+      }
+    }
+
+    if (heroScore > bestVillain) win++;
+    else if (heroScore === bestVillain) tie++;
+  }
+  return (win + tie / 2) / iterations;
+}
+
+/**
  * hero 对 RangeSpec 隐含范围的蒙特卡洛胜率（win + tie/2），带缓存。
  *
  * 每次迭代按权重无放回抽一对对手底牌（强牌权重 1、诈唬权重 bluffPct——
@@ -358,6 +509,7 @@ function getPool(
  * 逐比特一致。旧的「多人池 = 对收紧范围抽单个对手」近似会严重高估多人
  * 池胜率（中对子 vs 4 个 top28% 范围：单对手口径 ≈0.51，联合口径 ≈0.2），
  * 已由 brain 的 rangeMultiwayJoint 旋钮切换（默认 true = 联合口径）。
+ * 多人池逐角色范围（下注者/跟注者不同 spec）见 equityVsRanges。
  *
  * 缓存 key 含 spec、迭代数、对手数与 blocker 开关（兼容 brain 的 equity 缓存
  * 风格：不同迭代数/对手数/开关的条目互不混用）。rng 可注入以便测试复现；
@@ -390,115 +542,60 @@ export function equityVsRange(
   const hit = rangeEquityCache.get(eqKey);
   if (hit !== undefined) return hit;
 
-  const { cards, strong, bluff } = pool;
-  const need = 5 - board.length;
-  const bluffW = bluff.length > 0 ? clamp(spec.bluffPct, 0, 1) : 0;
+  // 单 spec 多人 = 同一池/同一 spec 传 N 份，走与 equityVsRanges 相同的联合内核
+  const pools = new Array<RangePool>(opponents).fill(pool);
+  const specs = new Array<RangeSpec>(opponents).fill(spec);
+  const eq = jointEquityTrials(hero, board, pools, specs, iterations, rng);
+  if (rangeEquityCache.size >= EQUITY_CACHE_LIMIT) rangeEquityCache.clear();
+  rangeEquityCache.set(eqKey, eq);
+  return eq;
+}
 
-  /** 按权重抽一对底牌（强牌权重 1 / 诈唬权重 bluffW） */
-  let pickPair: () => number;
-  if (pool.strongW === null || pool.bluffW === null) {
-    // 均匀权重（blocker 关闭或无规则命中）：旧公式路径，与旧版逐比特一致
-    const totalW = strong.length + bluff.length * bluffW;
-    pickPair = (): number => {
-      const t = rng() * totalW;
-      if (t < strong.length) return strong[Math.floor(t)];
-      const k = Math.floor((t - strong.length) / bluffW);
-      return bluff[Math.min(k, bluff.length - 1)];
-    };
-  } else {
-    // blocker 逐组合权重：线性扫描累计权重选牌（每次抽牌仍 1 次 rng()，
-    // 权重只改变 t 到组合的映射）
-    const strongW = pool.strongW;
-    const bluffArrW = pool.bluffW;
-    let strongTotal = 0;
-    for (let i = 0; i < strongW.length; i++) strongTotal += strongW[i];
-    let bluffBase = 0;
-    for (let i = 0; i < bluffArrW.length; i++) bluffBase += bluffArrW[i];
-    const totalW = strongTotal + bluffBase * bluffW;
-    pickPair = (): number => {
-      const t = rng() * totalW;
-      if (t < strongTotal) {
-        let acc = 0;
-        for (let i = 0; i < strong.length; i++) {
-          acc += strongW[i];
-          if (t < acc) return strong[i];
-        }
-        return strong[strong.length - 1];
-      }
-      const u = t - strongTotal;
-      let acc = 0;
-      for (let i = 0; i < bluff.length; i++) {
-        acc += bluffArrW[i] * bluffW;
-        if (u < acc) return bluff[i];
-      }
-      return bluff[bluff.length - 1];
-    };
+/**
+ * hero 对「逐角色范围」的蒙特卡洛胜率（win + tie/2），带缓存——多人池里每个
+ * 对手可以有不同的隐含范围（公共资产；训练器防守判定曾用它做下注者/跟注者
+ * 混合采样，2026-09-29 起防守侧改为只对下注者评估，见 gto/multiway.ts）。
+ *
+ * specs[i] 为对手 i 的 RangeSpec（长度 1-3 = 对手数）。每轮为对手 i 从
+ * specs[i] 的池独立加权抽一对底牌（各池各自构建/缓存；互不共牌，冲突重抽
+ * 与 equityVsRange 同逻辑），hero 压过全部对手才计 win（与 equityVsRange
+ * 的 opponents>1 口径一致）。
+ *
+ * 与 equityVsRange 的关系：共用 jointEquityTrials 内核——specs 全相同时
+ * （如 [s,s,s]）与同 spec+同 opponents 的 equityVsRange 逐比特一致（同 seed
+ * 同结果）；specs 长度 1 时等价于 equityVsRange(..., opponents=1)。不提供
+ * blocker 开关（训练器题族不用；brain 决策路径请继续用 equityVsRange）。
+ *
+ * 缓存 key 为各 spec 的池键拼接 + 迭代数，与 equityVsRange 的条目互不混用。
+ */
+export function equityVsRanges(
+  hero: [Card, Card],
+  board: Card[],
+  specs: RangeSpec[],
+  iterations: number = 400,
+  rng: () => number = Math.random,
+): number {
+  if (board.length < 3 || board.length > 5) throw new Error("board 必须为 3-5 张");
+  if (!Number.isInteger(iterations) || iterations <= 0) {
+    throw new Error("iterations 必须为正整数");
   }
-
-  let win = 0;
-  let tie = 0;
-  // 分配提升到迭代外（perf：单挑热点路径避免每轮新建 Set/数组）
-  const villPairs: number[] = [];
-  const usedCards = new Set<string>();
-  for (let it = 0; it < iterations; it++) {
-    // 抽 opponents 个互不共牌的对手底牌（物理不重复；冲突重抽 + 扫描兜底）
-    villPairs.length = 0;
-    usedCards.clear();
-    for (let v = 0; v < opponents; v++) {
-      let pairIdx = -1;
-      for (let attempt = 0; attempt < 60; attempt++) {
-        const cand = pickPair();
-        if (!usedCards.has(cards[cand >> 6]) && !usedCards.has(cards[cand & 63])) {
-          pairIdx = cand;
-          break;
-        }
-      }
-      if (pairIdx === -1) {
-        // 极小范围池兜底：顺序扫描找无冲突组合（防死循环；正常不会走到）
-        for (const cand of [...strong, ...bluff]) {
-          if (!usedCards.has(cards[cand >> 6]) && !usedCards.has(cards[cand & 63])) {
-            pairIdx = cand;
-            break;
-          }
-        }
-        if (pairIdx === -1) pairIdx = strong[0]; // 极端兜底：接受冲突（有偏但不停机）
-      }
-      usedCards.add(cards[pairIdx >> 6]);
-      usedCards.add(cards[pairIdx & 63]);
-      villPairs.push(pairIdx);
-    }
-
-    // 从剩余牌中抽 runout（无放回；排除全部对手底牌）
-    let heroScore: number;
-    let bestVillain = -1;
-    if (need === 0) {
-      heroScore = evaluate7([...hero, ...board]);
-      for (const p of villPairs) {
-        const s = evaluate7([cards[p >> 6], cards[p & 63], ...board]);
-        if (s > bestVillain) bestVillain = s;
-      }
-    } else {
-      const runPool: Card[] = [];
-      for (const c of cards) if (!usedCards.has(c)) runPool.push(c);
-      for (let k = 0; k < need; k++) {
-        const j = k + Math.floor(rng() * (runPool.length - k));
-        const tmp = runPool[k];
-        runPool[k] = runPool[j];
-        runPool[j] = tmp;
-      }
-      const fullBoard = [...board, ...runPool.slice(0, need)];
-      heroScore = evaluate7([...hero, ...fullBoard]);
-      for (const p of villPairs) {
-        const s = evaluate7([cards[p >> 6], cards[p & 63], ...fullBoard]);
-        if (s > bestVillain) bestVillain = s;
-      }
-    }
-
-    if (heroScore > bestVillain) win++;
-    else if (heroScore === bestVillain) tie++;
+  if (!Array.isArray(specs) || specs.length < 1 || specs.length > 3) {
+    throw new Error("specs 必须为 1-3 个（每对手一个 RangeSpec）");
   }
+  for (const s of specs) {
+    if (!s || !Number.isFinite(s.topPct) || !Number.isFinite(s.bluffPct)) {
+      throw new Error("specs 元素必须为含有限 topPct/bluffPct 的 RangeSpec");
+    }
+  }
+  const pools = specs.map((s) => getPool(hero, board, s, false));
+  const eqKey =
+    pools
+      .map((p, i) => poolCacheKey(hero, board, specs[i], p.strongW !== null))
+      .join("&") + `|${iterations}`;
+  const hit = rangeEquityCache.get(eqKey);
+  if (hit !== undefined) return hit;
 
-  const eq = (win + tie / 2) / iterations;
+  const eq = jointEquityTrials(hero, board, pools, specs, iterations, rng);
   if (rangeEquityCache.size >= EQUITY_CACHE_LIMIT) rangeEquityCache.clear();
   rangeEquityCache.set(eqKey, eq);
   return eq;

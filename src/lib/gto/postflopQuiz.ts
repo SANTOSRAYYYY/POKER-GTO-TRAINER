@@ -21,18 +21,23 @@
  * - defense：对手已下注，其范围不是随机——用 equityVsRange（下注者隐含范围，
  *   按行动线取 spec + 15% 诈唬混入）实算胜率：
  *     ≥ 加注线（单挑 68%，+6pp/人）→ aggressive（价值加注）；
- *     ≥ 跟注线（单挑 28%，+4pp/人）→ passive（call：半池注赔率 25% + 实现折扣余量）；
+ *     ≥ 跟注线（单挑 28%，+3pp/人实现率税）→ passive（call：半池注赔率 25% + 实现折扣余量）；
  *     否则 → fold。
  *   中间档一律跟注——中对/弱对加注只会打走差的留下强的。
  *
- * 多路底池（multiway，见 multiway.ts）：opponents 按 55/30/15% 抽 1|2|3，
- * 胜率一律按对手数联合采样（equityMulti / equityVsRange：hero 需压过全部
- * 对手）。多人行动线里 hero 更可能是跟注者：attack 多人线 = 你（BTN）跟注
+ * 多路底池（multiway，见 multiway.ts）：opponents 按 55/30/15% 抽 1|2|3。
+ * 多人行动线里 hero 更可能是跟注者：attack 多人线 = 你（BTN）跟注
  * 开局、盲注也跟注，翻牌全员过牌到最后行动的你（role = caller）；defense
  * 多人线 = 你（大盲）跟注多人池，面对开局者的持续下注且身后还有人
- * （role = bbDefend）。防守题多人判定是保守口径：尚未行动的对手也按下注者
- * 范围联合采样（引擎只支持单一 spec）。半诈唬放宽仅单挑生效
- * （semibluffAllowed）——多人底池诈唬成功率大幅下降。
+ * （role = bbDefend）。两套胜率口径（2026-09-29 修正）：
+ * - attack（进攻侧）：主动进攻要赢全场，对 opponents 名随机对手联合采样
+ *   （hero 需压过全部），进攻线步进不变；
+ * - defense（防守侧）：面对下注只评估 hero 对下注者的胜率
+ *   （equityVsRange(..., opponents=1)）——身后尚未行动的跟注者视为死钱，
+ *   死钱反而改善直接赔率，实现率税体现为跟注线 +0.03/人（加注线 +0.06/人
+ *   不变：加注是打全场）。旧框架「联合胜率 + 跟注线 +0.04/人」对多人摊薄
+ *   重复计费，强牌被系统性误弃。单挑（opponents=1）行为逐比特不变。
+ * 半诈唬放宽仅单挑生效（semibluffAllowed）——多人底池诈唬成功率大幅下降。
  *
  * 难度过滤（isTooObvious，见 trainerDifficulty.ts）：防守题判定胜率 <20%
  * （纯垃圾弃牌）或 >85%（坚果级无脑加注）、进攻题 >85%（无脑价值）或 <25%
@@ -100,7 +105,7 @@ export interface PostflopScenario {
 export interface PostflopQuiz extends PostflopScenario {
   /** 实算胜率（对 opponents 名随机对手联合采样，win/tie/lose 0-1，展示用） */
   equity: EquityResult;
-  /** 防守题的判定胜率（对下注者范围联合采样，0-1；进攻题为 null） */
+  /** 防守题的判定胜率（对下注者范围胜率，多人池也只对下注者——身后跟注者视为死钱，0-1；进攻题为 null） */
   defenseEquity: number | null;
   /** 听牌分析（进攻题的半诈唬判定用） */
   draws: DrawInfo;
@@ -408,13 +413,15 @@ export function generatePostflopQuiz(
     const equity = evaluateScenario(scenario, iterations);
     const defenseEquity =
       scenario.type === "defense"
-        ? equityVsRange(
+        ? // 防守判定（含多人池）：只评估对下注者的胜率（opponents=1）——
+          // 身后尚未行动的跟注者视为死钱，死钱改善直接赔率（见 multiway.ts 两套口径）
+          equityVsRange(
             scenario.hero,
             scenario.board,
             defenseRangeSpecFor(scenario.lineKind),
             iterations,
             rng,
-            scenario.opponents,
+            1,
           )
         : null;
     const draws = analyzeDraws(scenario.hero, scenario.board);
@@ -461,6 +468,10 @@ export function quizComment(quiz: PostflopQuiz): string {
     quiz.opponents > 1
       ? `${potPlayers(quiz.opponents)} 人底池：胜率被稀释，继续需要更强牌力——`
       : "";
+  const noteDefense =
+    quiz.opponents > 1
+      ? `${potPlayers(quiz.opponents)} 人底池：只评估对下注者的胜率，身后跟注者视为死钱改善直接赔率——`
+      : "";
   switch (quiz.answer) {
     case "aggressive": {
       if (quiz.type === "attack") {
@@ -476,10 +487,10 @@ export function quizComment(quiz: PostflopQuiz): string {
         }
         return `${note}实算胜率 ${pct}%${tie}，越过 ${atk}% 进攻线——牌力明显领先随机手，主动下注拿价值、直接收池`;
       }
-      return `${note}对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，超过 ${raise}% 加注线——价值加注榨取，别给便宜看牌`;
+      return `${noteDefense}对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，超过 ${raise}% 加注线——价值加注榨取，别给便宜看牌`;
     }
     case "fold":
-      return `${note}对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，不足 ${call}%——半池注需 25% 赔率也够不上，弃牌`;
+      return `${noteDefense}对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，不足 ${call}%——半池注需 25% 赔率也够不上，弃牌`;
     case "passive":
       if (quiz.type === "attack") {
         if (quiz.opponents > 1 && isStrongDraw(quiz.draws)) {
@@ -490,6 +501,6 @@ export function quizComment(quiz: PostflopQuiz): string {
         }
         return `${note}实算胜率 ${pct}%${tie}，不够进攻线——过牌控池、免费看转牌，别用弱牌造池`;
       }
-      return `${note}对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，够 ${call}% 跟注线但不够 ${raise}% 加注线——中对/弱对的标准打法是跟注看转牌，加注只会打走差的留下强的`;
+      return `${noteDefense}对下注者范围（前 ${rPct}%，随行动线收窄）实算胜率 ${dPct}%${tie}，够 ${call}% 跟注线但不够 ${raise}% 加注线——中对/弱对的标准打法是跟注看转牌，加注只会打走差的留下强的`;
   }
 }

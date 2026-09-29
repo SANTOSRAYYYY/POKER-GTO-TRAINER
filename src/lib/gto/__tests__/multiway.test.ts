@@ -124,13 +124,13 @@ describe("判定阈值函数（multiway.ts）", () => {
     for (const [, f, base] of lines) expect(f(1)).toBe(base);
   });
 
-  it("步进口径：翻牌/转牌加注进攻 +0.06/人、防守跟注 +0.04/人、河牌 +0.05/人", () => {
+  it("步进口径：进攻/加注 +0.06/人（不变）、防守跟注 +0.03/人（实现率税）、河牌价值 +0.05/人、抓诈 +0.03/人", () => {
     expect(flopAttackLine(3)).toBeCloseTo(0.67, 10);
     expect(flopDefenseRaiseLine(2)).toBeCloseTo(0.74, 10);
-    expect(flopDefenseCallLine(3)).toBeCloseTo(0.36, 10);
-    expect(turnDefenseCallLine(2)).toBeCloseTo(0.34, 10);
+    expect(flopDefenseCallLine(3)).toBeCloseTo(0.34, 10);
+    expect(turnDefenseCallLine(2)).toBeCloseTo(0.33, 10);
     expect(riverValueBetLine(3)).toBeCloseTo(0.7, 10);
-    expect(riverBluffcatchCallLine(2)).toBeCloseTo(0.38, 10);
+    expect(riverBluffcatchCallLine(2)).toBeCloseTo(0.36, 10);
   });
 
   it("半诈唬放宽仅单挑生效", () => {
@@ -170,7 +170,7 @@ describe("引擎层多人胜率回归（联合采样）", () => {
 });
 
 describe("多人判定差分（同一胜率，单挑与多人结论不同）", () => {
-  it("翻牌防守：0.31 单挑判跟注（≥0.28），四人池判弃牌（<0.36）", () => {
+  it("翻牌防守：0.31 单挑判跟注（≥0.28），四人池判弃牌（<0.34）", () => {
     expect(judgePostflop(0.9, "defense", 0.31, undefined, 1)).toBe("passive");
     expect(judgePostflop(0.9, "defense", 0.31, undefined, 3)).toBe("fold");
   });
@@ -191,7 +191,7 @@ describe("多人判定差分（同一胜率，单挑与多人结论不同）", (
     expect(judgePostflop(0.5, "attack", undefined, STRONG_DRAW, 3)).toBe("passive");
   });
 
-  it("转牌面对第二枪：0.33 单挑判跟注（≥0.30），四人池判弃牌（<0.38）", () => {
+  it("转牌面对第二枪：0.33 单挑判跟注（≥0.30），四人池判弃牌（<0.36）", () => {
     expect(judgeTurn(0.33, "defense", undefined, 1)).toBe("passive");
     expect(judgeTurn(0.33, "defense", undefined, 3)).toBe("fold");
   });
@@ -208,7 +208,7 @@ describe("多人判定差分（同一胜率，单挑与多人结论不同）", (
     expect(judgeRiver(0.9, "value", 0.63, 3)).toBe("passive");
   });
 
-  it("河牌抓诈：0.35 单挑判跟注（≥0.33），四人池判弃牌（线 0.43）", () => {
+  it("河牌抓诈：0.35 单挑判跟注（≥0.33），四人池判弃牌（线 0.39）", () => {
     expect(judgeRiver(0.1, "bluffcatch", 0.35, 1)).toBe("passive");
     expect(judgeRiver(0.1, "bluffcatch", 0.35, 3)).toBe("fold");
   });
@@ -216,6 +216,32 @@ describe("多人判定差分（同一胜率，单挑与多人结论不同）", (
   it("河牌诈唬题判定不受对手数参数影响（题型本身只在单挑出现）", () => {
     expect(judgeRiver(0.24, "bluff", undefined, 1)).toBe("aggressive");
     expect(judgeRiver(0.3, "bluff", undefined, 1)).toBe("passive");
+  });
+});
+
+describe("多人池防守框架（2026-09-29 修正：对下注者胜率 + 实现率税）", () => {
+  // 旧框架「联合胜率 + 跟注线 +0.04/0.05pp/人」对多人摊薄重复计费（用户实报：
+  // 四人池顶两对面对第二枪被误弃）。新框架：防守只评估对下注者的胜率
+  // （身后跟注者视为死钱改善直接赔率），跟注线步进降为 +0.03/人实现率税；
+  // 加注线 +0.06/人与进攻侧步进不变（加注/进攻是打全场）。
+  it("防守跟注线 +0.03/人（翻牌 0.28 / 转牌 0.30 / 河牌抓诈 0.33 基准），单挑值不变", () => {
+    expect(flopDefenseCallLine(1)).toBeCloseTo(0.28, 10);
+    expect(flopDefenseCallLine(2)).toBeCloseTo(0.31, 10);
+    expect(flopDefenseCallLine(3)).toBeCloseTo(0.34, 10);
+    expect(turnDefenseCallLine(1)).toBeCloseTo(0.3, 10);
+    expect(turnDefenseCallLine(2)).toBeCloseTo(0.33, 10);
+    expect(turnDefenseCallLine(3)).toBeCloseTo(0.36, 10);
+    expect(riverBluffcatchCallLine(1)).toBeCloseTo(0.33, 10);
+    expect(riverBluffcatchCallLine(2)).toBeCloseTo(0.36, 10);
+    expect(riverBluffcatchCallLine(3)).toBeCloseTo(0.39, 10);
+  });
+
+  it("加注线保持 +0.06/人（加注是打全场，仍需碾压级牌力），进攻侧步进不变", () => {
+    expect(flopDefenseRaiseLine(3)).toBeCloseTo(0.8, 10);
+    expect(turnDefenseRaiseLine(3)).toBeCloseTo(0.8, 10);
+    expect(flopAttackLine(3)).toBeCloseTo(0.67, 10);
+    expect(turnBarrelLine(3)).toBeCloseTo(0.67, 10);
+    expect(riverValueBetLine(3)).toBeCloseTo(0.7, 10);
   });
 });
 

@@ -28,21 +28,26 @@
  *   一对手 +5pp）→ aggressive（价值下注）；45%-价值线 → passive（薄价值不够
  *   薄别贪：下注多半只被更强的牌跟）；< 45% → passive（过牌）。
  * - bluffcatch：equityVsRange（对手 = 极化范围 RIVER_BLUFFCATCH_POLAR_SPEC：
- *   前 25% 强牌 + 35% 诈唬混入）≥ 跟注线（单挑 33%，+5pp/人；满池注跟 1 池
- *   赢 3 池，保本胜率 33%）→ passive（跟注抓诈）；否则 → fold。
+ *   前 25% 强牌 + 35% 诈唬混入）≥ 跟注线（单挑 33%，+3pp/人实现率税；满池注
+ *   跟 1 池赢 3 池，保本胜率 33%）→ passive（跟注抓诈）；否则 → fold。
  * - bluff：精确胜率 < 25% → aggressive（诈唬：毫无摊牌价值，过牌=认输，
  *   唯有下注能赢）；25-45% → passive（弱牌有摊牌价值别诈唬：诈唬只会打走
  *   更弱的、被更强的跟）；≥ 45% → aggressive（牌力领先，价值下注）。
  *   **诈唬题只在单挑池出现**——多人池纯诈唬是负 EV 教学反面（需全部对手
  *   弃牌），多人池题型只抽 value / bluffcatch。
  *
- * 多路底池（multiway，见 multiway.ts）：opponents 按 55/30/15% 抽 1|2|3，
- * 胜率一律按对手数联合采样。多人行动线 kind 恒 open：value 多人线 = hero
- * BTN/CO 开局被盲注（与按钮）跟注、连开一枪后转牌全过（hero role = open）；
- * bluffcatch 多人线 = hero 大盲跟注多人池，河牌面对开局者满池注且身后还有
- * 人（hero role = bbDefend，heroRoleForRiver 需要 type+opponents 判定）。
- * 抓诈多人判定是保守口径：尚未行动的对手也按极化范围联合采样（引擎只支持
- * 单一 spec）。
+ * 多路底池（multiway，见 multiway.ts）：opponents 按 55/30/15% 抽 1|2|3。
+ * 多人行动线 kind 恒 open：value 多人线 = hero BTN/CO 开局被盲注（与按钮）
+ * 跟注、连开一枪后转牌全过（hero role = open）；bluffcatch 多人线 = hero
+ * 大盲跟注多人池，河牌面对开局者满池注且身后还有人（hero role = bbDefend，
+ * heroRoleForRiver 需要 type+opponents 判定）。两套胜率口径（2026-09-29
+ * 修正）：
+ * - value（进攻侧）：薄价值下注要被更差的牌跟、压住全场，对 opponents 名
+ *   跟注者联合采样，价值线步进不变（+0.05/人）；
+ * - bluffcatch（防守侧）：面对满池注只评估 hero 对下注者极化范围的胜率
+ *   （equityVsRange(..., opponents=1)）——身后尚未行动的跟注者视为死钱，
+ *   死钱反而改善直接赔率，实现率税体现为跟注线 +0.03/人（由 +0.05 下调）。
+ * 单挑（opponents=1）行为逐比特不变。
  *
  * 难度过滤（isTooObvious，见 trainerDifficulty.ts）：抓诈题 <20%/>85% 重发；
  * 薄价值题 >85%（无脑价值）或 <25%（纯空气过牌）重发；诈唬题 >85%（坚果级
@@ -114,7 +119,7 @@ export interface RiverScenario {
 export interface RiverQuiz extends RiverScenario {
   /** vs 随机对手的胜率（单挑 = 精确枚举；多人 = 按对手数联合蒙特卡洛。展示用；bluff 题的判定胜率） */
   equity: EquityResult;
-  /** 判定胜率（value/bluffcatch 题对相应隐含范围联合采样；bluff 题为 null） */
+  /** 判定胜率（value 题对跟注范围联合采样；bluffcatch 题对下注者极化范围，含多人池只对下注者；bluff 题为 null） */
   rangeEquity: number | null;
   /** 由胜率与子题型推导的标准答案 */
   answer: PostflopChoice;
@@ -546,7 +551,8 @@ export function generateRiverQuiz(
           );
     const rangeEquity =
       scenario.type === "value"
-        ? equityVsRange(
+        ? // value（进攻侧）：对 opponents 名跟注者联合采样（主动进攻要赢全场）
+          equityVsRange(
             scenario.hero,
             scenario.board,
             riverValueCallerSpecFor(scenario.lineKind),
@@ -555,13 +561,15 @@ export function generateRiverQuiz(
             scenario.opponents,
           )
         : scenario.type === "bluffcatch"
-          ? equityVsRange(
+          ? // bluffcatch（含多人池）：只评估对下注者极化范围的胜率（opponents=1）——
+            // 身后尚未行动的跟注者视为死钱，死钱改善直接赔率
+            equityVsRange(
               scenario.hero,
               scenario.board,
               RIVER_BLUFFCATCH_POLAR_SPEC,
               iterations,
               rng,
-              scenario.opponents,
+              1,
             )
           : null;
     const answer = judgeRiver(
@@ -598,6 +606,10 @@ export function riverQuizComment(quiz: RiverQuiz): string {
     quiz.opponents > 1
       ? `${potPlayers(quiz.opponents)} 人底池：胜率被稀释，继续需要更强牌力——`
       : "";
+  const noteDefense =
+    quiz.opponents > 1
+      ? `${potPlayers(quiz.opponents)} 人底池：只评估对下注者的胜率，身后跟注者视为死钱改善直接赔率——`
+      : "";
   switch (quiz.answer) {
     case "aggressive":
       if (quiz.type === "value") {
@@ -608,7 +620,7 @@ export function riverQuizComment(quiz: RiverQuiz): string {
       }
       return `${note}精确胜率 ${pct}%${tie}，超过 45%——牌力明显领先随机手，主动下注拿价值（这是价值不是诈唬）`;
     case "fold":
-      return `${note}对极化范围（前 25% 强牌 + 35% 诈唬）实算胜率 ${rPct}%${tie}，不足 ${catchLine}%——满池注需 33% 胜率保本，你连对方的诈唬组合都压不过，弃牌`;
+      return `${noteDefense}对极化范围（前 25% 强牌 + 35% 诈唬）实算胜率 ${rPct}%${tie}，不足 ${catchLine}%——满池注需 33% 胜率保本，你连对方的诈唬组合都压不过，弃牌`;
     case "passive":
       if (quiz.type === "value") {
         return (quiz.rangeEquity ?? 0) >= RIVER_THIN_VALUE_MIN
@@ -616,7 +628,7 @@ export function riverQuizComment(quiz: RiverQuiz): string {
           : `${note}对跟注范围（前 ${callerPct}%，随行动线收窄）实算胜率 ${rPct}%${tie}，不足 45%——下注等于诈唬而非价值；有摊牌价值的牌过牌比牌`;
       }
       if (quiz.type === "bluffcatch") {
-        return `${note}对极化范围（前 25% 强牌 + 35% 诈唬）实算胜率 ${rPct}%${tie}，越过 ${catchLine}% 满池赔率线——跟注抓诈：对方的诈唬组合足够多，满池注只需三分之一胜率`;
+        return `${noteDefense}对极化范围（前 25% 强牌 + 35% 诈唬）实算胜率 ${rPct}%${tie}，越过 ${catchLine}% 满池赔率线——跟注抓诈：对方的诈唬组合足够多，满池注只需三分之一胜率`;
       }
       return `精确胜率 ${pct}%${tie}，在 25-45% 之间——弱牌有摊牌价值：过牌有机会赢下更弱的牌；诈唬只会打走更弱的、被更强的跟注，把赢面打没`;
   }

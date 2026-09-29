@@ -78,6 +78,10 @@ function quizCommentText(quiz: TurnQuiz, t: TFunc): string {
     quiz.opponents > 1
       ? t("trainer.pot.note", { n: potPlayers(quiz.opponents) })
       : "";
+  const noteDefense =
+    quiz.opponents > 1
+      ? t("trainer.pot.noteDefense", { n: potPlayers(quiz.opponents) })
+      : "";
   const vars = { pct, tie, rpct };
   switch (quiz.answer) {
     case "aggressive":
@@ -98,9 +102,9 @@ function quizCommentText(quiz: TurnQuiz, t: TFunc): string {
         }
         return note + t("trainer.turn.comment.barrelValue", { ...vars, line });
       }
-      return note + t("trainer.turn.comment.defenseAggressive", { ...vars, raise });
+      return noteDefense + t("trainer.turn.comment.defenseAggressive", { ...vars, raise });
     case "fold":
-      return note + t("trainer.turn.comment.fold", { ...vars, call });
+      return noteDefense + t("trainer.turn.comment.fold", { ...vars, call });
     case "passive":
       if (quiz.type === "barrel") {
         if (quiz.opponents > 1 && isStrongDraw(quiz.draws)) {
@@ -116,7 +120,7 @@ function quizCommentText(quiz: TurnQuiz, t: TFunc): string {
         }
         return note + t("trainer.turn.comment.barrelGiveUp", vars);
       }
-      return note + t("trainer.turn.comment.defensePassive", {
+      return noteDefense + t("trainer.turn.comment.defensePassive", {
         ...vars,
         call,
         raise,

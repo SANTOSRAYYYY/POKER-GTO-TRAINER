@@ -28,9 +28,10 @@ import {
   turnRangeSpecFor,
 } from "../turnQuiz";
 import { analyzeDraws, isStrongDraw } from "../postflopQuiz";
+import { turnDefenseCallLine, turnDefenseRaiseLine } from "../multiway";
 import { heroRangeLabels } from "../heroRange";
 import { cardsToHandType } from "../pushfold";
-import { equityVsRange } from "@/lib/ai/range";
+import { equityVsRange, resetRangeCaches } from "@/lib/ai/range";
 
 /** 线性同余种子 rng（测试可复现） */
 function lcg(seed: number): () => number {
@@ -134,6 +135,72 @@ describe("generateTurnQuiz 实算回归", () => {
     expect(eq).toBeGreaterThanOrEqual(TURN_DEFENSE_CALL_THRESHOLD);
     expect(eq).toBeLessThan(TURN_DEFENSE_RAISE_THRESHOLD);
     expect(judgeTurn(eq, "defense")).toBe("passive");
+  });
+});
+
+describe("用户实报回归：多人池防守只对下注者（2026-09-29 框架修正）", () => {
+  // 用户实锤：T♥9♥ 顶两对在 6♣8♥8♣9♦，翻前跟注+翻牌跟注后转牌面对第二枪
+  // 1/2 池、两家未行动（四人池，opponents=3）。新框架：防守判定只评估对
+  // 第二枪者的胜率（身后跟注者 = 死钱，改善直接赔率），跟注线 = 实现率税
+  // 0.30 + 0.03/人。旧框架「联合胜率 + 跟注线 +0.04/人」对多人摊薄重复计费，
+  // 把对下注者 ~0.60 的胜率压到 ~0.24 → 误弃。
+  const hero = c("Th 9h") as [Card, Card];
+  const board = c("6c 8h 8c 9d") as [Card, Card, Card, Card];
+  const draws = analyzeDraws(hero, board);
+  resetRangeCaches();
+  const vsBettor = equityVsRange(hero, board, TURN_BETTOR_RANGE_SPEC, 8000, lcg(99), 1);
+  resetRangeCaches();
+  const oldJoint = equityVsRange(hero, board, TURN_BETTOR_RANGE_SPEC, 8000, lcg(99), 3);
+
+  it(`哨兵转正：四人池对第二枪者胜率 ${vsBettor.toFixed(3)} ≥ 跟注线 0.36 → passive（旧联合口径 ${oldJoint.toFixed(3)} 误弃）`, () => {
+    // 上一版哨兵断言「四人池仍判弃牌」——框架修正后按新口径更新为判跟注（变绿）
+    expect(vsBettor).toBeGreaterThanOrEqual(turnDefenseCallLine(3)); // 0.36
+    expect(vsBettor).toBeLessThan(turnDefenseRaiseLine(3)); // 0.80
+    expect(judgeTurn(vsBettor, "defense", draws, 3)).toBe("passive");
+    // 旧联合口径同一手牌判弃牌（重复计费的实锤）
+    expect(oldJoint).toBeLessThan(turnDefenseCallLine(3));
+    expect(judgeTurn(oldJoint, "defense", draws, 3)).toBe("fold");
+    expect(vsBettor).toBeGreaterThan(oldJoint + 0.2);
+  });
+
+  it("弱牌仍弃（防矫枉过正）：四人池纯空气 7♣2♦ 在 A♠K♥Q♦9♣ 面对第二枪，对下注者 ~0.04 < 0.36 → fold", () => {
+    const h2 = c("7c 2d") as [Card, Card];
+    const b2 = c("As Kh Qd 9c") as [Card, Card, Card, Card];
+    resetRangeCaches();
+    const eq = equityVsRange(h2, b2, TURN_BETTOR_RANGE_SPEC, 4000, lcg(7), 1);
+    expect(eq).toBeLessThan(turnDefenseCallLine(3));
+    expect(judgeTurn(eq, "defense", analyzeDraws(h2, b2), 3)).toBe("fold");
+  });
+
+  it("多人池强牌案例：四人池中对 9♥9♦ 在 T♥6♦2♣4♥ 面对第二枪，对下注者 ~0.53 → 跟注", () => {
+    const h2 = c("9h 9d") as [Card, Card];
+    const b2 = c("Th 6d 2c 4h") as [Card, Card, Card, Card];
+    resetRangeCaches();
+    const eq = equityVsRange(h2, b2, TURN_BETTOR_RANGE_SPEC, 8000, lcg(96), 1);
+    expect(eq).toBeGreaterThanOrEqual(turnDefenseCallLine(3));
+    expect(eq).toBeLessThan(turnDefenseRaiseLine(3));
+    expect(judgeTurn(eq, "defense", analyzeDraws(h2, b2), 3)).toBe("passive");
+  });
+
+  it("多人池碾压级强牌案例：四人池 TPTK A♥K♦ 在 K♥7♦2♣4♠ 面对第二枪，对下注者 ~0.82 ≥ 0.80 加注线 → 价值加注", () => {
+    const h2 = c("Ah Kd") as [Card, Card];
+    const b2 = c("Kh 7d 2c 4s") as [Card, Card, Card, Card];
+    resetRangeCaches();
+    const eq = equityVsRange(h2, b2, TURN_BETTOR_RANGE_SPEC, 12000, lcg(95), 1);
+    expect(eq).toBeGreaterThanOrEqual(turnDefenseRaiseLine(3));
+    expect(judgeTurn(eq, "defense", analyzeDraws(h2, b2), 3)).toBe("aggressive");
+  });
+
+  it("单挑防守逐比特回归：opp=1 分支同 seed 与旧口径一致，且该手牌单挑判跟注", () => {
+    resetRangeCaches();
+    const a = equityVsRange(hero, board, TURN_BETTOR_RANGE_SPEC, 1500, lcg(94), 1);
+    resetRangeCaches();
+    const b = equityVsRange(hero, board, TURN_BETTOR_RANGE_SPEC, 1500, lcg(94));
+    expect(b).toBe(a);
+    // 单挑线不变（0.30/0.68）：0.60 在跟注带
+    expect(a).toBeGreaterThanOrEqual(turnDefenseCallLine(1));
+    expect(a).toBeLessThan(turnDefenseRaiseLine(1));
+    expect(judgeTurn(a, "defense", draws, 1)).toBe("passive");
   });
 });
 

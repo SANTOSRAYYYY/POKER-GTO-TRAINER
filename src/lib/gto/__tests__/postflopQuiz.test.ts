@@ -34,8 +34,9 @@ import {
 } from "../postflopQuiz";
 import { FILTER_MAX_ATTEMPTS } from "../trainerDifficulty";
 import { heroRangeLabels } from "../heroRange";
+import { flopDefenseCallLine, flopDefenseRaiseLine } from "../multiway";
 import { cardsToHandType } from "../pushfold";
-import { equityVsRange } from "@/lib/ai/range";
+import { equityVsRange, resetRangeCaches } from "@/lib/ai/range";
 
 /** 线性同余种子 rng（测试可复现） */
 function lcg(seed: number): () => number {
@@ -150,6 +151,39 @@ describe("evaluateScenario 实算胜率", () => {
     };
     const r = evaluateScenario(s, 3000);
     expect(r.win).toBeGreaterThan(0.55);
+  });
+});
+
+describe("多人池防守只对下注者（2026-09-29 框架修正）", () => {
+  // 新框架：防守判定只评估对下注者的胜率（身后跟注者 = 死钱，改善直接赔率），
+  // 跟注线 = 实现率税 0.28 + 0.03/人（四人池 0.34），加注线保持 0.68 + 0.06/人。
+  it("四人池 TPTK A♥K♦ 在 K♣7♠2♦ 面对持续下注（两家未行动）：对下注者 ~0.86 ≥ 0.80 加注线 → 价值加注", () => {
+    const hero = c("Ah Kd") as [Card, Card];
+    const board = c("Kc 7s 2d") as [Card, Card, Card];
+    resetRangeCaches();
+    const eq = equityVsRange(hero, board, DEFENSE_RANGE_SPEC, 8000, lcg(94), 1);
+    expect(eq).toBeGreaterThanOrEqual(flopDefenseRaiseLine(3)); // 0.80
+    expect(judgePostflop(0.9, "defense", eq, undefined, 3)).toBe("aggressive");
+  });
+
+  it("四人池中对 9♥9♦ 在 K♣7♠2♦ 面对持续下注：对下注者 ~0.63 在跟注带（0.34-0.80）→ 跟注", () => {
+    const hero = c("9h 9d") as [Card, Card];
+    const board = c("Kc 7s 2d") as [Card, Card, Card];
+    resetRangeCaches();
+    const eq = equityVsRange(hero, board, DEFENSE_RANGE_SPEC, 8000, lcg(92), 1);
+    expect(eq).toBeGreaterThanOrEqual(flopDefenseCallLine(3));
+    expect(eq).toBeLessThan(flopDefenseRaiseLine(3));
+    expect(judgePostflop(0.9, "defense", eq, undefined, 3)).toBe("passive");
+  });
+
+  it("单挑防守逐比特回归：同一手牌同 seed 与 equityVsRange 一致", () => {
+    const hero = c("Ah Kd") as [Card, Card];
+    const board = c("Kc 7s 2d") as [Card, Card, Card];
+    resetRangeCaches();
+    const a = equityVsRange(hero, board, DEFENSE_RANGE_SPEC, 1500, lcg(93), 1);
+    resetRangeCaches();
+    const b = equityVsRange(hero, board, DEFENSE_RANGE_SPEC, 1500, lcg(93));
+    expect(b).toBe(a);
   });
 });
 

@@ -80,6 +80,10 @@ function quizCommentText(quiz: RiverQuiz, t: TFunc): string {
     quiz.opponents > 1
       ? t("trainer.pot.note", { n: potPlayers(quiz.opponents) })
       : "";
+  const noteDefense =
+    quiz.opponents > 1
+      ? t("trainer.pot.noteDefense", { n: potPlayers(quiz.opponents) })
+      : "";
   const vars = { pct, tie, rpct };
   switch (quiz.answer) {
     case "aggressive":
@@ -90,7 +94,7 @@ function quizCommentText(quiz: RiverQuiz, t: TFunc): string {
       }
       return note + t("trainer.river.comment.valueBetBig", vars);
     case "fold":
-      return note + t("trainer.river.comment.bluffcatchFold", { ...vars, line });
+      return noteDefense + t("trainer.river.comment.bluffcatchFold", { ...vars, line });
     case "passive":
       if (quiz.type === "value") {
         return note + t(
@@ -101,7 +105,7 @@ function quizCommentText(quiz: RiverQuiz, t: TFunc): string {
         );
       }
       if (quiz.type === "bluffcatch") {
-        return note + t("trainer.river.comment.bluffcatchCall", { ...vars, line });
+        return noteDefense + t("trainer.river.comment.bluffcatchCall", { ...vars, line });
       }
       return t("trainer.river.comment.bluffCheck", vars);
   }

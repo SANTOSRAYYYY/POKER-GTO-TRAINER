@@ -709,8 +709,8 @@ export const PAGES_DICT = {
     en: "{bb}bb ({depth}bb tier)",
   },
   "trainer.post.rule": {
-    zh: "翻牌圈场景 · 进攻题按对随机胜率判定（≥55% 进攻）· 防守题按对下注者范围胜率判定（≥68% 加注 / ≥28% 跟注 / 否则弃牌）· 范围随行动线收窄 · 按 55/30/15% 抽单挑/三人池/四人池：多人池门槛随人数上调（进攻/加注 +6pp、跟注 +4pp/人），半诈唬仅单挑放宽 · 脑残题自动重发",
-    en: "Flop scenarios · attack judged vs random equity (≥55%) · defense judged vs the bettor's range (raise ≥68% / call ≥28% / else fold) · ranges tighten with the action line · heads-up / 3-way / 4-way drawn at 55/30/15%: multiway lines scale up (attack/raise +6pp, call +4pp per extra opponent) and semi-bluffs only relax heads-up · no-brainer spots are re-dealt",
+    zh: "翻牌圈场景 · 进攻题按对随机胜率判定（≥55% 进攻）· 防守题按对下注者范围胜率判定（≥68% 加注 / ≥28% 跟注 / 否则弃牌）· 范围随行动线收窄 · 按 55/30/15% 抽单挑/三人池/四人池：多人池进攻按对手数联合采样（进攻/加注 +6pp/人），防守只评估对下注者胜率（身后跟注者视为死钱改善赔率，跟注 +3pp/人实现率税），半诈唬仅单挑放宽 · 脑残题自动重发",
+    en: "Flop scenarios · attack judged vs random equity (≥55%) · defense judged vs the bettor's range (raise ≥68% / call ≥28% / else fold) · ranges tighten with the action line · heads-up / 3-way / 4-way drawn at 55/30/15%: multiway attack is sampled jointly (attack/raise +6pp/opp); defense is judged vs the bettor only (callers behind are dead money, call +3pp/opp realization tax) and semi-bluffs only relax heads-up · no-brainer spots are re-dealt",
   },
   "trainer.post.dealing": {
     zh: "发牌并实算胜率中…",
@@ -740,8 +740,8 @@ export const PAGES_DICT = {
   "trainer.post.tie": { zh: "平局", en: "Tie" },
   "trainer.post.lose": { zh: "败率", en: "Lose" },
   "trainer.post.method": {
-    zh: "实算口径：蒙特卡洛 2000 次 · 进攻线（对随机）{attack}% · 防守判定用下注者范围（随行动线前 35-60%）：加注线 {raise}% / 跟注线 {call}% · 多人池胜率按对手数联合采样，每多 1 对手进攻/加注线 +6pp、跟注线 +4pp",
-    en: "Method: 2000-iteration Monte Carlo · attack line (vs random) {attack}% · defense judged vs the bettor's range (top 35-60%, tightening with the action line): raise {raise}% / call {call}% · multiway equity is sampled jointly across all opponents: +6pp to attack/raise and +4pp to call per extra opponent",
+    zh: "实算口径：蒙特卡洛 2000 次 · 进攻线（对随机）{attack}% · 防守判定用下注者范围（随行动线前 35-60%）：加注线 {raise}% / 跟注线 {call}% · 多人池：进攻按对手数联合采样（进攻/加注线 +6pp/人）；防守只评估对下注者胜率（身后跟注者视为死钱改善直接赔率），跟注线 +3pp/人实现率税",
+    en: "Method: 2000-iteration Monte Carlo · attack line (vs random) {attack}% · defense judged vs the bettor's range (top 35-60%, tightening with the action line): raise {raise}% / call {call}% · multiway: attack sampled jointly across all opponents (+6pp/opp to attack/raise); defense judged vs the bettor only (callers behind are dead money, improving direct odds), call line +3pp/opp realization tax",
   },
   "trainer.pot.headsUp": { zh: "单挑", en: "Heads-up" },
   "trainer.pot.threeWay": { zh: "三人池", en: "3-way" },
@@ -749,6 +749,10 @@ export const PAGES_DICT = {
   "trainer.pot.note": {
     zh: "{n} 人底池：胜率被稀释，继续需要更强牌力——",
     en: "{n}-way pot: equity is diluted — continuing takes a stronger hand. ",
+  },
+  "trainer.pot.noteDefense": {
+    zh: "{n} 人底池：只评估对下注者的胜率，身后跟注者视为死钱改善直接赔率——",
+    en: "{n}-way pot: judged vs the bettor only — callers behind are dead money, improving your direct odds. ",
   },
   "trainer.post.wrongMeta": {
     zh: "{type} · 胜率 {pct}%",
@@ -825,8 +829,8 @@ export const PAGES_DICT = {
 
   // ---- 转牌圈（TurnTrainer / lib/gto/turnQuiz.ts） ----
   "trainer.turn.rule": {
-    zh: "转牌圈场景 · 第二枪题按对跟注者范围（前 45%）胜率判定：≥55% 继续进攻，35-55% 且强听牌算半诈唬进攻 · 面对第二枪按对下注者范围（随行动线前 30-45%）判定：≥68% 加注 / ≥30% 跟注 / 否则弃牌 · 多人池门槛随人数上调（进攻/加注 +6pp、跟注 +4pp/人），半诈唬仅单挑放宽 · 脑残题自动重发",
-    en: "Turn scenarios · double-barrel judged vs the caller's range (top 45%): fire again ≥55%, semi-bluff at 35-55% with a strong draw · facing a second barrel judged vs the bettor's range (top 30-45%, tightening with the action line): raise ≥68% / call ≥30% / else fold · multiway lines scale up (attack/raise +6pp, call +4pp per extra opponent) and semi-bluffs only relax heads-up · no-brainer spots are re-dealt",
+    zh: "转牌圈场景 · 第二枪题按对跟注者范围（前 45%）胜率判定：≥55% 继续进攻，35-55% 且强听牌算半诈唬进攻 · 面对第二枪按对下注者范围（随行动线前 30-45%）判定：≥68% 加注 / ≥30% 跟注 / 否则弃牌 · 多人池第二枪联合采样（进攻/加注 +6pp/人），面对第二枪只评估对下注者胜率（身后跟注者视为死钱改善赔率，跟注 +3pp/人实现率税），半诈唬仅单挑放宽 · 脑残题自动重发",
+    en: "Turn scenarios · double-barrel judged vs the caller's range (top 45%): fire again ≥55%, semi-bluff at 35-55% with a strong draw · facing a second barrel judged vs the bettor's range (top 30-45%, tightening with the action line): raise ≥68% / call ≥30% / else fold · multiway barrels sampled jointly (attack/raise +6pp/opp); facing a barrel judged vs the bettor only (callers behind are dead money, call +3pp/opp realization tax) and semi-bluffs only relax heads-up · no-brainer spots are re-dealt",
   },
   "trainer.turn.barrelQ": { zh: "第二枪题", en: "Double-barrel spot" },
   "trainer.turn.defenseQ": {
@@ -844,8 +848,8 @@ export const PAGES_DICT = {
     en: "Facing the second barrel — raise, call, or fold?",
   },
   "trainer.turn.method": {
-    zh: "实算口径：蒙特卡洛 {iters} 次 · 第二枪对跟注者范围（前 45% + 10% 诈唬混入）：进攻线 {barrel}%，强听牌半诈唬带 {semi}-{barrel}% · 面对第二枪对下注者范围（随行动线前 30-45%）：加注线 {raise}% / 跟注线 {call}% · 多人池胜率按对手数联合采样，每多 1 对手进攻/加注线 +6pp、跟注线 +4pp",
-    en: "Method: {iters}-iteration Monte Carlo · barrel judged vs caller's range (top 45% + 10% bluffs): attack line {barrel}%, semi-bluff band {semi}-{barrel}% with a strong draw · facing the barrel vs bettor's range (top 30-45%, tightened by the action line): raise {raise}% / call {call}% · multiway equity is sampled jointly across all opponents: +6pp to attack/raise and +4pp to call per extra opponent",
+    zh: "实算口径：蒙特卡洛 {iters} 次 · 第二枪对跟注者范围（前 45% + 10% 诈唬混入）：进攻线 {barrel}%，强听牌半诈唬带 {semi}-{barrel}% · 面对第二枪对下注者范围（随行动线前 30-45%）：加注线 {raise}% / 跟注线 {call}% · 多人池：第二枪按对手数联合采样（进攻/加注线 +6pp/人）；面对第二枪只评估对下注者胜率（身后跟注者视为死钱改善直接赔率），跟注线 +3pp/人实现率税",
+    en: "Method: {iters}-iteration Monte Carlo · barrel judged vs caller's range (top 45% + 10% bluffs): attack line {barrel}%, semi-bluff band {semi}-{barrel}% with a strong draw · facing the barrel vs bettor's range (top 30-45%, tightened by the action line): raise {raise}% / call {call}% · multiway: barrels sampled jointly across all opponents (+6pp/opp to attack/raise); facing a barrel judged vs the bettor only (callers behind are dead money, improving direct odds), call line +3pp/opp realization tax",
   },
   "trainer.turn.winVsCaller": {
     zh: "胜率（对跟注者范围）",
@@ -886,8 +890,8 @@ export const PAGES_DICT = {
 
   // ---- 河牌圈（RiverTrainer / lib/gto/riverQuiz.ts） ----
   "trainer.river.rule": {
-    zh: "河牌圈场景（公共牌 5 张齐，单挑对随机胜率精确枚举全部组合）· 价值题对跟注范围（随行动线前 40-50%）≥60% 下注 · 抓诈题对极化范围（前 25% + 35% 诈唬）≥33% 跟注 · 诈唬题 <25% 无摊牌价值才诈唬，25-45% 过牌，≥45% 价值下注 · 多人池价值/抓诈门槛 +5pp/人且胜率联合采样，诈唬题只在单挑池出现 · 脑残题自动重发",
-    en: "River scenarios (board complete; heads-up vs-random equity enumerated exactly over all combos) · thin value vs calling range (top 40-50%, tightening with the action line): bet ≥60% · bluff-catch vs polarized range (top 25% + 35% bluffs): call ≥33% · bluff: bet only below 25% (no showdown value), check 25-45%, value-bet ≥45% · multiway value/bluff-catch lines +5pp per extra opponent with jointly sampled equity; bluff spots appear heads-up only · no-brainer spots are re-dealt",
+    zh: "河牌圈场景（公共牌 5 张齐，单挑对随机胜率精确枚举全部组合）· 价值题对跟注范围（随行动线前 40-50%）≥60% 下注 · 抓诈题对极化范围（前 25% + 35% 诈唬）≥33% 跟注 · 诈唬题 <25% 无摊牌价值才诈唬，25-45% 过牌，≥45% 价值下注 · 多人池价值题联合采样（+5pp/人）；抓诈只评估对下注者极化范围胜率（身后跟注者视为死钱改善赔率，跟注 +3pp/人实现率税），诈唬题只在单挑池出现 · 脑残题自动重发",
+    en: "River scenarios (board complete; heads-up vs-random equity enumerated exactly over all combos) · thin value vs calling range (top 40-50%, tightening with the action line): bet ≥60% · bluff-catch vs polarized range (top 25% + 35% bluffs): call ≥33% · bluff: bet only below 25% (no showdown value), check 25-45%, value-bet ≥45% · multiway value spots sampled jointly (+5pp/opp); bluff-catch judged vs the bettor's polarized range only (callers behind are dead money, call +3pp/opp realization tax); bluff spots appear heads-up only · no-brainer spots are re-dealt",
   },
   "trainer.river.valueQ": { zh: "薄价值题", en: "Thin-value spot" },
   "trainer.river.bluffcatchQ": {
@@ -911,8 +915,8 @@ export const PAGES_DICT = {
     en: "Action on you — bluff at the pot, or check and give up?",
   },
   "trainer.river.method": {
-    zh: "实算口径：单挑对随机胜率精确枚举（剩余 45 张牌的全部 {combos} 组合），多人池按对手数联合蒙特卡洛 · 价值题对跟注范围（随行动线前 40-50% + 5% 诈唬混入）下注线 {value}% · 抓诈题对极化范围（前 25% + 35% 诈唬混入）跟注线 {catch}%（满池注赔率 33%）· 诈唬题胜率 <{bluff}% 才诈唬 / {bluff}-{showdown}% 有摊牌价值过牌 / ≥{showdown}% 价值下注 · 多人池价值/抓诈线每多 1 对手 +5pp",
-    en: "Method: exact enumeration vs random heads-up (all {combos} combos of the 45 remaining cards); multiway uses joint Monte Carlo across opponents · value line {value}% vs calling range (top 40-50%, tightened by the action line, + 5% bluffs) · bluff-catch call line {catch}% vs polarized range (top 25% + 35% bluffs; pot-sized bet = 33% pot odds) · bluff only below {bluff}%, check with showdown value {bluff}-{showdown}%, value-bet ≥{showdown}% · multiway value/bluff-catch lines +5pp per extra opponent",
+    zh: "实算口径：单挑对随机胜率精确枚举（剩余 45 张牌的全部 {combos} 组合）· 价值题对跟注范围（随行动线前 40-50% + 5% 诈唬混入）下注线 {value}% · 抓诈题对极化范围（前 25% + 35% 诈唬混入）跟注线 {catch}%（满池注赔率 33%）· 诈唬题胜率 <{bluff}% 才诈唬 / {bluff}-{showdown}% 有摊牌价值过牌 / ≥{showdown}% 价值下注 · 多人池：价值题按对手数联合蒙特卡洛（+5pp/人）；抓诈只评估对下注者极化范围胜率（身后跟注者视为死钱改善直接赔率），跟注线 +3pp/人实现率税",
+    en: "Method: exact enumeration vs random heads-up (all {combos} combos of the 45 remaining cards) · value line {value}% vs calling range (top 40-50%, tightened by the action line, + 5% bluffs) · bluff-catch call line {catch}% vs polarized range (top 25% + 35% bluffs; pot-sized bet = 33% pot odds) · bluff only below {bluff}%, check with showdown value {bluff}-{showdown}%, value-bet ≥{showdown}% · multiway: value uses joint Monte Carlo across opponents (+5pp/opp); bluff-catch judged vs the bettor's polarized range only (callers behind are dead money, improving direct odds), call line +3pp/opp realization tax",
   },
   "trainer.river.winExact": { zh: "胜率（精确枚举）", en: "Equity (exact)" },
   "trainer.river.winVsCaller": {

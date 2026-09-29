@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
 import type { Card, OpponentClass, OpponentModel, Seat, SeatAction } from "@/lib/types";
 import { equityMulti } from "@/lib/poker/equity";
 import { brainDecide, resetBrainCaches } from "../brain";
-import { equityVsRange, inferFacingSpec, resetRangeCaches } from "../range";
+import { equityVsRange, equityVsRanges, inferFacingSpec, resetRangeCaches } from "../range";
 import { createOpponentStats } from "../adapt";
 import { assertLegal, makeDecideInput } from "./helpers";
 
@@ -154,6 +154,79 @@ describe("equityVsRange 蒙特卡洛合理性", () => {
     resetRangeCaches();
     const implicit = equityVsRange(hero, b, spec, 800, mulberry32(42));
     expect(implicit).toBe(explicit);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// equityVsRanges：逐角色多人池范围胜率（2026-09-29 新增）
+// ---------------------------------------------------------------------------
+
+describe("equityVsRanges 逐角色多人池范围胜率", () => {
+  // 用户实报手牌：顶两对 T♥9♥ 在 6♣8♥8♣9♦（转牌面对第二枪）
+  const hero: [Card, Card] = ["Th", "9h"];
+  const board: Card[] = ["6c", "8h", "8c", "9d"];
+  const strong = { topPct: 0.45, bluffPct: 0.15 }; // 下注者（第二枪者）
+  const capped = { topPct: 0.65, bluffPct: 0.2 }; // 翻牌圈只跟注的封顶范围
+
+  it("specs 长度 1：与 equityVsRange(..., opponents=1) 同 seed 逐比特一致", () => {
+    resetRangeCaches();
+    const a = equityVsRanges(hero, board, [strong], 800, mulberry32(42));
+    resetRangeCaches();
+    const b = equityVsRange(hero, board, strong, 800, mulberry32(42), 1);
+    expect(a).toBe(b);
+  });
+
+  it("specs 全相同 ×3：与 equityVsRange 同 spec+opponents=3 统计一致（宽容区间）", () => {
+    resetRangeCaches();
+    const joint = equityVsRanges(hero, board, [strong, strong, strong], 6000, mulberry32(7));
+    resetRangeCaches();
+    const legacy = equityVsRange(hero, board, strong, 6000, mulberry32(7), 3);
+    expect(Math.abs(joint - legacy)).toBeLessThan(0.02);
+  });
+
+  it("逐角色混合：跟注者封顶显著抬高胜率（介于「全强」与「全封顶」之间）", () => {
+    resetRangeCaches();
+    const allStrong = equityVsRanges(hero, board, [strong, strong, strong], 8000, mulberry32(11));
+    resetRangeCaches();
+    const mixed = equityVsRanges(hero, board, [strong, capped, capped], 8000, mulberry32(12));
+    resetRangeCaches();
+    const allCapped = equityVsRanges(hero, board, [capped, capped, capped], 8000, mulberry32(13));
+    // 实测：allStrong ≈0.25 / mixed ≈0.30 / allCapped ≈0.33
+    expect(mixed).toBeGreaterThan(allStrong + 0.02);
+    expect(mixed).toBeLessThan(allCapped - 0.01);
+  });
+
+  it("specs 长度 2（三人池）：摊薄更少，胜率高于同组合四人池", () => {
+    resetRangeCaches();
+    const threeWay = equityVsRanges(hero, board, [strong, capped], 8000, mulberry32(14));
+    resetRangeCaches();
+    const fourWay = equityVsRanges(hero, board, [strong, capped, capped], 8000, mulberry32(15));
+    // 实测：threeWay ≈0.43 / fourWay ≈0.30
+    expect(threeWay).toBeGreaterThan(fourWay + 0.05);
+    expect(threeWay).toBeGreaterThan(0);
+    expect(threeWay).toBeLessThan(1);
+  });
+
+  it("河牌（公共牌已齐）混合 spec：坚果对任何 spec 组合恒胜", () => {
+    resetRangeCaches();
+    const eq = equityVsRanges(
+      ["As", "Ks"],
+      ["Qs", "Js", "Ts", "2d", "3c"],
+      [strong, capped, capped],
+      500,
+      mulberry32(16),
+    );
+    expect(eq).toBe(1);
+  });
+
+  it("错误参数：specs 空 / 超 3 个 / 元素非法 / board 非法 / iterations 非法 → throw", () => {
+    expect(() => equityVsRanges(hero, board, [], 100)).toThrow();
+    expect(() => equityVsRanges(hero, board, [strong, strong, strong, strong], 100)).toThrow();
+    expect(() => equityVsRanges(hero, board, [{ topPct: NaN, bluffPct: 0.1 }], 100)).toThrow();
+    expect(() => equityVsRanges(hero, board, [{ topPct: 0.5, bluffPct: Infinity }], 100)).toThrow();
+    expect(() => equityVsRanges(hero, ["Ah", "Kh"], [strong], 100)).toThrow();
+    expect(() => equityVsRanges(hero, board, [strong], 0)).toThrow();
+    expect(() => equityVsRanges(hero, board, [strong], 1.5)).toThrow();
   });
 });
 

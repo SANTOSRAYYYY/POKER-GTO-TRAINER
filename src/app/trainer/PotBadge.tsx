@@ -12,7 +12,8 @@ const BADGE_KEY: Record<OpponentCount, DictKey> = {
 
 /**
  * 底池人数徽标：单挑 / 三人池 / 四人池。多人池用琥珀色强调——
- * 判定门槛随人数上调，胜率被稀释（见 lib/gto/multiway.ts）。
+ * 多人池判定口径见 lib/gto/multiway.ts（进攻联合采样压全场 / 防守只对下注者、
+ * 身后跟注者视为死钱）。
  */
 export function PotBadge({ opponents }: { opponents: OpponentCount }) {
   const { t } = useI18n();

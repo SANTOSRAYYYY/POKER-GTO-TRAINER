@@ -66,6 +66,10 @@ function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
     quiz.opponents > 1
       ? t("trainer.pot.note", { n: potPlayers(quiz.opponents) })
       : "";
+  const noteDefense =
+    quiz.opponents > 1
+      ? t("trainer.pot.noteDefense", { n: potPlayers(quiz.opponents) })
+      : "";
   switch (quiz.answer) {
     case "aggressive":
       if (quiz.type === "attack") {
@@ -86,14 +90,14 @@ function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
         }
         return note + t("trainer.post.comment.attackAggressive", { pct, tie, atk });
       }
-      return note + t("trainer.post.comment.defenseAggressive", {
+      return noteDefense + t("trainer.post.comment.defenseAggressive", {
         pct: quiz.defenseEquity !== null ? dPct : pct,
         tie,
         rpct,
         raise,
       });
     case "fold":
-      return note + t("trainer.post.comment.fold", { pct: dPct, tie, rpct, call });
+      return noteDefense + t("trainer.post.comment.fold", { pct: dPct, tie, rpct, call });
     case "passive":
       if (quiz.type === "attack") {
         if (quiz.opponents > 1 && isStrongDraw(quiz.draws)) {
@@ -110,7 +114,7 @@ function quizCommentText(quiz: PostflopQuiz, t: TFunc): string {
         }
         return note + t("trainer.post.comment.attackPassive", { pct, tie });
       }
-      return note + t("trainer.post.comment.defensePassive", {
+      return noteDefense + t("trainer.post.comment.defensePassive", {
         pct: dPct,
         tie,
         rpct,

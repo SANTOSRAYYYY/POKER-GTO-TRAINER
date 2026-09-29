@@ -33,8 +33,9 @@ import {
   type RiverQuiz,
 } from "../riverQuiz";
 import { heroRangeLabels } from "../heroRange";
+import { riverBluffcatchCallLine } from "../multiway";
 import { cardsToHandType } from "../pushfold";
-import { equityVsRange } from "@/lib/ai/range";
+import { equityVsRange, resetRangeCaches } from "@/lib/ai/range";
 
 /** 线性同余种子 rng（测试可复现） */
 function lcg(seed: number): () => number {
@@ -180,6 +181,45 @@ describe("generateRiverQuiz 实算回归", () => {
     const eq = equityVsRange(hero, boardAir, RIVER_BLUFFCATCH_POLAR_SPEC, 4000, lcg(7));
     expect(eq).toBeGreaterThanOrEqual(RIVER_BLUFFCATCH_CALL_THRESHOLD);
     expect(judgeRiver(riverEquityExact(hero, boardAir).win, "bluffcatch", eq)).toBe("passive");
+  });
+});
+
+describe("多人池抓诈只对下注者（2026-09-29 框架修正）", () => {
+  // 新框架：抓诈判定只评估对下注者极化范围的胜率（身后跟注者 = 死钱，改善
+  // 直接赔率），跟注线 = 实现率税 0.33 + 0.03/人（四人池 0.39）。旧框架联合
+  // 采样把顶对级抓诈牌压到 ~0.17 → 误弃。
+  it("多人池强牌不再误弃（案例二）：四人池顶对 K♥Q♦ 在 K♠8♣4♦2♥6♣ 面对满池注，对下注者 ~0.58 ≥ 0.39 → 跟注（旧联合口径 ~0.17 误弃）", () => {
+    const hero = c("Kh Qd") as [Card, Card];
+    const board = c("Ks 8c 4d 2h 6c") as [Card, Card, Card, Card, Card];
+    resetRangeCaches();
+    const vsBettor = equityVsRange(hero, board, RIVER_BLUFFCATCH_POLAR_SPEC, 8000, lcg(96), 1);
+    resetRangeCaches();
+    const oldJoint = equityVsRange(hero, board, RIVER_BLUFFCATCH_POLAR_SPEC, 8000, lcg(96), 3);
+    // 旧联合口径误弃
+    expect(oldJoint).toBeLessThan(riverBluffcatchCallLine(3));
+    expect(judgeRiver(0.1, "bluffcatch", oldJoint, 3)).toBe("fold");
+    // 新口径：只对下注者 → 跟注抓诈
+    expect(vsBettor).toBeGreaterThanOrEqual(riverBluffcatchCallLine(3));
+    expect(judgeRiver(0.1, "bluffcatch", vsBettor, 3)).toBe("passive");
+  });
+
+  it("弱牌仍弃：四人池纯空气 7♣2♦ 在 K♠8♣4♦2♥6♣ 面对满池注，对下注者 ~0.20 < 0.39 → fold", () => {
+    const hero = c("7c 2d") as [Card, Card];
+    const board = c("Ks 8c 4d 2h 6c") as [Card, Card, Card, Card, Card];
+    resetRangeCaches();
+    const eq = equityVsRange(hero, board, RIVER_BLUFFCATCH_POLAR_SPEC, 4000, lcg(93), 1);
+    expect(eq).toBeLessThan(riverBluffcatchCallLine(3));
+    expect(judgeRiver(0.1, "bluffcatch", eq, 3)).toBe("fold");
+  });
+
+  it("单挑抓诈逐比特回归：同一手牌同 seed 与 equityVsRange 一致", () => {
+    const hero = c("Kh Qd") as [Card, Card];
+    const board = c("Ks 8c 4d 2h 6c") as [Card, Card, Card, Card, Card];
+    resetRangeCaches();
+    const single = equityVsRange(hero, board, RIVER_BLUFFCATCH_POLAR_SPEC, 2000, lcg(95), 1);
+    resetRangeCaches();
+    const again = equityVsRange(hero, board, RIVER_BLUFFCATCH_POLAR_SPEC, 2000, lcg(95));
+    expect(again).toBe(single);
   });
 });
 
