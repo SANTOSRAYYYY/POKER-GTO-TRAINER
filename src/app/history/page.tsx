@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Nav } from "@/components/history/Nav";
 import { handStyles, isTournamentHand, styleName } from "@/components/history/labels";
 import { useI18n } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n/dict";
+import { isNativeApp, nativeHandReplayHref } from "@/lib/nativeApp";
 import { useHistoryStore } from "@/lib/store/historyStore";
 import type { HandRecord } from "@/lib/types";
 import { HISTORY_PAGE_SIZE, nextVisibleCount, paginateHands } from "./pagination";
@@ -32,6 +34,7 @@ function handSummary(h: HandRecord, t: TFunc): string {
 
 export default function HistoryPage() {
   const { t, lang } = useI18n();
+  const router = useRouter();
   const { hands, loaded, loadError, loadAll, deleteHand, clearAll, stats } = useHistoryStore();
   const [busy, setBusy] = useState(false);
   const [visibleCount, setVisibleCount] = useState(HISTORY_PAGE_SIZE);
@@ -72,7 +75,7 @@ export default function HistoryPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/stats"
-              className="rounded-lg border border-emerald-900 px-3 py-1.5 text-sm text-emerald-400 transition-colors hover:bg-emerald-950/50"
+              className="rounded-lg border border-emerald-900 px-3 py-1.5 text-sm text-emerald-400 transition-colors hover:bg-emerald-950/50 max-md:inline-flex max-md:min-h-10 max-md:items-center"
             >
               {t("history.statsCenter")}
             </Link>
@@ -80,7 +83,7 @@ export default function HistoryPage() {
               <button
                 onClick={onClear}
                 disabled={busy}
-                className="rounded-lg border border-red-900 px-3 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-950/50 disabled:opacity-50"
+                className="rounded-lg border border-red-900 px-3 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-950/50 disabled:opacity-50 max-md:py-2.5"
               >
                 {t("history.clearAll")}
               </button>
@@ -127,7 +130,18 @@ export default function HistoryPage() {
               {page.visible.map((h) => (
               <li key={h.id}>
                 <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3">
-                  <Link href={`/history/${h.id}`} className="flex flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+                  <Link
+                    href={`/history/${h.id}`}
+                    onClick={(e) => {
+                      // App（静态导出）只有占位壳 /history/_/ 有实体文件，
+                      // 真实 id 走查询参数（见 src/lib/nativeApp.ts）；Web 不变
+                      if (isNativeApp()) {
+                        e.preventDefault();
+                        router.push(nativeHandReplayHref(h.id));
+                      }
+                    }}
+                    className="flex flex-1 flex-wrap items-center gap-x-3 gap-y-1"
+                  >
                     <span className="text-sm text-zinc-400">{formatTime(h.timestamp)}</span>
                     <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">
                       {t("history.seatsBadge", { n: h.players.length })}
@@ -166,7 +180,7 @@ export default function HistoryPage() {
                   <button
                     onClick={() => void onDelete(h.id)}
                     disabled={busy}
-                    className="rounded px-2 py-1 text-xs text-zinc-500 transition-colors hover:bg-red-950/50 hover:text-red-400 disabled:opacity-50"
+                    className="rounded px-2 py-1 text-xs text-zinc-500 transition-colors hover:bg-red-950/50 hover:text-red-400 disabled:opacity-50 max-md:px-3 max-md:py-3"
                   >
                     {t("common.delete")}
                   </button>
@@ -178,7 +192,7 @@ export default function HistoryPage() {
               <div className="mt-4 text-center">
                 <button
                   onClick={() => setVisibleCount(nextVisibleCount)}
-                  className="rounded-lg border border-zinc-700 px-4 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800/60"
+                  className="rounded-lg border border-zinc-700 px-4 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800/60 max-md:py-2.5"
                 >
                   {t("history.loadMore", { shown: page.shown, total: page.total })}
                 </button>

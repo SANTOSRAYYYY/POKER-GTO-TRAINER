@@ -224,7 +224,7 @@ export default function SettingsPage() {
               onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
               placeholder="sk-..."
               autoComplete="off"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none max-md:py-3"
             />
           </label>
 
@@ -235,7 +235,7 @@ export default function SettingsPage() {
               value={config.baseUrl}
               onChange={(e) => setConfig({ ...config, baseUrl: e.target.value })}
               placeholder="https://api.deepseek.com"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none max-md:py-3"
             />
           </label>
 
@@ -246,7 +246,7 @@ export default function SettingsPage() {
               value={config.model}
               onChange={(e) => setConfig({ ...config, model: e.target.value })}
               placeholder="deepseek-flash"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none max-md:py-3"
             />
           </label>
 
@@ -257,7 +257,7 @@ export default function SettingsPage() {
               <span className="mb-1 block text-sm text-zinc-400">{t("settings.effort")}</span>
               <div className="flex flex-wrap gap-3">
                 {EFFORT_OPTIONS.map((o) => (
-                  <label key={o.value || "default"} className="flex items-center gap-1.5 text-sm">
+                  <label key={o.value || "default"} className="flex items-center gap-1.5 text-sm max-md:py-2.5">
                     <input
                       type="radio"
                       name="reasoning-effort"
@@ -284,7 +284,7 @@ export default function SettingsPage() {
               <span className="mb-1 block text-sm text-zinc-400">{t("settings.thinking")}</span>
               <div className="flex flex-wrap gap-3">
                 {THINKING_OPTIONS.map((o) => (
-                  <label key={o.value || "default"} className="flex items-center gap-1.5 text-sm">
+                  <label key={o.value || "default"} className="flex items-center gap-1.5 text-sm max-md:py-2.5">
                     <input
                       type="radio"
                       name="thinking-mode"
@@ -314,7 +314,7 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-sm max-md:py-2.5">
               <input
                 type="checkbox"
                 checked={config.jsonOutput === true}
@@ -357,7 +357,7 @@ export default function SettingsPage() {
                   }
                 }}
                 placeholder="0"
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none max-md:py-3"
               />
             </label>
             <p className="mt-1 text-xs leading-5 text-zinc-500">
@@ -375,7 +375,7 @@ export default function SettingsPage() {
                     { value: "full", labelKey: "settings.promptStyle.full" },
                   ] as { value: string; labelKey: DictKey }[]
                 ).map((o) => (
-                  <label key={o.value} className="flex items-center gap-1.5 text-sm">
+                  <label key={o.value} className="flex items-center gap-1.5 text-sm max-md:py-2.5">
                     <input
                       type="radio"
                       name="prompt-style"
@@ -417,7 +417,7 @@ export default function SettingsPage() {
                   }
                 }}
                 placeholder="4096"
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none max-md:py-3"
               />
             </label>
             <p className="mt-2 text-xs leading-5 text-zinc-500">
@@ -433,14 +433,14 @@ export default function SettingsPage() {
             <button
               onClick={() => void testConnection()}
               disabled={test.kind === "testing" || formatTest.kind === "testing" || !config.apiKey}
-              className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-200 transition-colors hover:bg-zinc-800 disabled:opacity-40"
+              className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-200 transition-colors hover:bg-zinc-800 disabled:opacity-40 max-md:py-3"
             >
               {test.kind === "testing" ? t("settings.testing") : t("settings.testConnection")}
             </button>
             <button
               onClick={() => void testReviewFormat()}
               disabled={test.kind === "testing" || formatTest.kind === "testing" || !config.apiKey}
-              className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-200 transition-colors hover:bg-zinc-800 disabled:opacity-40"
+              className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-200 transition-colors hover:bg-zinc-800 disabled:opacity-40 max-md:py-3"
             >
               {formatTest.kind === "testing" ? t("settings.testing") : t("settings.testFormat")}
             </button>
@@ -476,7 +476,7 @@ export default function SettingsPage() {
           <select
             value={defaultStyle}
             onChange={(e) => setDefaultStyle(e.target.value as AIStyle)}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none max-md:py-3"
           >
             {STYLE_OPTIONS.map((o) => (
               <option key={o.id} value={o.id}>

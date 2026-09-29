@@ -252,7 +252,8 @@ export default function ActionBar() {
           )}
           {!heroTurn && !game.handOver && (
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="text-xs text-neutral-500">
+              {/* 移动端状态文字独占一行，三个预操作按钮收进同一行（少占一行纵向空间） */}
+              <span className="text-xs text-neutral-500 max-md:basis-full max-md:text-center">
                 {aiThinking ? t("action.aiThinking") : t("action.waitingOpponents")}{" "}
                 {/* 移动端省一行纵向空间（按钮文本已自解释），桌面端保留 */}
                 <span className="max-md:hidden">{t("action.preActionLabel")}</span>

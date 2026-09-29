@@ -121,8 +121,9 @@ export default function EquityPage() {
         </p>
 
         <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
-          {/* 左：选牌区 */}
-          <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          {/* 左：选牌区（max-md:min-w-0：网格项默认可被内容撑宽，436px 选牌
+              网格会把 section 撑出视口；归零后由内部滚动条接管） */}
+          <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 max-md:min-w-0">
             {/* 三个牌区 */}
             <Zone
               title={t("equity.zone.hero")}
@@ -143,7 +144,7 @@ export default function EquityPage() {
             <div className="mb-4">
               <div className="mb-2 flex items-center gap-3">
                 <span className="text-sm text-zinc-400">{t("equity.villainRange")}</span>
-                <label className="flex items-center gap-1 text-sm text-zinc-300">
+                <label className="flex items-center gap-1 text-sm text-zinc-300 max-md:py-2.5">
                   <input
                     type="radio"
                     checked={villainMode === "random"}
@@ -152,7 +153,7 @@ export default function EquityPage() {
                   />
                   {t("equity.random")}
                 </label>
-                <label className="flex items-center gap-1 text-sm text-zinc-300">
+                <label className="flex items-center gap-1 text-sm text-zinc-300 max-md:py-2.5">
                   <input
                     type="radio"
                     checked={villainMode === "exact"}
@@ -184,7 +185,7 @@ export default function EquityPage() {
                         setOpponents(n);
                         setResult(null);
                       }}
-                      className={`h-7 w-7 rounded-md text-sm transition-colors ${
+                      className={`h-7 w-7 rounded-md text-sm transition-colors max-md:h-10 max-md:w-10 ${
                         opponents === n
                           ? "bg-emerald-500/20 font-semibold text-emerald-300 ring-1 ring-emerald-500"
                           : "bg-zinc-800/60 text-zinc-400 hover:text-zinc-200"
@@ -198,12 +199,14 @@ export default function EquityPage() {
               )}
             </div>
 
-            {/* 52 张选择网格 */}
-            <div className="rounded-lg bg-zinc-950/60 p-2">
+            {/* 52 张选择网格：移动端容器横向滚动（13 列最小 436px 保证每格 ≥30px，
+                不再互相重叠）；桌面端铺满自适应不变 */}
+            <div className="rounded-lg bg-zinc-950/60 p-2 max-md:overflow-x-auto">
               <div className="mb-1 px-1 text-xs text-zinc-500">
                 {t("equity.pickHint", { zone: t(TARGET_LABEL_KEY[target]) })}
                 {zone[target].length >= TARGET_MAX[target] && t("equity.full")}
               </div>
+              <div className="max-md:min-w-[436px]">
               {SUITS.map((s) => (
                 <div key={s} className="mb-1 flex items-center gap-1">
                   <span className="w-5 text-center text-sm text-zinc-500">{SUIT_LABEL[s]}</span>
@@ -225,6 +228,7 @@ export default function EquityPage() {
                   </div>
                 </div>
               ))}
+              </div>
             </div>
 
             <div className="mt-4 flex gap-3">
@@ -237,7 +241,7 @@ export default function EquityPage() {
               </button>
               <button
                 onClick={reset}
-                className="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800"
+                className="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 max-md:py-3"
               >
                 {t("equity.reset")}
               </button>

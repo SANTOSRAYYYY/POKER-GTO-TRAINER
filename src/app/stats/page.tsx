@@ -79,7 +79,7 @@ function NotebookCard() {
         {nb && (
           <button
             onClick={onReset}
-            className="shrink-0 rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-800/60 hover:text-zinc-200"
+            className="shrink-0 rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-800/60 hover:text-zinc-200 max-md:py-3"
           >
             {t("nb.clear")}
           </button>
@@ -133,7 +133,7 @@ function PillGroup<T extends string | number>({
         <button
           key={String(o)}
           onClick={() => onChange(o)}
-          className={`rounded px-2.5 py-1 text-xs transition-colors ${
+          className={`rounded px-2.5 py-1 text-xs transition-colors max-md:px-3 max-md:py-3 ${
             value === o
               ? "bg-emerald-500/15 font-medium text-emerald-400"
               : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
@@ -251,7 +251,7 @@ export default function StatsPage() {
                     )}
                     <button
                       onClick={() => setCompareOn((v) => !v)}
-                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors max-md:py-3 ${
                         compareOn
                           ? "bg-emerald-500/15 text-emerald-400"
                           : "border border-zinc-700 text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"

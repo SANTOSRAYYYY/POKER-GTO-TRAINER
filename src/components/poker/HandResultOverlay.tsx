@@ -183,7 +183,8 @@ export default function HandResultOverlay() {
   if (tournamentOver) {
     return (
       <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="flex max-h-[85vh] w-96 flex-col items-center gap-3 overflow-y-auto rounded-2xl border border-amber-500/60 bg-neutral-900 p-6 shadow-2xl">
+        {/* w-96(384px) 在 375px 视口会两边出血，移动端收紧到视口内 */}
+        <div className="flex max-h-[85vh] w-96 flex-col items-center gap-3 overflow-y-auto rounded-2xl border border-amber-500/60 bg-neutral-900 p-6 shadow-2xl max-md:max-w-[calc(100vw-2rem)]">
           <div className="text-2xl font-black tracking-wide text-neutral-100">
             {championSeat === HERO_SEAT
               ? t("result.youAreChampion")

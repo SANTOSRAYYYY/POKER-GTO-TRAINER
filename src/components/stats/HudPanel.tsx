@@ -48,8 +48,10 @@ export function HudPanel({ hud }: { hud: HeroHud }) {
         {t("stats.hud.bucketTitle")}{" "}
         <span className="text-xs text-zinc-600">{t("stats.hud.bucketNote")}</span>
       </h3>
+      {/* 移动端允许表格收起 min-w（5 列挤进窄屏、单元格换行），
+          不再强制横向滚动才能看到 PFR/基准列；桌面端维持 min-w-105 */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-105 text-sm">
+        <table className="w-full min-w-105 text-sm max-md:min-w-0">
           <thead>
             <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">
               <th className="py-2 pr-3 font-medium">{t("stats.hud.th.bucket")}</th>

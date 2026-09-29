@@ -36,12 +36,14 @@ function ToastItem({ achievement }: { achievement: Achievement }) {
 /**
  * 成就 toast 挂载点：读取 useAchievements 的 pending 队列，
  * 右上角堆叠展示新解锁成就（每条 3 秒自动消失）。
+ * 移动端（max-md）：w-80 会盖住导航与页面标题，改为底部左右留白横条
+ * （toast 仅在 /stats 与 /history 触发，两页均无底部吸附栏，不遮操作）。
  */
 export function AchievementToastHost() {
   const pending = useAchievements((s) => s.pending);
   if (pending.length === 0) return null;
   return (
-    <div className="pointer-events-none fixed right-4 top-16 z-50 flex w-80 flex-col gap-2">
+    <div className="pointer-events-none fixed right-4 top-16 z-50 flex w-80 flex-col gap-2 max-md:inset-x-4 max-md:bottom-4 max-md:top-auto max-md:w-auto">
       {pending.map((a) => (
         <ToastItem key={a.id} achievement={a} />
       ))}

@@ -67,8 +67,9 @@ export function ComparePanel({ compare }: { compare: SegmentCompare }) {
           })}
         </span>
       </div>
+      {/* 与 HUD 分桶表同口径：移动端取消 min-w 让 4 列挤进窄屏，桌面端不变 */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-105 text-sm">
+        <table className="w-full min-w-105 text-sm max-md:min-w-0">
           <thead>
             <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">
               <th className="py-2 pr-3 font-medium">{t("stats.compare.metric")}</th>

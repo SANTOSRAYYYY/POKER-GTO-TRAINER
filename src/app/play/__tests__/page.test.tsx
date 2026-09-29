@@ -1,6 +1,6 @@
 /**
- * /play URL 参数解析测试：直接调用服务端组件 PlayPage（async 函数返回
- * React 元素，node 环境下不渲染），断言透传给 TableScreen 的 config/resume。
+ * /play URL 参数解析测试：直接调用纯函数 parsePlayConfig（页面改为客户端壳
+ * 后，解析逻辑抽出至 ../config 供 server/client 共用），断言产出的 config/resume。
  *
  * 锁定语义：
  * - 锦标赛四参数（hpl / blindMode / rebuys / rebuyPeriod）合法值全部生效；
@@ -9,7 +9,7 @@
  * - resume 判定：裸地址/显式 resume=1 恢复存档，带开局参数开新局。
  */
 import { describe, expect, it } from "vitest";
-import PlayPage from "@/app/play/page";
+import { parsePlayConfig } from "@/app/play/config";
 import {
   DEFAULT_TOURNAMENT,
   INFINITE_TOTAL_LEVELS,
@@ -18,9 +18,8 @@ import type { TableConfig } from "@/lib/store/gameStore";
 
 type SP = Record<string, string | string[] | undefined>;
 
-async function props(sp: SP): Promise<{ config: TableConfig; resume: boolean }> {
-  const el = await PlayPage({ searchParams: Promise.resolve(sp) });
-  return el.props as { config: TableConfig; resume: boolean };
+function props(sp: SP): { config: TableConfig; resume: boolean } {
+  return parsePlayConfig(sp);
 }
 
 describe("/play 锦标赛参数解析", () => {

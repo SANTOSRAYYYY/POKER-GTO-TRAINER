@@ -22,6 +22,27 @@ const DEFAULT_BASE_URL = "https://api.openai.com/v1";
 /** 略低于 maxDuration：保证超时时由函数返回可读 504，而不是被平台硬杀成空响应 */
 const TIMEOUT_MS = 55_000;
 
+/**
+ * CORS：Capacitor App 的 WebView 以 https://localhost 为源跨域调用本代理所需。
+ * 本路由是无鉴权公开代理（调用方自带 apiKey，无任何 Cookie/会话），
+ * 放开 * 不引入新的暴露面；Web 同源调用不受影响。
+ */
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+} as const;
+
+/** NextResponse.json 的包装：统一附带 CORS 头 */
+function json(body: unknown, init?: { status?: number }) {
+  return NextResponse.json(body, { ...init, headers: CORS_HEADERS });
+}
+
+/** 预检请求应答 */
+export function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 /** 校验并规范化 baseUrl；非法值返回可读错误（400） */
 function normalizeBaseUrl(raw: string | undefined): { baseUrl: string } | { error: string } {
   const trimmed = raw?.trim() ?? "";
@@ -70,12 +91,12 @@ export async function POST(req: Request) {
     try {
       body = await req.json();
     } catch {
-      return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
+      return json({ error: "invalid JSON body" }, { status: 400 });
     }
 
     const { config, messages } = body;
     if (!config?.apiKey || !config?.model || !Array.isArray(messages)) {
-      return NextResponse.json(
+      return json(
         { error: "missing config.apiKey / config.model / messages" },
         { status: 400 },
       );
@@ -83,7 +104,7 @@ export async function POST(req: Request) {
 
     const normalized = normalizeBaseUrl(config.baseUrl);
     if ("error" in normalized) {
-      return NextResponse.json({ error: normalized.error }, { status: 400 });
+      return json({ error: normalized.error }, { status: 400 });
     }
     const baseUrl = normalized.baseUrl;
 
@@ -123,7 +144,7 @@ export async function POST(req: Request) {
     } catch (err) {
       const isTimeout =
         err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
-      return NextResponse.json(
+      return json(
         { error: isTimeout ? "LLM upstream timeout (55s)" : `LLM fetch failed: ${String(err)}` },
         { status: isTimeout ? 504 : 502 },
       );
@@ -134,7 +155,7 @@ export async function POST(req: Request) {
     const rawText = await upstream.text().catch(() => "");
 
     if (!upstream.ok) {
-      return NextResponse.json(
+      return json(
         { error: `LLM upstream ${upstream.status}: ${rawText.slice(0, 500)}` },
         { status: 502 },
       );
@@ -144,7 +165,7 @@ export async function POST(req: Request) {
     try {
       data = JSON.parse(rawText) as typeof data;
     } catch {
-      return NextResponse.json(
+      return json(
         { error: `LLM upstream returned non-JSON body: ${rawText.slice(0, 500)}` },
         { status: 502 },
       );
@@ -152,7 +173,7 @@ export async function POST(req: Request) {
 
     const content = extractContent(data.choices?.[0]?.message);
     if (typeof content !== "string") {
-      return NextResponse.json(
+      return json(
         { error: "LLM upstream returned no content" },
         { status: 502 },
       );
@@ -163,17 +184,17 @@ export async function POST(req: Request) {
       data.choices?.[0] as { finish_reason?: string } | undefined
     )?.finish_reason;
     if (finishReason === "length") {
-      return NextResponse.json(
+      return json(
         {
           error: `LLM 输出达到 max_tokens 上限被截断（当前上限：${config.maxTokens ?? "服务商默认值"}；思考模式下推理过程也占用该额度）。请到「设置 → 高级参数」把输出上限调大（如 8192/16384）`,
         },
         { status: 502 },
       );
     }
-    return NextResponse.json({ content });
+    return json({ content });
   } catch (err) {
     // 顶层兜底：任何意外异常都返回可读 JSON，而不是框架默认的空 500
-    return NextResponse.json(
+    return json(
       { error: `LLM proxy internal error: ${String(err)}` },
       { status: 500 },
     );

@@ -1,0 +1,4739 @@
+{
+  "se375/lobby": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"随机\"",
+        "w": 147,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"紧弱 Nit\"",
+        "w": 147,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"紧凶 TAG\"",
+        "w": 147,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"松凶 LAG\"",
+        "w": 147,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"疯子 Maniac\"",
+        "w": 147,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"跟注站\"",
+        "w": 147,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"GTO 均衡\"",
+        "w": 147,
+        "h": 38
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 92,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 92,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 92,
+        "h": 38,
+        "type": "number"
+      }
+    ],
+    "truncated": []
+  },
+  "se375/play-2max": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.text-sm.font-bold.tracking-tight.hover:text-emerald-300 \"PokerGTO Trainer\"",
+        "w": 110,
+        "h": 20
+      },
+      {
+        "el": "button.rounded.px-1.5.py-0.5.text-sm \"🔊\"",
+        "w": 31,
+        "h": 24
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"大厅\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"历史\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"设置\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "button.flex.h-7.w-7.items-center \"«\"",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "truncated": []
+  },
+  "se375/play-6max": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.text-sm.font-bold.tracking-tight.hover:text-emerald-300 \"PokerGTO Trainer\"",
+        "w": 110,
+        "h": 20
+      },
+      {
+        "el": "button.rounded.px-1.5.py-0.5.text-sm \"🔊\"",
+        "w": 31,
+        "h": 24
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"大厅\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"历史\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"设置\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "button.flex.h-7.w-7.items-center \"«\"",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "truncated": []
+  },
+  "se375/play-9max": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.text-sm.font-bold.tracking-tight.hover:text-emerald-300 \"PokerGTO Trainer\"",
+        "w": 110,
+        "h": 20
+      },
+      {
+        "el": "button.rounded.px-1.5.py-0.5.text-sm \"🔊\"",
+        "w": 31,
+        "h": 24
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"大厅\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"历史\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"设置\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "button.flex.h-8.w-8.shrink-0 \"×\"",
+        "w": 32,
+        "h": 32
+      },
+      {
+        "el": "button.flex.h-7.w-7.items-center \"«\"",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "truncated": []
+  },
+  "se375/history": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "a.rounded-lg.border.border-emerald-900.px-3 \"数据中心\"",
+        "w": 82,
+        "h": 34
+      },
+      {
+        "el": "button.rounded-lg.border.border-red-900.px-3 \"清空全部\"",
+        "w": 82,
+        "h": 34
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      }
+    ],
+    "truncated": []
+  },
+  "se375/replay": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "a.text-sm.text-zinc-400.hover:text-zinc-200 \"← 历史列表\"",
+        "w": 72,
+        "h": 20
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"翻前\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"翻牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"转牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"河牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"摊牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.mb-4.w-full.rounded-lg.bg-emerald-500 \"开始 AI 分析\"",
+        "w": 301,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "se375/stats": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"全部\"",
+        "w": 44,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"仅现金局\"",
+        "w": 68,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"仅锦标赛\"",
+        "w": 68,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"近 50 手\"",
+        "w": 64,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"近 100 手\"",
+        "w": 70,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"全部手\"",
+        "w": 56,
+        "h": 24
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.5.text-xs \"分段对比\"",
+        "w": 74,
+        "h": 30
+      },
+      {
+        "el": "button.rounded-lg.bg-emerald-500.px-4.py-2 \"生成整场复盘\"",
+        "w": 116,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "se375/trainer-pushfold": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      }
+    ],
+    "truncated": []
+  },
+  "se375/trainer-3bet": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      }
+    ],
+    "truncated": []
+  },
+  "se375/trainer-flop": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      }
+    ],
+    "truncated": []
+  },
+  "se375/trainer-turn": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      }
+    ],
+    "truncated": []
+  },
+  "se375/trainer-river": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      }
+    ],
+    "truncated": []
+  },
+  "se375/ranges": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"UTG 开局\"",
+        "w": 83,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"UTG+1 开局\"",
+        "w": 99,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"LJ 开局\"",
+        "w": 68,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"HJ 开局\"",
+        "w": 71,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"CO 开局\"",
+        "w": 75,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"BTN 开局\"",
+        "w": 81,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"SB 开局（对 BB）\"",
+        "w": 133,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"按钮位开局\"",
+        "w": 94,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"大盲位防守（对按钮加注）\"",
+        "w": 192,
+        "h": 32
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AA\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AKs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AQs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AJs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"ATs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A9s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A8s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A7s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A6s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A5s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A4s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A3s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A2s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AKo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KK\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KQs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KJs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KTs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K9s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K8s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K7s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K6s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K5s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K4s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K3s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K2s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AQo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KQo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"QQ\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"QJs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"QTs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q9s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q8s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q7s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q6s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q5s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q4s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q3s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q2s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AJo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KJo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"QJo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"JJ\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"JTs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J9s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J8s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J7s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J6s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J5s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J4s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J3s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J2s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"ATo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KTo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"QTo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"JTo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"TT\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T9s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T8s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T7s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T6s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T5s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T4s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T3s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T2s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A9o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K9o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q9o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J9o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T9o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"99\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"98s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"97s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"96s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"95s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"94s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"93s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"92s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A8o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K8o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q8o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J8o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T8o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"98o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"88\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"87s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"86s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"85s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"84s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"83s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"82s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A7o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K7o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q7o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J7o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T7o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"97o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"87o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"77\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"76s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"75s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"74s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"73s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"72s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A6o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K6o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q6o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J6o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T6o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"96o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"86o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"76o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"66\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"65s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"64s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"63s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"62s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A5o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K5o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q5o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J5o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T5o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"95o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"85o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"75o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"65o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"55\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"54s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"53s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"52s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A4o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K4o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q4o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J4o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T4o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"94o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"84o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"74o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"64o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"54o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"44\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"43s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"42s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A3o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K3o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q3o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J3o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T3o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"93o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"83o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"73o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"63o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"53o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"43o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"33\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"32s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A2o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K2o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q2o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J2o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T2o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"92o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"82o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"72o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"62o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"52o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"42o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"32o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"22\"",
+        "w": 41,
+        "h": 41
+      }
+    ],
+    "truncated": []
+  },
+  "se375/equity": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"1\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"2\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"3\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"4\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"5\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"6\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"7\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"8\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♠\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♥\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♦\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♣\"",
+        "w": 17,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♣\"",
+        "w": 17,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "se375/settings": {
+    "vw": 375,
+    "bodySW": 375,
+    "docSW": 375,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 301,
+        "h": 38,
+        "type": "password"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 301,
+        "h": 38,
+        "type": "text"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 301,
+        "h": 38,
+        "type": "text"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "checkbox"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 275,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 275,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "button.rounded-lg.border.border-zinc-600.px-4 \"测试连接\"",
+        "w": 90,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.border-zinc-600.px-4 \"测试复盘格式\"",
+        "w": 118,
+        "h": 38
+      },
+      {
+        "el": "select.w-full.rounded-lg.border.border-zinc-700 \"随机（推荐，每手随机风格）紧弱 Nit紧凶 TAG松凶 LA\"",
+        "w": 301,
+        "h": 39
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/lobby": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"随机\"",
+        "w": 154,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"紧弱 Nit\"",
+        "w": 154,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"紧凶 TAG\"",
+        "w": 154,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"松凶 LAG\"",
+        "w": 154,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"疯子 Maniac\"",
+        "w": 154,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"跟注站\"",
+        "w": 154,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"GTO 均衡\"",
+        "w": 154,
+        "h": 38
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 97,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 97,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 97,
+        "h": 38,
+        "type": "number"
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/play-2max": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.text-sm.font-bold.tracking-tight.hover:text-emerald-300 \"PokerGTO Trainer\"",
+        "w": 110,
+        "h": 20
+      },
+      {
+        "el": "button.rounded.px-1.5.py-0.5.text-sm \"🔊\"",
+        "w": 31,
+        "h": 24
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"大厅\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"历史\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"设置\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "button.flex.h-7.w-7.items-center \"«\"",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/play-6max": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.text-sm.font-bold.tracking-tight.hover:text-emerald-300 \"PokerGTO Trainer\"",
+        "w": 110,
+        "h": 20
+      },
+      {
+        "el": "button.rounded.px-1.5.py-0.5.text-sm \"🔊\"",
+        "w": 31,
+        "h": 24
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"大厅\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"历史\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"设置\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "button.flex.h-7.w-7.items-center \"«\"",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/play-9max": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.text-sm.font-bold.tracking-tight.hover:text-emerald-300 \"PokerGTO Trainer\"",
+        "w": 110,
+        "h": 20
+      },
+      {
+        "el": "button.rounded.px-1.5.py-0.5.text-sm \"🔊\"",
+        "w": 31,
+        "h": 24
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"大厅\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"历史\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100 \"设置\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "button.flex.h-7.w-7.items-center \"«\"",
+        "w": 40,
+        "h": 40
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/history": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "a.rounded-lg.border.border-emerald-900.px-3 \"数据中心\"",
+        "w": 82,
+        "h": 34
+      },
+      {
+        "el": "button.rounded-lg.border.border-red-900.px-3 \"清空全部\"",
+        "w": 82,
+        "h": 34
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/replay": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "a.text-sm.text-zinc-400.hover:text-zinc-200 \"← 历史列表\"",
+        "w": 72,
+        "h": 20
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"翻前\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"翻牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"转牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"河牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"摊牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-lg.border.border-zinc-700.px-4 \"← 上一步\"",
+        "w": 92,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.bg-emerald-500.px-4.py-2 \"下一步 →\"",
+        "w": 90,
+        "h": 36
+      },
+      {
+        "el": "button.mb-4.w-full.rounded-lg.bg-emerald-500 \"开始 AI 分析\"",
+        "w": 316,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/stats": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"全部\"",
+        "w": 44,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"仅现金局\"",
+        "w": 68,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"仅锦标赛\"",
+        "w": 68,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"近 50 手\"",
+        "w": 64,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"近 100 手\"",
+        "w": 70,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"全部手\"",
+        "w": 56,
+        "h": 24
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.5.text-xs \"分段对比\"",
+        "w": 74,
+        "h": 30
+      },
+      {
+        "el": "button.rounded-lg.bg-emerald-500.px-4.py-2 \"生成整场复盘\"",
+        "w": 116,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/trainer-pushfold": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/trainer-3bet": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/trainer-flop": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/trainer-turn": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/trainer-river": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/ranges": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"UTG 开局\"",
+        "w": 83,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"UTG+1 开局\"",
+        "w": 99,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"LJ 开局\"",
+        "w": 68,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"HJ 开局\"",
+        "w": 71,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"CO 开局\"",
+        "w": 75,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"BTN 开局\"",
+        "w": 81,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"SB 开局（对 BB）\"",
+        "w": 133,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"按钮位开局\"",
+        "w": 94,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"大盲位防守（对按钮加注）\"",
+        "w": 192,
+        "h": 32
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AA\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AKs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AQs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AJs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"ATs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A9s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A8s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A7s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A6s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A5s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A4s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A3s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A2s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AKo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KK\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KQs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KJs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KTs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K9s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K8s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K7s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K6s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K5s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K4s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K3s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K2s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AQo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KQo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"QQ\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"QJs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"QTs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q9s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q8s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q7s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q6s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q5s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q4s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q3s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q2s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"AJo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KJo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"QJo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"JJ\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"JTs\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J9s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J8s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J7s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J6s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J5s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J4s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J3s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J2s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"ATo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"KTo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"QTo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"JTo\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"TT\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T9s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T8s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T7s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T6s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T5s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T4s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T3s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T2s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A9o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K9o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q9o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J9o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T9o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"99\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"98s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"97s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"96s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"95s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"94s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"93s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"92s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A8o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K8o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q8o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J8o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T8o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"98o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"88\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"87s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"86s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"85s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"84s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"83s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"82s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A7o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K7o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q7o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J7o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T7o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"97o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"87o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"77\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"76s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"75s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"74s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"73s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"72s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A6o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K6o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q6o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J6o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T6o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"96o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"86o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"76o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"66\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"65s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"64s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"63s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"62s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A5o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K5o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q5o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J5o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T5o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"95o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"85o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"75o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"65o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"55\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"54s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"53s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"52s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A4o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K4o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q4o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J4o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T4o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"94o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"84o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"74o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"64o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"54o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"44\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"43s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"42s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A3o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K3o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q3o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J3o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T3o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"93o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"83o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"73o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"63o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"53o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"43o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"33\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"32s\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"A2o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"K2o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"Q2o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"J2o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"T2o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"92o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"82o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"72o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"62o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"52o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"42o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"32o\"",
+        "w": 41,
+        "h": 41
+      },
+      {
+        "el": "button.flex.aspect-square.items-center.justify-center \"22\"",
+        "w": 41,
+        "h": 41
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/equity": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"1\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"2\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"3\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"4\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"5\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"6\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"7\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"8\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♠\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♥\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♦\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♣\"",
+        "w": 18,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♣\"",
+        "w": 18,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "i14-390/settings": {
+    "vw": 390,
+    "bodySW": 390,
+    "docSW": 390,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 84,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"大厅\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"对战\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"训练\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"历史\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"数据\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"范围\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"胜率\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:py-2 \"设置\"",
+        "w": 52,
+        "h": 36
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 316,
+        "h": 38,
+        "type": "password"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 316,
+        "h": 38,
+        "type": "text"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 316,
+        "h": 38,
+        "type": "text"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "checkbox"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 290,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 290,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "button.rounded-lg.border.border-zinc-600.px-4 \"测试连接\"",
+        "w": 90,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.border-zinc-600.px-4 \"测试复盘格式\"",
+        "w": 118,
+        "h": 38
+      },
+      {
+        "el": "select.w-full.rounded-lg.border.border-zinc-700 \"随机（推荐，每手随机风格）紧弱 Nit紧凶 TAG松凶 LA\"",
+        "w": 316,
+        "h": 39
+      }
+    ],
+    "truncated": []
+  }
+}

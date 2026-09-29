@@ -113,6 +113,38 @@ Validated by 2 × 240-hand LLM variant battles:
 | Force JSON output | on | `response_format`; sharply cuts parse failures |
 | Prompt style | slim (default) | strategy preaching induces mechanical threshold play ("win small, lose big"); slim was the only variant profitable in both battles |
 
+## Package as an Android app (Capacitor)
+
+The app is 99% front-end (IndexedDB/localStorage persistence, local heuristic AI), so it ships as a **static export wrapped in a Capacitor native shell**. The only backend, `/api/llm`, is reached over the network: inside the app the LLM client calls the live Vercel deployment instead of a same-origin route — your API key still never leaves your device.
+
+```
+┌─────────────────────────────┐
+│ Android app (Capacitor)     │
+│  WebView serves out/ locally│ ── IndexedDB / localStorage: hands, settings, saves
+│  (static export, no server) │ ── heuristic AI: fully offline
+└─────────────┬───────────────┘
+              │ HTTPS (only for LLM coach / replay analysis)
+              ▼
+   https://poker-nu-steel.vercel.app/api/llm  (serverless proxy, key comes from the device)
+```
+
+How the two build modes coexist (see `next.config.ts`):
+
+- `npm run build` — unchanged Vercel build, includes the `/api/llm` serverless proxy.
+- `npm run build:app` — sets `APP_EXPORT=1`: `output: 'export'` into `out/` (which doubles as Capacitor's `webDir`), then runs `cap sync android`. In this mode `pageExtensions: ["tsx"]` excludes the one Route Handler (`api/llm/route.ts`, kept intact for Vercel), `/play` parses its URL params client-side, and `/history/[id]` exports a placeholder shell (`/history/_/`) — hand ids live in on-device IndexedDB so real replays navigate as `/history/_/?id=<handId>` inside the native shell.
+
+Build the APK:
+
+```bash
+npm install
+npm run build:app      # static export → out/ → cap sync android
+npm run open:android   # opens the android/ project in Android Studio
+```
+
+In Android Studio: let Gradle sync, then **Build → Build Bundle(s)/APK(s) → Build APK(s)** for a debug APK, or **Run ▶** on a device/emulator. Prerequisites: Android Studio (with Android SDK) and a JDK 17+; the `android/` native project is committed to the repo, so no codegen step is needed on a fresh clone. After any web change, re-run `npm run build:app` to re-sync.
+
+App-side notes: the LLM endpoint resolves at runtime — Capacitor native shell → `https://poker-nu-steel.vercel.app/api/llm`, otherwise same-origin `/api/llm` (build-time override: `NEXT_PUBLIC_LLM_PROXY`). The proxy sends permissive CORS headers so the WebView origin (`https://localhost`) can call it; it was already a public, key-less endpoint. Fullscreen + zoom lock are configured natively (`android/` styles & `MainActivity`), leaving the web experience untouched.
+
 ## Tournament structure (SNG)
 
 1500 starting chips, blinds up every 8 hands, 10 levels (top level repeats):
@@ -315,6 +347,38 @@ npm run dev
 ## 部署（Vercel）
 
 直接把仓库导入 Vercel 即可：自动识别 Next.js，无需改任何配置（无自定义构建命令/输出目录）。所有页面为静态/客户端渲染，唯一的后端是 `/api/llm`——它会部署为 Vercel serverless function，负责把浏览器里的 LLM 请求转发到你配置的 OpenAI 兼容服务（Key 仍只存在访客浏览器中）。
+
+## 打包成手机 App（Capacitor）
+
+应用 99% 是纯前端（IndexedDB/localStorage 持久化、启发式 AI 全本地），因此采用**静态导出 + Capacitor 套壳**。唯一的后端 `/api/llm` 在 App 内改为请求线上 Vercel 部署——API Key 仍只存在用户设备上，架构不变：
+
+```
+┌──────────────────────────────┐
+│ Android App（Capacitor 壳）   │
+│  WebView 本地加载 out/        │ ── IndexedDB/localStorage：手牌、设置、存档
+│ （静态导出，无服务器）         │ ── 启发式 AI：完全离线
+└──────────────┬───────────────┘
+               │ HTTPS（仅 LLM 教练/复盘分析时）
+               ▼
+   https://poker-nu-steel.vercel.app/api/llm（serverless 代理，Key 来自设备）
+```
+
+双模式构建互不干扰（见 `next.config.ts`）：
+
+- `npm run build` — 原样 Vercel 构建，含 `/api/llm` 代理。
+- `npm run build:app` — 置 `APP_EXPORT=1`：`output: 'export'` 导出到 `out/`（即 Capacitor 的 `webDir`），随后自动 `cap sync android`。该模式下 `pageExtensions: ["tsx"]` 把唯一的 Route Handler（`api/llm/route.ts`，源文件保留给 Vercel）排除出导出；`/play` 改为客户端解析 URL 参数；`/history/[id]` 只导出占位壳 `/history/_/`（手牌 id 在设备 IndexedDB 里，构建期不可知），App 内复盘统一走 `/history/_/?id=<handId>`。
+
+构建 APK：
+
+```bash
+npm install
+npm run build:app      # 静态导出 → out/ → cap sync android
+npm run open:android   # 用 Android Studio 打开 android/ 工程
+```
+
+Android Studio 中等待 Gradle sync 完成，然后 **Build → Build Bundle(s)/APK(s) → Build APK(s)** 得到 debug APK，或连接设备/模拟器点 **Run ▶**。前置要求：安装 Android Studio（含 Android SDK）与 JDK 17+；`android/` 原生工程源码已提交进仓库，新克隆无需再跑 `cap add`。每次改动 Web 代码后重新 `npm run build:app` 同步即可。
+
+App 侧细节：LLM 代理地址运行时解析——检测到 Capacitor 原生壳 → `https://poker-nu-steel.vercel.app/api/llm`，否则同源 `/api/llm`（构建期可用 `NEXT_PUBLIC_LLM_PROXY` 覆盖）。代理路由已带宽松 CORS 头以允许 WebView 源（`https://localhost`）跨域调用——该端点本来就是无鉴权公开代理，不引入新暴露面。全屏与禁用缩放在原生侧配置（`android/` 的 styles 与 `MainActivity`），Web 体验不受影响。
 
 ## 技术架构
 

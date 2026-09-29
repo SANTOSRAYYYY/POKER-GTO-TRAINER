@@ -30,11 +30,13 @@ export function Nav() {
     <>
       <header className="border-b border-zinc-800 bg-zinc-950/90">
       <div className="mx-auto flex max-w-6xl items-center gap-1 px-4 py-3">
-        <Link href="/" className="mr-4 flex items-center gap-2">
+        <Link href="/" className="mr-4 flex items-center gap-2 max-md:mr-2 max-md:py-1.5">
           <span className="text-lg font-bold text-emerald-400">PokerGTO</span>
           <span className="hidden text-sm text-zinc-500 sm:inline">Trainer</span>
         </Link>
-        <nav className="flex flex-1 flex-wrap items-center gap-1">
+        {/* 移动端（max-md）：单行横向滚动，避免 8 个入口折成 3 行挤压首屏；
+            链接 shrink-0 保持自然宽度与 ≥40px 触控高。桌面端维持 flex-wrap 不变 */}
+        <nav className="flex flex-1 flex-wrap items-center gap-1 max-md:flex-nowrap max-md:overflow-x-auto">
           {LINKS.map((l) => {
             const active =
               l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
@@ -42,7 +44,7 @@ export function Nav() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`rounded-md px-3 py-1.5 max-md:py-2 text-sm transition-colors ${
+                className={`rounded-md px-3 py-1.5 max-md:shrink-0 max-md:py-2.5 text-sm transition-colors ${
                   active
                     ? "bg-emerald-500/15 font-medium text-emerald-400"
                     : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
@@ -56,7 +58,7 @@ export function Nav() {
         <button
           type="button"
           onClick={() => setLang(lang === "zh" ? "en" : "zh")}
-          className="ml-2 rounded-md border border-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-300 transition-colors hover:border-emerald-500 hover:text-emerald-400"
+          className="ml-2 rounded-md border border-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-300 transition-colors hover:border-emerald-500 hover:text-emerald-400 max-md:px-3 max-md:py-3"
           title={lang === "zh" ? "Switch to English" : "切换为中文"}
         >
           {t("nav.langToggle")}

@@ -234,7 +234,7 @@ export default function TableScreen({
             {blindLabel} · {t("table.handNumber", { n: handNumber })}
           </span>
         </div>
-        <nav className="flex items-center gap-4 text-xs text-neutral-400">
+        <nav className="flex items-center gap-4 text-xs text-neutral-400 max-md:gap-2">
           <button
             type="button"
             onClick={() => {
@@ -245,17 +245,17 @@ export default function TableScreen({
             }}
             aria-label={soundOn ? t("table.soundOff") : t("table.soundOn")}
             title={soundOn ? t("table.soundStateOn") : t("table.soundStateOff")}
-            className="rounded px-1.5 py-0.5 text-sm hover:bg-neutral-800"
+            className="rounded px-1.5 py-0.5 text-sm hover:bg-neutral-800 max-md:px-2.5 max-md:py-2.5"
           >
             {soundOn ? "🔊" : "🔇"}
           </button>
-          <Link href="/" className="hover:text-neutral-100">
+          <Link href="/" className="hover:text-neutral-100 max-md:px-2 max-md:py-3">
             {t("nav.home")}
           </Link>
-          <Link href="/history" className="hover:text-neutral-100">
+          <Link href="/history" className="hover:text-neutral-100 max-md:px-2 max-md:py-3">
             {t("nav.history")}
           </Link>
-          <Link href="/settings" className="hover:text-neutral-100">
+          <Link href="/settings" className="hover:text-neutral-100 max-md:px-2 max-md:py-3">
             {t("nav.settings")}
           </Link>
         </nav>
@@ -276,7 +276,9 @@ export default function TableScreen({
         )}
       </div>
 
-      <div className="mx-auto flex w-full max-w-7xl flex-1 items-start gap-4 px-2 py-3 max-md:min-h-0 max-md:overflow-y-auto md:px-4 md:py-4">
+      {/* 移动端滚动区上下 padding 收到 4px（桌面 16px）：9 人桌 + 锦标赛 HUD +
+          横屏提示的叠加态下，这 16px 决定 hero 底排座位是否被行动栏压住 */}
+      <div className="mx-auto flex w-full max-w-7xl flex-1 items-start gap-4 px-2 py-3 max-md:min-h-0 max-md:overflow-y-auto max-md:py-1 md:px-4 md:py-4">
         <section className="min-w-0 flex-1">
           <PokerTable />
           {/* 折叠后的悬浮窄条：桌面端 fixed 右缘（md:contents 使包装层消失，

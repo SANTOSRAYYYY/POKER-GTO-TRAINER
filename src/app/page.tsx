@@ -225,7 +225,7 @@ export default function LobbyPage() {
                 <button
                   key={n}
                   onClick={() => setSeats(n)}
-                  className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  className={`rounded-lg border px-3 py-2 text-sm transition-colors max-md:px-1 max-md:py-3 max-md:text-xs max-md:whitespace-nowrap ${
                     seats === n
                       ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
                       : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500"
@@ -242,7 +242,7 @@ export default function LobbyPage() {
                 <button
                   key={id}
                   onClick={() => setStyle(id)}
-                  className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                  className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors max-md:py-3 ${
                     style === id
                       ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
                       : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500"
@@ -466,7 +466,7 @@ function NumberField({
           if (max !== undefined && v > max) v = max;
           onChange(v);
         }}
-        className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+        className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none max-md:py-3"
       />
     </label>
   );

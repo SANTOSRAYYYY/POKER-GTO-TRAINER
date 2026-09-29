@@ -102,7 +102,7 @@ export default function RangesPage() {
                 <button
                   key={tb.id}
                   onClick={() => setTableId(tb.id)}
-                  className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                  className={`rounded-lg px-3 py-1.5 text-sm transition-colors max-md:py-2.5 ${
                     tb.id === tableId
                       ? "bg-emerald-500/15 font-medium text-emerald-400"
                       : "bg-zinc-800/60 text-zinc-400 hover:text-zinc-200"
@@ -137,10 +137,11 @@ export default function RangesPage() {
           </span>
         </div>
 
-        {/* 13x13 矩阵 */}
+        {/* 13x13 矩阵：桌面 min-w-560；移动端抬到 596px 使每格触控边长 ≥44px
+            （容器 overflow-x-auto 横向滑动查看） */}
         <div className="overflow-x-auto">
           <div
-            className="grid min-w-[560px] gap-0.5"
+            className="grid min-w-[560px] gap-0.5 max-md:min-w-[596px]"
             style={{ gridTemplateColumns: "repeat(13, minmax(0, 1fr))" }}
           >
             {MATRIX_RANKS.map((_, row) =>

@@ -39,7 +39,9 @@ export default function TournamentHud() {
         </span>
       )}
       {game && game.ante > 0 && (
-        <span className="text-purple-300/80">
+        // 移动端隐藏「本手固定支出」明细（次要信息， ante 已在盲注行标注），
+        // 让 HUD 在窄屏收敛到 2 行以内，给牌桌让出纵向空间
+        <span className="text-purple-300/80 max-md:hidden">
           {t("tour.handCost", {
             ante: game.ante,
             mode: t(
@@ -60,7 +62,8 @@ export default function TournamentHud() {
         <span className="font-bold tabular-nums text-emerald-300">{aliveCount}</span>/{seats}{" "}
         {t("tour.playersSuffix")}
       </span>
-      <span>
+      {/* 目标/名次行：移动端隐藏（夺冠目标为弱信息；淘汰名次另有结算横幅播报） */}
+      <span className="max-md:hidden">
         {tournamentOver
           ? heroPlace === 1
             ? t("tour.youChampion")

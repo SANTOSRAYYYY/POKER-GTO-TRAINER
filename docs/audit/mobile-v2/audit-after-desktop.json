@@ -1,0 +1,1783 @@
+{
+  "desktop/lobby": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"2 人桌（单挑）\"",
+        "w": 163,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"6 人桌\"",
+        "w": 163,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"9 人桌\"",
+        "w": 163,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"随机\"",
+        "w": 163,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"紧弱 Nit\"",
+        "w": 163,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"紧凶 TAG\"",
+        "w": 163,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"松凶 LAG\"",
+        "w": 163,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"疯子 Maniac\"",
+        "w": 163,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"跟注站\"",
+        "w": 163,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.px-3.py-2 \"GTO 均衡\"",
+        "w": 163,
+        "h": 38
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 161,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 161,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 161,
+        "h": 38,
+        "type": "number"
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/play-2max": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.text-sm.font-bold.tracking-tight.hover:text-emerald-300 \"PokerGTO Trainer\"",
+        "w": 110,
+        "h": 20
+      },
+      {
+        "el": "button.rounded.px-1.5.py-0.5.text-sm \"🔊\"",
+        "w": 31,
+        "h": 24
+      },
+      {
+        "el": "a.hover:text-neutral-100.max-md:px-2.max-md:py-3 \"大厅\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100.max-md:px-2.max-md:py-3 \"历史\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100.max-md:px-2.max-md:py-3 \"设置\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "button.flex.h-7.w-7.items-center \"»\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.min-h-11.rounded-lg.px-5.py-2.5 \"弃牌\"",
+        "w": 68,
+        "h": 40
+      },
+      {
+        "el": "button.min-h-11.rounded-lg.px-5.py-2.5 \"跟注 1\"",
+        "w": 80,
+        "h": 40
+      },
+      {
+        "el": "button.min-h-11.rounded-lg.px-5.py-2.5 \"加注\"",
+        "w": 68,
+        "h": 40
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/play-6max": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.text-sm.font-bold.tracking-tight.hover:text-emerald-300 \"PokerGTO Trainer\"",
+        "w": 110,
+        "h": 20
+      },
+      {
+        "el": "button.rounded.px-1.5.py-0.5.text-sm \"🔊\"",
+        "w": 31,
+        "h": 24
+      },
+      {
+        "el": "a.hover:text-neutral-100.max-md:px-2.max-md:py-3 \"大厅\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100.max-md:px-2.max-md:py-3 \"历史\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100.max-md:px-2.max-md:py-3 \"设置\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "button.flex.h-7.w-7.items-center \"»\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.min-h-11.rounded-lg.px-5.py-2.5 \"弃牌\"",
+        "w": 68,
+        "h": 40
+      },
+      {
+        "el": "button.min-h-11.rounded-lg.px-5.py-2.5 \"跟注 6\"",
+        "w": 80,
+        "h": 40
+      },
+      {
+        "el": "button.min-h-11.rounded-lg.px-5.py-2.5 \"加注\"",
+        "w": 68,
+        "h": 40
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/play-9max": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.text-sm.font-bold.tracking-tight.hover:text-emerald-300 \"PokerGTO Trainer\"",
+        "w": 110,
+        "h": 20
+      },
+      {
+        "el": "button.rounded.px-1.5.py-0.5.text-sm \"🔊\"",
+        "w": 31,
+        "h": 24
+      },
+      {
+        "el": "a.hover:text-neutral-100.max-md:px-2.max-md:py-3 \"大厅\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100.max-md:px-2.max-md:py-3 \"历史\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "a.hover:text-neutral-100.max-md:px-2.max-md:py-3 \"设置\"",
+        "w": 24,
+        "h": 16
+      },
+      {
+        "el": "button.flex.h-7.w-7.items-center \"»\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.min-h-11.rounded-lg.px-4.py-2 \"提前弃牌\"",
+        "w": 88,
+        "h": 36
+      },
+      {
+        "el": "button.min-h-11.rounded-lg.px-4.py-2 \"提前过牌\"",
+        "w": 88,
+        "h": 36
+      },
+      {
+        "el": "button.min-h-11.rounded-lg.px-4.py-2 \"提前跟注\"",
+        "w": 88,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/history": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "a.rounded-lg.border.border-emerald-900.px-3 \"数据中心\"",
+        "w": 82,
+        "h": 34
+      },
+      {
+        "el": "button.rounded-lg.border.border-red-900.px-3 \"清空全部\"",
+        "w": 82,
+        "h": 34
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 18:039人桌 · 锦标赛疯子跟注站\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 17:039人桌 · 锦标赛松凶 LA\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 16:039人桌 · 锦标赛紧凶 TA\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 15:032人桌 · 现金局疯子Qs \"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 14:032人桌 · 现金局松凶 LA\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 13:032人桌 · 现金局紧凶 TA\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 12:036人桌 · 现金局松凶 LA\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 11:036人桌 · 现金局紧凶 TA\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 10:036人桌 · 现金局紧弱 Ni\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 09:036人桌 · 现金局GTO紧弱\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 08:036人桌 · 现金局跟注站GT\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 07:036人桌 · 现金局疯子跟注站\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 06:036人桌 · 现金局松凶 LA\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      },
+      {
+        "el": "a.flex.flex-1.flex-wrap.items-center \"2026-09-29 05:036人桌 · 现金局紧凶 TA\"",
+        "w": 1034,
+        "h": 21
+      },
+      {
+        "el": "button.rounded.px-2.py-1.text-xs \"删除\"",
+        "w": 40,
+        "h": 24
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/replay": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "a.text-sm.text-zinc-400.hover:text-zinc-200.max-md:inline-flex \"← 历史列表\"",
+        "w": 72,
+        "h": 20
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"翻前\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"翻牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"转牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"河牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.text-sm \"摊牌\"",
+        "w": 52,
+        "h": 28
+      },
+      {
+        "el": "button.rounded-lg.border.border-zinc-700.px-4 \"← 上一步\"",
+        "w": 92,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.bg-emerald-500.px-4.py-2 \"下一步 →\"",
+        "w": 90,
+        "h": 36
+      },
+      {
+        "el": "button.mb-4.w-full.rounded-lg.bg-emerald-500 \"开始 AI 分析\"",
+        "w": 318,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/stats": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"全部\"",
+        "w": 44,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"仅现金局\"",
+        "w": 68,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"仅锦标赛\"",
+        "w": 68,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"近 50 手\"",
+        "w": 64,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"近 100 手\"",
+        "w": 70,
+        "h": 24
+      },
+      {
+        "el": "button.rounded.px-2.5.py-1.text-xs \"全部手\"",
+        "w": 56,
+        "h": 24
+      },
+      {
+        "el": "button.rounded-md.px-3.py-1.5.text-xs \"分段对比\"",
+        "w": 74,
+        "h": 30
+      },
+      {
+        "el": "button.rounded-lg.bg-emerald-500.px-4.py-2 \"生成整场复盘\"",
+        "w": 116,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/trainer-pushfold": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻前 Push/Fold\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻前 3bet\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻牌圈\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"转牌圈\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"河牌圈\"",
+        "w": 142,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/trainer-3bet": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻前 Push/Fold\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻前 3bet\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻牌圈\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"转牌圈\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"河牌圈\"",
+        "w": 142,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/trainer-flop": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻前 Push/Fold\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻前 3bet\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻牌圈\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"转牌圈\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"河牌圈\"",
+        "w": 142,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/trainer-turn": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻前 Push/Fold\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻前 3bet\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻牌圈\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"转牌圈\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"河牌圈\"",
+        "w": 142,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/trainer-river": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻前 Push/Fold\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻前 3bet\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"翻牌圈\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"转牌圈\"",
+        "w": 142,
+        "h": 36
+      },
+      {
+        "el": "button.flex-1.rounded-md.px-1.py-2 \"河牌圈\"",
+        "w": 142,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/ranges": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"UTG 开局\"",
+        "w": 83,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"UTG+1 开局\"",
+        "w": 99,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"LJ 开局\"",
+        "w": 68,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"HJ 开局\"",
+        "w": 71,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"CO 开局\"",
+        "w": 75,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"BTN 开局\"",
+        "w": 81,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"SB 开局（对 BB）\"",
+        "w": 133,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"按钮位开局\"",
+        "w": 94,
+        "h": 32
+      },
+      {
+        "el": "button.rounded-lg.px-3.py-1.5.text-sm \"大盲位防守（对按钮加注）\"",
+        "w": 192,
+        "h": 32
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/equity": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"1\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"2\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"3\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"4\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"5\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"6\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"7\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.h-7.w-7.rounded-md.text-sm \"8\"",
+        "w": 28,
+        "h": 28
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♠\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♥\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♦\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"A♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"K♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"Q♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"J♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"T♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"9♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"8♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"7♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"6♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"5♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"4♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"3♣\"",
+        "w": 28,
+        "h": 36
+      },
+      {
+        "el": "button.rounded.transition-opacity.hover:ring-2.hover:ring-emerald-400 \"2♣\"",
+        "w": 28,
+        "h": 36
+      }
+    ],
+    "truncated": []
+  },
+  "desktop/settings": {
+    "vw": 1600,
+    "bodySW": 1600,
+    "docSW": 1600,
+    "hOverflow": false,
+    "overflowEls": [],
+    "smallTargets": [
+      {
+        "el": "a.mr-4.flex.items-center.gap-2 \"PokerGTOTrainer\"",
+        "w": 134,
+        "h": 28
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"大厅\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"对战\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"训练\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"历史\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"数据\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"范围\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"胜率\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "a.rounded-md.px-3.py-1.5.max-md:shrink-0 \"设置\"",
+        "w": 52,
+        "h": 32
+      },
+      {
+        "el": "button.ml-2.rounded-md.border.border-zinc-700 \"EN\"",
+        "w": 37,
+        "h": 26
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 598,
+        "h": 38,
+        "type": "password"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 598,
+        "h": 38,
+        "type": "text"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 598,
+        "h": 38,
+        "type": "text"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "checkbox"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 572,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.accent-emerald-500 \"\"",
+        "w": 13,
+        "h": 13,
+        "type": "radio"
+      },
+      {
+        "el": "input.w-full.rounded-lg.border.border-zinc-700 \"\"",
+        "w": 572,
+        "h": 38,
+        "type": "number"
+      },
+      {
+        "el": "button.rounded-lg.border.border-zinc-600.px-4 \"测试连接\"",
+        "w": 90,
+        "h": 38
+      },
+      {
+        "el": "button.rounded-lg.border.border-zinc-600.px-4 \"测试复盘格式\"",
+        "w": 118,
+        "h": 38
+      },
+      {
+        "el": "select.w-full.rounded-lg.border.border-zinc-700 \"随机（推荐，每手随机风格）紧弱 Nit紧凶 TAG松凶 LA\"",
+        "w": 598,
+        "h": 39
+      }
+    ],
+    "truncated": []
+  }
+}
